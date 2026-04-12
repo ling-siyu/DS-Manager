@@ -1,0 +1,28 @@
+{
+  "name": "dsm-tokens",
+  "displayName": "Design System Manager — Token Hints",
+  "description": "Inline completions and hover docs for dsm design tokens",
+  "version": "0.1.0",
+  "publisher": "dsm",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onLanguage:css", "onLanguage:scss", "onLanguage:javascript", "onLanguage:typescript", "onLanguage:javascriptreact", "onLanguage:typescriptreact"],
+  "main": "./extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "DSM Token Hints",
+      "properties": {
+        "dsm.cssVarsPath": {
+          "type": "string",
+          "default": "design-system/build/css-vars.css",
+          "description": "Path to the generated css-vars.css file, relative to the workspace root."
+        },
+        "dsm.contextPath": {
+          "type": "string",
+          "default": "design-system/context.md",
+          "description": "Path to context.md for token descriptions, relative to the workspace root."
+        }
+      }
+    }
+  }
+}
