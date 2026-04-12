@@ -3,7 +3,9 @@ import { Command } from 'commander';
 import { buildCommand } from './commands/build.js';
 import { generateContextCommand } from './commands/generate-context.js';
 import { initCommand } from './commands/init.js';
+import { installHookCommand } from './commands/install-hook.js';
 import { scanCommand } from './commands/scan.js';
+import { serveCommand } from './commands/serve.js';
 import { validateCommand } from './commands/validate.js';
 import { watchCommand } from './commands/watch.js';
 
@@ -47,5 +49,16 @@ program
   .description('Validate files for design system compliance (exit 1 if violations found)')
   .option('--json', 'Output results as JSON')
   .action(validateCommand);
+
+program
+  .command('serve')
+  .description('Start the MCP server (stdio) exposing get_token, list_components, validate_file')
+  .action(serveCommand);
+
+program
+  .command('install-hook')
+  .description('Install a pre-commit git hook that runs dsm validate before each commit')
+  .option('--force', 'Append dsm block to an existing pre-commit hook instead of aborting')
+  .action(installHookCommand);
 
 program.parse();

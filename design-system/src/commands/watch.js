@@ -1,6 +1,7 @@
 import chokidar from 'chokidar';
 import chalk from 'chalk';
 import { buildCommand } from './build.js';
+import { generateContextCommand } from './generate-context.js';
 import { resolveProjectPaths } from '../utils/paths.js';
 
 export async function watchCommand() {
@@ -11,10 +12,11 @@ export async function watchCommand() {
   console.log(chalk.dim(`  ${componentsPath}`));
   console.log(chalk.dim('\nPress Ctrl+C to stop.\n'));
 
-  // Initial build
+  // Initial build + context generation
   await buildCommand();
+  await generateContextCommand();
 
-  const watcher = chokidar.watch([TOKENS_PATH, COMPONENTS_PATH], {
+  const watcher = chokidar.watch([tokensPath, componentsPath], {
     ignoreInitial: true,
     awaitWriteFinish: { stabilityThreshold: 300 },
   });
@@ -23,6 +25,7 @@ export async function watchCommand() {
     const name = filePath.split('/').pop();
     console.log(chalk.yellow(`\n↻  ${name} changed — rebuilding...`));
     await buildCommand();
+    await generateContextCommand();
   });
 
   watcher.on('error', (err) => {

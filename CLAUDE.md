@@ -1,22 +1,25 @@
 # Project Guidelines for Claude Code
 
-# Project Guidelines for Claude Code
-
 ## Project: Design System Manager
 This is the `dsm` CLI tool. Source lives in `design-system/src/`.
 
-## Current Phase: Phase 1 — Token Foundation
-**Already built:**
+## Current Phase: Phase 2 — MCP Server & Automation
+**Already built (Phase 1):**
 - `tokens.json` — W3C DTCG token taxonomy
 - `components.json` — component registry
 - CLI commands: build, watch, scan, validate, generate-context
 - Style Dictionary pipeline → css-vars.css + tailwind.tokens.cjs
 - Claude Code skills: /tokenize, /new-component, /audit-component
 
-**Next up (Phase 2):**
-- MCP server (`dsm serve`) exposing: get_token, list_components, validate_file
-- Pre-commit hook for dsm validate
-- Token watch + CLAUDE.md auto-regeneration on change
+**Already built (Phase 2):**
+- MCP server (`dsm serve`) — stdio server exposing: get_token, list_components, validate_file
+- Pre-commit hook (`dsm install-hook`) — blocks commits with token violations; `--force` appends to existing hooks
+- Token watch auto-regeneration — `dsm watch` now rebuilds CSS + regenerates CLAUDE.md on every change
+
+**Next up (Phase 3):**
+- Token diffing / changelog generation on build
+- VS Code extension or LSP integration for inline token hints
+- Multi-project token inheritance / theming support
 
 **File conventions:**
 - CLI commands in `design-system/src/commands/`
