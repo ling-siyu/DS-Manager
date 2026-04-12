@@ -226,56 +226,131 @@
 | `component.modal.overlayBg` | `rgba(0,0,0,0.5)` |
 | `component.modal.maxWidth.sm` | `{primitive.spacing.80} → 320px` |
 | `component.modal.maxWidth.md` | `{primitive.spacing.96} → 384px` |
+| `component.preview.shell.maxWidth` | `93.75rem` |
+| `component.preview.search.minWidth` | `{primitive.spacing.80} → 320px` |
+| `component.preview.sidebar.minWidth` | `{primitive.spacing.64} → 256px` |
+| `component.preview.sidebar.maxWidth` | `{primitive.spacing.80} → 320px` |
+| `component.preview.tokenCard.minWidth` | `{primitive.spacing.48} → 192px` |
+| `component.preview.componentCard.minWidth` | `{primitive.spacing.80} → 320px` |
+| `component.preview.spacingBar.maxWidth` | `{primitive.spacing.80} → 320px` |
 
 ---
 
 ## Components
 
-### Button
-- **File:** `src/components/ui/Button.tsx`
-- **Description:** Primary interactive element. Supports multiple variants, sizes, and states.
-- **Variants:** primary, secondary, ghost, destructive
-- **Sizes:** sm, md, lg
-- **Required props:** children
-
-### Input
-- **File:** `src/components/ui/Input.tsx`
-- **Description:** Text input field. Handles all text-like input types with validation states.
-- **Variants:** default, error
-- **Sizes:** sm, md, lg
-- **Required props:** none
-
-### Card
-- **File:** `src/components/ui/Card.tsx`
-- **Description:** Surface container with consistent padding, radius, and shadow.
-- **Variants:** default, flat, elevated
-- **Sizes:** sm, md, lg
-- **Required props:** children
-
 ### Badge
+- **Level:** Lv.1
 - **File:** `src/components/ui/Badge.tsx`
 - **Description:** Small status or label indicator.
 - **Variants:** default, error, warning, success, info
 - **Sizes:** n/a
+- **Contains:** 
 - **Required props:** children
 
+### Button
+- **Level:** Lv.1
+- **File:** `src/components/ui/Button.tsx`
+- **Description:** Primary interactive element. Supports multiple variants, sizes, and states.
+- **Variants:** primary, secondary, ghost, destructive
+- **Sizes:** sm, md, lg
+- **Contains:** 
+- **Required props:** children
+
+### Card
+- **Level:** Lv.1
+- **File:** `src/components/ui/Card.tsx`
+- **Description:** Surface container with consistent padding, radius, and shadow.
+- **Variants:** default, flat, elevated
+- **Sizes:** sm, md, lg
+- **Contains:** 
+- **Required props:** children
+
+### Input
+- **Level:** Lv.1
+- **File:** `src/components/ui/Input.tsx`
+- **Description:** Text input field. Handles all text-like input types with validation states.
+- **Variants:** default, error
+- **Sizes:** sm, md, lg
+- **Contains:** 
+- **Required props:** none
+
 ### Tooltip
+- **Level:** Lv.1
 - **File:** `src/components/ui/Tooltip.tsx`
 - **Description:** Contextual hint shown on hover.
 - **Variants:** n/a
 - **Sizes:** n/a
+- **Contains:** 
 - **Required props:** content, children
 
-### Modal
-- **File:** `src/components/ui/Modal.tsx`
-- **Description:** Dialog overlay for focused tasks or confirmations.
-- **Variants:** n/a
-- **Sizes:** n/a
-- **Required props:** isOpen, onClose, children
-
 ### Typography
+- **Level:** Lv.1
 - **File:** `src/components/ui/Typography.tsx`
 - **Description:** Text rendering with semantic heading and body styles.
 - **Variants:** h1, h2, h3, h4, body, bodyLg, bodySm, label, caption
 - **Sizes:** n/a
+- **Contains:** 
 - **Required props:** children
+
+### AssetLevelNav
+- **Level:** Lv.2
+- **File:** `design-system/src/ui/index.html`
+- **Description:** Level-based sidebar navigation used by the DSM preview to move through token and component layers.
+- **Variants:** n/a
+- **Sizes:** n/a
+- **Contains:** Card, Badge, Typography
+- **Required props:** none
+
+### Modal
+- **Level:** Lv.2
+- **File:** `src/components/ui/Modal.tsx`
+- **Description:** Dialog overlay for focused tasks or confirmations.
+- **Variants:** n/a
+- **Sizes:** n/a
+- **Contains:** Button, Typography
+- **Required props:** isOpen, onClose, children
+
+### PreviewHeader
+- **Level:** Lv.2
+- **File:** `design-system/src/ui/index.html`
+- **Description:** Hero header for the DSM preview, combining search, metadata, and hierarchy framing.
+- **Variants:** n/a
+- **Sizes:** n/a
+- **Contains:** Input, Badge, Typography
+- **Required props:** none
+
+### RegistryComponentCard
+- **Level:** Lv.2
+- **File:** `design-system/src/ui/index.html`
+- **Description:** Registry card for design-system components shown in the DSM preview, including status and composition metadata.
+- **Variants:** n/a
+- **Sizes:** n/a
+- **Contains:** Card, Badge, Typography
+- **Required props:** none
+
+### SummaryCard
+- **Level:** Lv.2
+- **File:** `design-system/src/ui/index.html`
+- **Description:** Compact metric card used to summarize counts and grouped asset information in the DSM preview.
+- **Variants:** n/a
+- **Sizes:** n/a
+- **Contains:** Card, Typography
+- **Required props:** none
+
+### TokenCard
+- **Level:** Lv.2
+- **File:** `design-system/src/ui/index.html`
+- **Description:** Preview card for individual token samples, including color swatches, spacing bars, and type specimens.
+- **Variants:** n/a
+- **Sizes:** n/a
+- **Contains:** Card, Typography
+- **Required props:** none
+
+### PreviewShell
+- **Level:** Lv.3
+- **File:** `design-system/src/ui/index.html`
+- **Description:** Top-level DSM preview layout that composes the header, level navigation, summaries, token cards, and component cards.
+- **Variants:** n/a
+- **Sizes:** n/a
+- **Contains:** PreviewHeader, AssetLevelNav, SummaryCard, TokenCard, RegistryComponentCard
+- **Required props:** none

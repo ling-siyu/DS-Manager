@@ -134,6 +134,15 @@ Starts an MCP (Model Context Protocol) stdio server. Used internally by Claude C
 dsm serve
 ```
 
+### `dsm ui`
+
+Starts a local preview for designers and agents. The UI groups tokens at `Lv.0`, treats leaf components as `Lv.1`, and derives higher levels from component composition metadata in `components.json`.
+
+```bash
+dsm ui
+dsm ui --port 7788 --no-open
+```
+
 ---
 
 ## Token Naming Convention
@@ -167,6 +176,21 @@ Three layers in `tokens.json`:
 ## Component Registry
 
 Components are registered in `components.json`. All registered components are marked `"doNotCreate": true` — AI agents must use them, not recreate them.
+
+Optional `contains` metadata lets DSM derive hierarchy levels automatically:
+
+- `Lv.0` — tokens
+- `Lv.1` — components with no registered child components
+- `Lv.2+` — components that contain lower-level components
+
+Example:
+
+```json
+{
+  "name": "Modal",
+  "contains": ["Button", "Typography"]
+}
+```
 
 Registered components: `Button`, `Input`, `Card`, `Badge`, `Tooltip`, `Modal`, `Typography`
 

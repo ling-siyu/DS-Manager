@@ -90,6 +90,7 @@
       "name": "Modal",
       "path": "src/components/ui/Modal.tsx",
       "description": "Dialog overlay for focused tasks or confirmations.",
+      "contains": ["Button", "Typography"],
       "props": {
         "isOpen":   { "type": "boolean", "required": true },
         "onClose":  { "type": "function","required": true },
@@ -114,6 +115,60 @@
       },
       "tokens": ["semantic.typography.*", "semantic.color.text.*"],
       "status": "stable",
+      "doNotCreate": true
+    },
+    {
+      "name": "PreviewHeader",
+      "path": "design-system/src/ui/index.html",
+      "description": "Hero header for the DSM preview, combining search, metadata, and hierarchy framing.",
+      "contains": ["Input", "Badge", "Typography"],
+      "tokens": ["component.preview.search.*", "semantic.color.text.*", "semantic.color.background.*"],
+      "status": "beta",
+      "doNotCreate": true
+    },
+    {
+      "name": "AssetLevelNav",
+      "path": "design-system/src/ui/index.html",
+      "description": "Level-based sidebar navigation used by the DSM preview to move through token and component layers.",
+      "contains": ["Card", "Badge", "Typography"],
+      "tokens": ["component.preview.sidebar.*", "component.card.*", "semantic.color.interactive.*"],
+      "status": "beta",
+      "doNotCreate": true
+    },
+    {
+      "name": "SummaryCard",
+      "path": "design-system/src/ui/index.html",
+      "description": "Compact metric card used to summarize counts and grouped asset information in the DSM preview.",
+      "contains": ["Card", "Typography"],
+      "tokens": ["component.card.*", "semantic.color.text.*"],
+      "status": "beta",
+      "doNotCreate": true
+    },
+    {
+      "name": "TokenCard",
+      "path": "design-system/src/ui/index.html",
+      "description": "Preview card for individual token samples, including color swatches, spacing bars, and type specimens.",
+      "contains": ["Card", "Typography"],
+      "tokens": ["component.preview.tokenCard.*", "component.card.*", "semantic.color.text.*"],
+      "status": "beta",
+      "doNotCreate": true
+    },
+    {
+      "name": "RegistryComponentCard",
+      "path": "design-system/src/ui/index.html",
+      "description": "Registry card for design-system components shown in the DSM preview, including status and composition metadata.",
+      "contains": ["Card", "Badge", "Typography"],
+      "tokens": ["component.preview.componentCard.*", "component.card.*", "semantic.color.status.*"],
+      "status": "beta",
+      "doNotCreate": true
+    },
+    {
+      "name": "PreviewShell",
+      "path": "design-system/src/ui/index.html",
+      "description": "Top-level DSM preview layout that composes the header, level navigation, summaries, token cards, and component cards.",
+      "contains": ["PreviewHeader", "AssetLevelNav", "SummaryCard", "TokenCard", "RegistryComponentCard"],
+      "tokens": ["component.preview.shell.*", "semantic.color.background.*"],
+      "status": "beta",
       "doNotCreate": true
     }
   ],

@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import chalk from 'chalk';
 import { flattenTokens, resolveReference, loadTokens } from '../utils/tokens.js';
+import { enrichComponents } from '../utils/components.js';
 import { resolveProjectPaths } from '../utils/paths.js';
 
 function buildSemanticColorTable(flat) {
@@ -17,12 +18,14 @@ function buildSemanticColorTable(flat) {
 }
 
 function buildComponentList(components) {
-  return components.map(c => ({
+  return enrichComponents(components).map(c => ({
     name: c.name,
+    level: c.levelLabel,
     path: c.path,
     description: c.description,
     variants: c.variants?.join(', ') ?? 'n/a',
     sizes: c.sizes?.join(', ') ?? 'n/a',
+    contains: c.contains?.join(', ') ?? 'none',
     required: Object.entries(c.props ?? {})
       .filter(([, v]) => v.required)
       .map(([k]) => k)
@@ -268,6 +271,6 @@ ${componentTokenRows}
 
 ## Components
 
-${components.map(c => `### ${c.name}\n- **File:** \`${c.path}\`\n- **Description:** ${c.description}\n- **Variants:** ${c.variants}\n- **Sizes:** ${c.sizes}\n- **Required props:** ${c.required}`).join('\n\n')}
+${components.map(c => `### ${c.name}\n- **Level:** ${c.level}\n- **File:** \`${c.path}\`\n- **Description:** ${c.description}\n- **Variants:** ${c.variants}\n- **Sizes:** ${c.sizes}\n- **Contains:** ${c.contains}\n- **Required props:** ${c.required}`).join('\n\n')}
 `;
 }

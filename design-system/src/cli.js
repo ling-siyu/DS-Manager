@@ -8,6 +8,7 @@ import { installHookCommand } from './commands/install-hook.js';
 import { listComponentsCommand } from './commands/list-components.js';
 import { scanCommand } from './commands/scan.js';
 import { serveCommand } from './commands/serve.js';
+import { uiCommand } from './commands/ui.js';
 import { validateCommand } from './commands/validate.js';
 import { watchCommand } from './commands/watch.js';
 
@@ -76,5 +77,12 @@ program
   .description('Install a pre-commit git hook that runs dsm validate before each commit')
   .option('--force', 'Append dsm block to an existing pre-commit hook instead of aborting')
   .action(installHookCommand);
+
+program
+  .command('ui')
+  .description('Start a local design system preview server for designers')
+  .option('-p, --port <number>', 'Port to listen on', '7777')
+  .option('--no-open', 'Do not automatically open the browser')
+  .action(uiCommand);
 
 program.parse();

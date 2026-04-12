@@ -162,8 +162,9 @@
   --ds-primitive-opacity-75: 0.75;
   --ds-primitive-opacity-90: 0.9;
   --ds-primitive-opacity-100: 1;
-  --ds-semantic-color-interactive-ghost-bg: rgba(0, 0, 0, 0);
+  --ds-semantic-color-interactive-ghost-bg: rgba(0, 0, 0, 0); /** Transparent background for ghost buttons */
   --ds-component-modal-overlay-bg: rgba(0, 0, 0, 0.5);
+  --ds-component-preview-shell-max-width: 93.75rem;
   --ds-semantic-color-background-default: var(--ds-primitive-color-white); /** Page/app background */
   --ds-semantic-color-background-subtle: var(--ds-primitive-color-neutral-50); /** Subtle section background */
   --ds-semantic-color-background-muted: var(--ds-primitive-color-neutral-100); /** Muted / secondary background */
@@ -184,40 +185,40 @@
   --ds-semantic-color-border-strong: var(--ds-primitive-color-neutral-300); /** Strong / high-emphasis border */
   --ds-semantic-color-border-focus: var(--ds-primitive-color-brand-500); /** Keyboard focus ring */
   --ds-semantic-color-border-error: var(--ds-primitive-color-red-400); /** Error state border */
-  --ds-semantic-color-interactive-primary-bg: var(--ds-primitive-color-brand-600);
-  --ds-semantic-color-interactive-primary-bg-hover: var(--ds-primitive-color-brand-700);
-  --ds-semantic-color-interactive-primary-bg-active: var(--ds-primitive-color-brand-800);
-  --ds-semantic-color-interactive-primary-bg-disabled: var(--ds-primitive-color-neutral-200);
-  --ds-semantic-color-interactive-primary-text: var(--ds-primitive-color-white);
-  --ds-semantic-color-interactive-primary-text-disabled: var(--ds-primitive-color-neutral-400);
-  --ds-semantic-color-interactive-secondary-bg: var(--ds-primitive-color-white);
-  --ds-semantic-color-interactive-secondary-bg-hover: var(--ds-primitive-color-neutral-50);
-  --ds-semantic-color-interactive-secondary-bg-active: var(--ds-primitive-color-neutral-100);
-  --ds-semantic-color-interactive-secondary-text: var(--ds-primitive-color-neutral-900);
-  --ds-semantic-color-interactive-secondary-border: var(--ds-primitive-color-neutral-300);
-  --ds-semantic-color-interactive-ghost-bg-hover: var(--ds-primitive-color-neutral-100);
-  --ds-semantic-color-interactive-ghost-bg-active: var(--ds-primitive-color-neutral-200);
-  --ds-semantic-color-interactive-ghost-text: var(--ds-primitive-color-neutral-700);
-  --ds-semantic-color-interactive-destructive-bg: var(--ds-primitive-color-red-600);
-  --ds-semantic-color-interactive-destructive-bg-hover: var(--ds-primitive-color-red-700);
-  --ds-semantic-color-interactive-destructive-bg-active: var(--ds-primitive-color-red-800);
-  --ds-semantic-color-interactive-destructive-text: var(--ds-primitive-color-white);
-  --ds-semantic-color-status-error-bg: var(--ds-primitive-color-red-50);
-  --ds-semantic-color-status-error-text: var(--ds-primitive-color-red-700);
-  --ds-semantic-color-status-error-border: var(--ds-primitive-color-red-200);
-  --ds-semantic-color-status-error-icon: var(--ds-primitive-color-red-500);
-  --ds-semantic-color-status-warning-bg: var(--ds-primitive-color-yellow-50);
-  --ds-semantic-color-status-warning-text: var(--ds-primitive-color-yellow-700);
-  --ds-semantic-color-status-warning-border: var(--ds-primitive-color-yellow-200);
-  --ds-semantic-color-status-warning-icon: var(--ds-primitive-color-yellow-500);
-  --ds-semantic-color-status-success-bg: var(--ds-primitive-color-green-50);
-  --ds-semantic-color-status-success-text: var(--ds-primitive-color-green-700);
-  --ds-semantic-color-status-success-border: var(--ds-primitive-color-green-200);
-  --ds-semantic-color-status-success-icon: var(--ds-primitive-color-green-500);
-  --ds-semantic-color-status-info-bg: var(--ds-primitive-color-blue-50);
-  --ds-semantic-color-status-info-text: var(--ds-primitive-color-blue-700);
-  --ds-semantic-color-status-info-border: var(--ds-primitive-color-blue-200);
-  --ds-semantic-color-status-info-icon: var(--ds-primitive-color-blue-500);
+  --ds-semantic-color-interactive-primary-bg: var(--ds-primitive-color-brand-600); /** Background for primary buttons and CTAs */
+  --ds-semantic-color-interactive-primary-bg-hover: var(--ds-primitive-color-brand-700); /** Hover background for primary interactive elements */
+  --ds-semantic-color-interactive-primary-bg-active: var(--ds-primitive-color-brand-800); /** Active/pressed background for primary interactive elements */
+  --ds-semantic-color-interactive-primary-bg-disabled: var(--ds-primitive-color-neutral-200); /** Disabled background for primary interactive elements */
+  --ds-semantic-color-interactive-primary-text: var(--ds-primitive-color-white); /** Text color on primary interactive elements */
+  --ds-semantic-color-interactive-primary-text-disabled: var(--ds-primitive-color-neutral-400); /** Text color on disabled primary interactive elements */
+  --ds-semantic-color-interactive-secondary-bg: var(--ds-primitive-color-white); /** Background for secondary buttons */
+  --ds-semantic-color-interactive-secondary-bg-hover: var(--ds-primitive-color-neutral-50); /** Hover background for secondary interactive elements */
+  --ds-semantic-color-interactive-secondary-bg-active: var(--ds-primitive-color-neutral-100); /** Active/pressed background for secondary interactive elements */
+  --ds-semantic-color-interactive-secondary-text: var(--ds-primitive-color-neutral-900); /** Text color on secondary interactive elements */
+  --ds-semantic-color-interactive-secondary-border: var(--ds-primitive-color-neutral-300); /** Border for secondary interactive elements */
+  --ds-semantic-color-interactive-ghost-bg-hover: var(--ds-primitive-color-neutral-100); /** Hover background for ghost interactive elements */
+  --ds-semantic-color-interactive-ghost-bg-active: var(--ds-primitive-color-neutral-200); /** Active/pressed background for ghost interactive elements */
+  --ds-semantic-color-interactive-ghost-text: var(--ds-primitive-color-neutral-700); /** Text color on ghost interactive elements */
+  --ds-semantic-color-interactive-destructive-bg: var(--ds-primitive-color-red-600); /** Background for destructive actions (delete, remove) */
+  --ds-semantic-color-interactive-destructive-bg-hover: var(--ds-primitive-color-red-700); /** Hover background for destructive interactive elements */
+  --ds-semantic-color-interactive-destructive-bg-active: var(--ds-primitive-color-red-800); /** Active/pressed background for destructive interactive elements */
+  --ds-semantic-color-interactive-destructive-text: var(--ds-primitive-color-white); /** Text color on destructive interactive elements */
+  --ds-semantic-color-status-error-bg: var(--ds-primitive-color-red-50); /** Background for error status banners and alerts */
+  --ds-semantic-color-status-error-text: var(--ds-primitive-color-red-700); /** Text color in error status contexts */
+  --ds-semantic-color-status-error-border: var(--ds-primitive-color-red-200); /** Border for error status containers */
+  --ds-semantic-color-status-error-icon: var(--ds-primitive-color-red-500); /** Icon color in error status contexts */
+  --ds-semantic-color-status-warning-bg: var(--ds-primitive-color-yellow-50); /** Background for warning status banners and alerts */
+  --ds-semantic-color-status-warning-text: var(--ds-primitive-color-yellow-700); /** Text color in warning status contexts */
+  --ds-semantic-color-status-warning-border: var(--ds-primitive-color-yellow-200); /** Border for warning status containers */
+  --ds-semantic-color-status-warning-icon: var(--ds-primitive-color-yellow-500); /** Icon color in warning status contexts */
+  --ds-semantic-color-status-success-bg: var(--ds-primitive-color-green-50); /** Background for success status banners and alerts */
+  --ds-semantic-color-status-success-text: var(--ds-primitive-color-green-700); /** Text color in success status contexts */
+  --ds-semantic-color-status-success-border: var(--ds-primitive-color-green-200); /** Border for success status containers */
+  --ds-semantic-color-status-success-icon: var(--ds-primitive-color-green-500); /** Icon color in success status contexts */
+  --ds-semantic-color-status-info-bg: var(--ds-primitive-color-blue-50); /** Background for info status banners and alerts */
+  --ds-semantic-color-status-info-text: var(--ds-primitive-color-blue-700); /** Text color in info status contexts */
+  --ds-semantic-color-status-info-border: var(--ds-primitive-color-blue-200); /** Border for info status containers */
+  --ds-semantic-color-status-info-icon: var(--ds-primitive-color-blue-500); /** Icon color in info status contexts */
   --ds-semantic-spacing-component-xs: var(--ds-primitive-spacing-1); /** 4px — tight internal padding */
   --ds-semantic-spacing-component-sm: var(--ds-primitive-spacing-2); /** 8px — small component padding */
   --ds-semantic-spacing-component-md: var(--ds-primitive-spacing-4); /** 16px — default component padding */
@@ -283,6 +284,12 @@
   --ds-component-modal-bg: var(--ds-primitive-color-white);
   --ds-component-modal-max-width-sm: var(--ds-primitive-spacing-80);
   --ds-component-modal-max-width-md: var(--ds-primitive-spacing-96);
+  --ds-component-preview-search-min-width: var(--ds-primitive-spacing-80);
+  --ds-component-preview-sidebar-min-width: var(--ds-primitive-spacing-64);
+  --ds-component-preview-sidebar-max-width: var(--ds-primitive-spacing-80);
+  --ds-component-preview-token-card-min-width: var(--ds-primitive-spacing-48);
+  --ds-component-preview-component-card-min-width: var(--ds-primitive-spacing-80);
+  --ds-component-preview-spacing-bar-max-width: var(--ds-primitive-spacing-80);
   --ds-component-input-border: var(--ds-semantic-color-border-default);
   --ds-component-input-border-focus: var(--ds-semantic-color-border-focus);
   --ds-component-input-border-error: var(--ds-semantic-color-border-error);
