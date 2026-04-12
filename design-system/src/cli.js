@@ -2,8 +2,10 @@
 import { Command } from 'commander';
 import { buildCommand } from './commands/build.js';
 import { generateContextCommand } from './commands/generate-context.js';
+import { getTokenCommand } from './commands/get-token.js';
 import { initCommand } from './commands/init.js';
 import { installHookCommand } from './commands/install-hook.js';
+import { listComponentsCommand } from './commands/list-components.js';
 import { scanCommand } from './commands/scan.js';
 import { serveCommand } from './commands/serve.js';
 import { validateCommand } from './commands/validate.js';
@@ -49,6 +51,19 @@ program
   .description('Validate files for design system compliance (exit 1 if violations found)')
   .option('--json', 'Output results as JSON')
   .action(validateCommand);
+
+program
+  .command('get-token <query>')
+  .description('Look up a design token by path, CSS variable, or partial name')
+  .option('--json', 'Output as JSON')
+  .action((query, options) => getTokenCommand(query, options));
+
+program
+  .command('list-components')
+  .description('List registered design system components')
+  .option('--filter <name>', 'Filter by component name')
+  .option('--json', 'Output as JSON')
+  .action(listComponentsCommand);
 
 program
   .command('serve')

@@ -23,5 +23,6 @@ export function resolveProjectPaths(cwd = process.cwd()) {
     buildDir: resolve(dsRoot, 'build'),
     styleDictionaryConfigPath: resolve(dsRoot, 'style-dictionary.config.mjs'),
     claudePath: resolve(repoRoot, 'CLAUDE.md'),
+    agentsPath: resolve(repoRoot, 'AGENTS.md'),
   };
 }

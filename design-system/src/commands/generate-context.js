@@ -1,67 +1,65 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { resolveProjectPaths } from '../utils/paths.js';
 import chalk from 'chalk';
-
-/**
- * Flatten a nested DTCG token object into a map of dotted paths → values.
- * e.g. semantic.color.text.default → { $value: '{...}', $type: 'color', $description: '...' }
- */
-function flattenTokens(obj, prefix = '') {
-  const result = {};
-  for (const [key, value] of Object.entries(obj)) {
-    const path = prefix ? `${prefix}.${key}` : key;
-    if (value && typeof value === 'object' && '$value' in value) {
-      result[path] = value;
-    } else if (value && typeof value === 'object') {
-      Object.assign(result, flattenTokens(value, path));
-    }
-  }
-  return result;
-}
-
-/** Resolve a token reference like {primitive.color.red.500} to its raw value */
-function resolveReference(ref, flat) {
-  const inner = ref.replace(/^\{|\}$/g, '');
-  return flat[inner]?.$value ?? ref;
-}
+import { flattenTokens, resolveReference, loadTokens } from '../utils/tokens.js';
+import { resolveProjectPaths } from '../utils/paths.js';
 
 function buildSemanticColorTable(flat) {
-  const semanticColors = Object.entries(flat)
+  return Object.entries(flat)
     .filter(([k]) => k.startsWith('semantic.color.'))
     .map(([path, token]) => {
       const shortPath = path.replace('semantic.color.', '');
-      const rawValue = token.$value;
-      const resolved = rawValue.startsWith('{') ? resolveReference(rawValue, flat) : rawValue;
-      const desc = token.$description ?? '';
-      return { path: shortPath, cssVar: `--ds-${path.replace(/\./g, '-')}`, value: resolved, desc };
+      const rawValue  = token.$value;
+      const resolved  = typeof rawValue === 'string' && rawValue.startsWith('{')
+        ? resolveReference(rawValue, flat)
+        : rawValue;
+      return { path: shortPath, cssVar: `--ds-${path.replace(/\./g, '-')}`, value: resolved, desc: token.$description ?? '' };
     });
-  return semanticColors;
 }
 
 function buildComponentList(components) {
-  return components.map(c => {
-    const variants = c.variants?.join(', ') ?? 'n/a';
-    const sizes    = c.sizes?.join(', ') ?? 'n/a';
-    const required = Object.entries(c.props ?? {})
+  return components.map(c => ({
+    name: c.name,
+    path: c.path,
+    description: c.description,
+    variants: c.variants?.join(', ') ?? 'n/a',
+    sizes: c.sizes?.join(', ') ?? 'n/a',
+    required: Object.entries(c.props ?? {})
       .filter(([, v]) => v.required)
       .map(([k]) => k)
-      .join(', ') || 'none';
-    return { name: c.name, path: c.path, description: c.description, variants, sizes, required };
-  });
+      .join(', ') || 'none',
+  }));
+}
+
+/** Splice (or create) the DSM section in a file. Idempotent. */
+function spliceDsmSection(filePath, content) {
+  const SECTION_START = '<!-- DSM:START -->';
+  const SECTION_END   = '<!-- DSM:END -->';
+  const block = `${SECTION_START}\n${content}\n${SECTION_END}`;
+
+  if (existsSync(filePath)) {
+    const existing = readFileSync(filePath, 'utf8');
+    if (existing.includes(SECTION_START)) {
+      const before = existing.substring(0, existing.indexOf(SECTION_START));
+      const after  = existing.substring(existing.indexOf(SECTION_END) + SECTION_END.length);
+      return before + block + after;
+    }
+    return existing.trimEnd() + '\n\n' + block + '\n';
+  }
+  return block + '\n';
 }
 
 export async function generateContextCommand() {
   console.log(chalk.cyan('\n📝 Generating context files...\n'));
 
-  const { tokensPath, componentsPath, dsRoot, claudePath } = resolveProjectPaths();
+  const { tokensPath, componentsPath, dsRoot, claudePath, agentsPath } = resolveProjectPaths();
 
   if (!existsSync(tokensPath)) {
     console.error(chalk.red('✗ design-system/tokens.json not found. Run `dsm init` first.\n'));
     process.exit(1);
   }
 
-  const tokens     = JSON.parse(readFileSync(tokensPath, 'utf8'));
-  const registry   = existsSync(componentsPath)
+  const tokens    = JSON.parse(readFileSync(tokensPath, 'utf8'));
+  const registry  = existsSync(componentsPath)
     ? JSON.parse(readFileSync(componentsPath, 'utf8'))
     : { components: [] };
 
@@ -69,88 +67,44 @@ export async function generateContextCommand() {
   const semColors  = buildSemanticColorTable(flat);
   const components = buildComponentList(registry.components ?? []);
 
-  // ─── Generate context.md (full reference) ─────────────────────────────────
-  const contextMd = generateContextMd(flat, semColors, components);
+  // ── context.md (full reference, unchanged) ───────────────────────────────
+  const contextMd   = generateContextMd(flat, semColors, components);
   const contextPath = `${dsRoot}/context.md`;
   writeFileSync(contextPath, contextMd, 'utf8');
   console.log(chalk.green('  ✓') + '  design-system/context.md');
 
-  // ─── Generate CLAUDE.md (rules + summary for AI agent) ────────────────────
-  const claudeMd = generateClaudeMd(semColors, components, registry.conventions ?? {});
+  // ── CLAUDE.md (Claude Code — slim rules + CLI hints) ─────────────────────
+  writeFileSync(claudePath, spliceDsmSection(claudePath, generateClaudeMd()), 'utf8');
+  console.log(chalk.green('  ✓') + '  CLAUDE.md');
 
-  if (existsSync(claudePath)) {
-    // Splice design system section into existing CLAUDE.md
-    const existing = readFileSync(claudePath, 'utf8');
-    const SECTION_START = '<!-- DSM:START -->';
-    const SECTION_END   = '<!-- DSM:END -->';
-    let updated;
-    if (existing.includes(SECTION_START)) {
-      const before = existing.substring(0, existing.indexOf(SECTION_START));
-      const after  = existing.substring(existing.indexOf(SECTION_END) + SECTION_END.length);
-      updated = before + SECTION_START + '\n' + claudeMd + '\n' + SECTION_END + after;
-    } else {
-      updated = existing + '\n\n' + SECTION_START + '\n' + claudeMd + '\n' + SECTION_END + '\n';
-    }
-    writeFileSync(claudePath, updated, 'utf8');
-    console.log(chalk.green('  ✓') + '  CLAUDE.md (design system section updated)');
-  } else {
-    writeFileSync(claudePath, claudeMd, 'utf8');
-    console.log(chalk.green('  ✓') + '  CLAUDE.md (created)');
-  }
+  // ── AGENTS.md (Codex — same rules, Codex-flavoured hints) ────────────────
+  writeFileSync(agentsPath, spliceDsmSection(agentsPath, generateAgentsMd()), 'utf8');
+  console.log(chalk.green('  ✓') + '  AGENTS.md');
 
   console.log(chalk.green('\n✓ Context generation complete.\n'));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-function generateClaudeMd(semColors, components, conventions) {
-  const colorRows = semColors
-    .filter(c => !c.path.startsWith('interactive.') || c.path.endsWith('.bg') || c.path.endsWith('.text'))
-    .map(c => `| \`var(--ds-semantic-color-${c.path.replace(/\./g, '-')})\` | ${c.value} | ${c.desc} |`)
-    .join('\n');
-
-  const componentRows = components
-    .map(c => `| \`<${c.name}>\` | ${c.variants} | \`${c.path}\` |`)
-    .join('\n');
-
+function generateClaudeMd() {
   return `# Design System Guidelines
 > Auto-generated by dsm generate-context. Do not edit manually.
-> Full token reference: design-system/context.md
+> Full token reference: \`design-system/context.md\`
 
 ## ⚠️ CRITICAL RULES — ALWAYS FOLLOW
 
 1. **NEVER use raw CSS values** — no hex colors, no \`rgb()\`, no hardcoded \`px\` values in inline styles.
 2. **ALWAYS use semantic CSS variables** from \`design-system/build/css-vars.css\` or Tailwind token classes.
-3. **ALWAYS use components from the registry** before creating a new one. Check the table below first.
+3. **ALWAYS use components from the registry** before creating a new one. Run \`dsm list-components\` to check.
 4. **NEVER create a duplicate component** — if a component with \`"doNotCreate": true\` exists, use it.
 5. **After adding a new component**, register it in \`design-system/components.json\` and run \`dsm generate-context\`.
 6. **Import tokens** in your Tailwind config via \`design-system/build/tailwind.tokens.cjs\`.
 
 ---
 
-## Semantic Color Tokens
-
-Use these CSS variables for all color values. Import \`design-system/build/css-vars.css\` at your app root.
-
-| CSS Variable | Resolved Value | Purpose |
-|---|---|---|
-${colorRows}
-
----
-
-## Component Registry
-
-These components exist and must be used as-is. Do not recreate them.
-
-| Component | Variants | File |
-|---|---|---|
-${componentRows}
-
----
-
 ## Token Naming Convention
 
-\`\`\`
+\`\`\`text
 --ds-{layer}-{category}-{intent}-{modifier}
 
 Examples:
@@ -162,18 +116,97 @@ Examples:
 
 ---
 
+## CLI — Token & Component Lookups
+
+Look up a token (partial name, full path, or CSS variable):
+\`\`\`bash
+dsm get-token text-default
+dsm get-token --ds-semantic-color-border-focus
+dsm get-token background --json
+\`\`\`
+
+List components (optional filter):
+\`\`\`bash
+dsm list-components
+dsm list-components --filter Button --json
+\`\`\`
+
+Validate for violations:
+\`\`\`bash
+dsm validate [path]
+\`\`\`
+
+Full token reference: \`design-system/context.md\`
+
+---
+
 ## Claude Code Commands
 
 - \`/tokenize\` — replace hardcoded values in a file with token CSS variables
 - \`/new-component\` — scaffold a new component that follows the design system
 - \`/audit-component\` — check a component for design system violations
+`;
+}
+
+function generateAgentsMd() {
+  return `# Design System Guidelines
+> Auto-generated by dsm generate-context. Do not edit manually.
+> Full token reference: \`design-system/context.md\`
+
+## ⚠️ CRITICAL RULES — ALWAYS FOLLOW
+
+1. **NEVER use raw CSS values** — no hex colors, no \`rgb()\`, no hardcoded \`px\` values in inline styles.
+2. **ALWAYS use semantic CSS variables** from \`design-system/build/css-vars.css\` or Tailwind token classes.
+3. **ALWAYS use components from the registry** before creating a new one. Run \`dsm list-components\` to check.
+4. **NEVER create a duplicate component** — if a component with \`"doNotCreate": true\` exists, use it.
+5. **After adding a new component**, register it in \`design-system/components.json\` and run \`dsm generate-context\`.
+6. **Import tokens** in your Tailwind config via \`design-system/build/tailwind.tokens.cjs\`.
 
 ---
 
-## Validation
+## Token Naming Convention
 
-Run \`cd design-system && node src/cli.js validate ..\` to check for violations.
+\`\`\`text
+--ds-{layer}-{category}-{intent}-{modifier}
+
+Examples:
+  --ds-semantic-color-text-default
+  --ds-semantic-color-background-subtle
+  --ds-component-button-height-md
+  --ds-primitive-color-brand-500
+\`\`\`
+
+---
+
+## CLI — Token & Component Lookups
+
+Look up a token (partial name, full path, or CSS variable):
+\`\`\`bash
+dsm get-token text-default
+dsm get-token --ds-semantic-color-border-focus
+dsm get-token background --json
+\`\`\`
+
+List components (optional filter):
+\`\`\`bash
+dsm list-components
+dsm list-components --filter Button --json
+\`\`\`
+
+Validate for violations:
+\`\`\`bash
+dsm validate [path]
+\`\`\`
+
 Full token reference: \`design-system/context.md\`
+
+---
+
+## Codex Commands
+
+Use shell tool to run any \`dsm\` command above. The CLI is the primary interface.
+- Scan + auto-report: \`dsm validate [path] --json\`
+- Full reference: \`cat design-system/context.md\`
 `;
 }
 
@@ -191,7 +224,7 @@ function generateContextMd(flat, semColors, components) {
   const componentTokenRows = Object.entries(flat)
     .filter(([k]) => k.startsWith('component.'))
     .map(([path, token]) => {
-      const val = token.$value.startsWith('{')
+      const val = typeof token.$value === 'string' && token.$value.startsWith('{')
         ? `${token.$value} → ${resolveReference(token.$value, flat)}`
         : token.$value;
       return `| \`${path}\` | \`${val}\` |`;
