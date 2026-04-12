@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "en-US"
+
+reviews:
+  profile: "assertive"
+  high_level_summary: true
+  review_status: true
+  review_details: false
+  collapse_walkthrough: true
+  poem: false
+  path_filters:
+    - "!design-system/node_modules/**"
+    - "!design-system/build/**"
+    - "!.DS_Store"
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+  path_instructions:
+    - path: "design-system/src/**/*.js"
+      instructions: >
+        This repository contains a Node.js ESM CLI. Prioritize behavioral bugs,
+        path resolution issues, process.cwd() vs package-relative file access,
+        generated file safety, and regressions in command-line UX.
+    - path: "design-system/{tokens.json,components.json,style-dictionary.config.mjs}"
+      instructions: >
+        Treat token schema changes as high impact. Check for broken token references,
+        invalid generated output, accidental hardcoded values, and compatibility with
+        the build pipeline.
+
+chat:
+  auto_reply: true

@@ -1,0 +1,125 @@
+{
+  "$schema": "https://design-system-manager/schemas/components.json",
+  "$version": "0.1.0",
+  "$description": "Registry of all design system components. AI agents must check here before creating new components.",
+  "components": [
+    {
+      "name": "Button",
+      "path": "src/components/ui/Button.tsx",
+      "description": "Primary interactive element. Supports multiple variants, sizes, and states.",
+      "variants": ["primary", "secondary", "ghost", "destructive"],
+      "sizes": ["sm", "md", "lg"],
+      "props": {
+        "variant": { "type": "string", "default": "primary", "options": ["primary", "secondary", "ghost", "destructive"] },
+        "size":    { "type": "string", "default": "md",      "options": ["sm", "md", "lg"] },
+        "disabled":{ "type": "boolean","default": false },
+        "loading": { "type": "boolean","default": false },
+        "fullWidth":{ "type": "boolean","default": false },
+        "leftIcon": { "type": "ReactNode","default": null },
+        "rightIcon":{ "type": "ReactNode","default": null },
+        "onClick":  { "type": "function" },
+        "children": { "type": "ReactNode", "required": true }
+      },
+      "tokens": ["component.button.*", "semantic.color.interactive.*"],
+      "status": "stable",
+      "doNotCreate": true
+    },
+    {
+      "name": "Input",
+      "path": "src/components/ui/Input.tsx",
+      "description": "Text input field. Handles all text-like input types with validation states.",
+      "variants": ["default", "error"],
+      "sizes": ["sm", "md", "lg"],
+      "props": {
+        "size":        { "type": "string",  "default": "md", "options": ["sm", "md", "lg"] },
+        "disabled":    { "type": "boolean", "default": false },
+        "error":       { "type": "boolean", "default": false },
+        "errorMessage":{ "type": "string" },
+        "label":       { "type": "string" },
+        "placeholder": { "type": "string" },
+        "helperText":  { "type": "string" },
+        "leftIcon":    { "type": "ReactNode" },
+        "rightIcon":   { "type": "ReactNode" }
+      },
+      "tokens": ["component.input.*", "semantic.color.border.*"],
+      "status": "stable",
+      "doNotCreate": true
+    },
+    {
+      "name": "Card",
+      "path": "src/components/ui/Card.tsx",
+      "description": "Surface container with consistent padding, radius, and shadow.",
+      "variants": ["default", "flat", "elevated"],
+      "sizes": ["sm", "md", "lg"],
+      "props": {
+        "variant": { "type": "string", "default": "default", "options": ["default", "flat", "elevated"] },
+        "padding": { "type": "string", "default": "md",      "options": ["sm", "md", "lg", "none"] },
+        "children":{ "type": "ReactNode", "required": true }
+      },
+      "tokens": ["component.card.*"],
+      "status": "stable",
+      "doNotCreate": true
+    },
+    {
+      "name": "Badge",
+      "path": "src/components/ui/Badge.tsx",
+      "description": "Small status or label indicator.",
+      "variants": ["default", "error", "warning", "success", "info"],
+      "props": {
+        "variant": { "type": "string", "default": "default", "options": ["default", "error", "warning", "success", "info"] },
+        "children":{ "type": "ReactNode", "required": true }
+      },
+      "tokens": ["component.badge.*", "semantic.color.status.*"],
+      "status": "stable",
+      "doNotCreate": true
+    },
+    {
+      "name": "Tooltip",
+      "path": "src/components/ui/Tooltip.tsx",
+      "description": "Contextual hint shown on hover.",
+      "props": {
+        "content":  { "type": "string", "required": true },
+        "placement":{ "type": "string", "default": "top", "options": ["top", "bottom", "left", "right"] },
+        "children": { "type": "ReactNode", "required": true }
+      },
+      "tokens": ["component.tooltip.*"],
+      "status": "stable",
+      "doNotCreate": true
+    },
+    {
+      "name": "Modal",
+      "path": "src/components/ui/Modal.tsx",
+      "description": "Dialog overlay for focused tasks or confirmations.",
+      "props": {
+        "isOpen":   { "type": "boolean", "required": true },
+        "onClose":  { "type": "function","required": true },
+        "title":    { "type": "string" },
+        "size":     { "type": "string", "default": "md", "options": ["sm", "md"] },
+        "children": { "type": "ReactNode","required": true }
+      },
+      "tokens": ["component.modal.*"],
+      "status": "stable",
+      "doNotCreate": true
+    },
+    {
+      "name": "Typography",
+      "path": "src/components/ui/Typography.tsx",
+      "description": "Text rendering with semantic heading and body styles.",
+      "variants": ["h1", "h2", "h3", "h4", "body", "bodyLg", "bodySm", "label", "caption"],
+      "props": {
+        "variant":  { "type": "string", "default": "body" },
+        "color":    { "type": "string", "default": "default" },
+        "as":       { "type": "string", "$description": "Override HTML element" },
+        "children": { "type": "ReactNode","required": true }
+      },
+      "tokens": ["semantic.typography.*", "semantic.color.text.*"],
+      "status": "stable",
+      "doNotCreate": true
+    }
+  ],
+  "conventions": {
+    "naming": "PascalCase for component names, camelCase for props",
+    "location": "All UI primitives live in src/components/ui/. Feature components in src/components/features/.",
+    "newComponent": "Run `dsm generate-context` after adding a new component to update CLAUDE.md"
+  }
+}

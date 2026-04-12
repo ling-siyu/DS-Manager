@@ -1,0 +1,23 @@
+{
+  "name": "dsm",
+  "version": "0.1.0",
+  "description": "Design System Manager — tokenize, build, and enforce your design system with Claude Code",
+  "type": "module",
+  "bin": {
+    "dsm": "./src/cli.js"
+  },
+  "scripts": {
+    "build": "node src/cli.js build",
+    "watch": "node src/cli.js watch",
+    "scan": "node src/cli.js scan ..",
+    "validate": "node src/cli.js validate ..",
+    "generate-context": "node src/cli.js generate-context"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "chokidar": "^3.6.0",
+    "commander": "^12.0.0",
+    "glob": "^11.0.0",
+    "style-dictionary": "^4.1.0"
+  }
+}
