@@ -25,41 +25,41 @@
 | `semantic.color.border.strong` | `#d4d4d4` | Strong / high-emphasis border |
 | `semantic.color.border.focus` | `#6366f1` | Keyboard focus ring |
 | `semantic.color.border.error` | `#f87171` | Error state border |
-| `semantic.color.interactive.primary.bg` | `#4f46e5` |  |
-| `semantic.color.interactive.primary.bgHover` | `#4338ca` |  |
-| `semantic.color.interactive.primary.bgActive` | `#3730a3` |  |
-| `semantic.color.interactive.primary.bgDisabled` | `#e5e5e5` |  |
-| `semantic.color.interactive.primary.text` | `#ffffff` |  |
-| `semantic.color.interactive.primary.textDisabled` | `#a3a3a3` |  |
-| `semantic.color.interactive.secondary.bg` | `#ffffff` |  |
-| `semantic.color.interactive.secondary.bgHover` | `#fafafa` |  |
-| `semantic.color.interactive.secondary.bgActive` | `#f5f5f5` |  |
-| `semantic.color.interactive.secondary.text` | `#171717` |  |
-| `semantic.color.interactive.secondary.border` | `#d4d4d4` |  |
-| `semantic.color.interactive.ghost.bg` | `transparent` |  |
-| `semantic.color.interactive.ghost.bgHover` | `#f5f5f5` |  |
-| `semantic.color.interactive.ghost.bgActive` | `#e5e5e5` |  |
-| `semantic.color.interactive.ghost.text` | `#404040` |  |
-| `semantic.color.interactive.destructive.bg` | `#dc2626` |  |
-| `semantic.color.interactive.destructive.bgHover` | `#b91c1c` |  |
-| `semantic.color.interactive.destructive.bgActive` | `#991b1b` |  |
-| `semantic.color.interactive.destructive.text` | `#ffffff` |  |
-| `semantic.color.status.error.bg` | `#fef2f2` |  |
-| `semantic.color.status.error.text` | `#b91c1c` |  |
-| `semantic.color.status.error.border` | `#fecaca` |  |
-| `semantic.color.status.error.icon` | `#ef4444` |  |
-| `semantic.color.status.warning.bg` | `#fffbeb` |  |
-| `semantic.color.status.warning.text` | `#b45309` |  |
-| `semantic.color.status.warning.border` | `#fde68a` |  |
-| `semantic.color.status.warning.icon` | `#f59e0b` |  |
-| `semantic.color.status.success.bg` | `#ecfdf5` |  |
-| `semantic.color.status.success.text` | `#047857` |  |
-| `semantic.color.status.success.border` | `#a7f3d0` |  |
-| `semantic.color.status.success.icon` | `#10b981` |  |
-| `semantic.color.status.info.bg` | `#eff6ff` |  |
-| `semantic.color.status.info.text` | `#1d4ed8` |  |
-| `semantic.color.status.info.border` | `#bfdbfe` |  |
-| `semantic.color.status.info.icon` | `#3b82f6` |  |
+| `semantic.color.interactive.primary.bg` | `#4f46e5` | Background for primary buttons and CTAs |
+| `semantic.color.interactive.primary.bgHover` | `#4338ca` | Hover background for primary interactive elements |
+| `semantic.color.interactive.primary.bgActive` | `#3730a3` | Active/pressed background for primary interactive elements |
+| `semantic.color.interactive.primary.bgDisabled` | `#e5e5e5` | Disabled background for primary interactive elements |
+| `semantic.color.interactive.primary.text` | `#ffffff` | Text color on primary interactive elements |
+| `semantic.color.interactive.primary.textDisabled` | `#a3a3a3` | Text color on disabled primary interactive elements |
+| `semantic.color.interactive.secondary.bg` | `#ffffff` | Background for secondary buttons |
+| `semantic.color.interactive.secondary.bgHover` | `#fafafa` | Hover background for secondary interactive elements |
+| `semantic.color.interactive.secondary.bgActive` | `#f5f5f5` | Active/pressed background for secondary interactive elements |
+| `semantic.color.interactive.secondary.text` | `#171717` | Text color on secondary interactive elements |
+| `semantic.color.interactive.secondary.border` | `#d4d4d4` | Border for secondary interactive elements |
+| `semantic.color.interactive.ghost.bg` | `transparent` | Transparent background for ghost buttons |
+| `semantic.color.interactive.ghost.bgHover` | `#f5f5f5` | Hover background for ghost interactive elements |
+| `semantic.color.interactive.ghost.bgActive` | `#e5e5e5` | Active/pressed background for ghost interactive elements |
+| `semantic.color.interactive.ghost.text` | `#404040` | Text color on ghost interactive elements |
+| `semantic.color.interactive.destructive.bg` | `#dc2626` | Background for destructive actions (delete, remove) |
+| `semantic.color.interactive.destructive.bgHover` | `#b91c1c` | Hover background for destructive interactive elements |
+| `semantic.color.interactive.destructive.bgActive` | `#991b1b` | Active/pressed background for destructive interactive elements |
+| `semantic.color.interactive.destructive.text` | `#ffffff` | Text color on destructive interactive elements |
+| `semantic.color.status.error.bg` | `#fef2f2` | Background for error status banners and alerts |
+| `semantic.color.status.error.text` | `#b91c1c` | Text color in error status contexts |
+| `semantic.color.status.error.border` | `#fecaca` | Border for error status containers |
+| `semantic.color.status.error.icon` | `#ef4444` | Icon color in error status contexts |
+| `semantic.color.status.warning.bg` | `#fffbeb` | Background for warning status banners and alerts |
+| `semantic.color.status.warning.text` | `#b45309` | Text color in warning status contexts |
+| `semantic.color.status.warning.border` | `#fde68a` | Border for warning status containers |
+| `semantic.color.status.warning.icon` | `#f59e0b` | Icon color in warning status contexts |
+| `semantic.color.status.success.bg` | `#ecfdf5` | Background for success status banners and alerts |
+| `semantic.color.status.success.text` | `#047857` | Text color in success status contexts |
+| `semantic.color.status.success.border` | `#a7f3d0` | Border for success status containers |
+| `semantic.color.status.success.icon` | `#10b981` | Icon color in success status contexts |
+| `semantic.color.status.info.bg` | `#eff6ff` | Background for info status banners and alerts |
+| `semantic.color.status.info.text` | `#1d4ed8` | Text color in info status contexts |
+| `semantic.color.status.info.border` | `#bfdbfe` | Border for info status containers |
+| `semantic.color.status.info.icon` | `#3b82f6` | Icon color in info status contexts |
 
 ---
 

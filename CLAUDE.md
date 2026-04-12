@@ -68,30 +68,30 @@ Use these CSS variables for all color values. Import `design-system/build/css-va
 | `var(--ds-semantic-color-border-strong)` | #d4d4d4 | Strong / high-emphasis border |
 | `var(--ds-semantic-color-border-focus)` | #6366f1 | Keyboard focus ring |
 | `var(--ds-semantic-color-border-error)` | #f87171 | Error state border |
-| `var(--ds-semantic-color-interactive-primary-bg)` | #4f46e5 |  |
-| `var(--ds-semantic-color-interactive-primary-text)` | #ffffff |  |
-| `var(--ds-semantic-color-interactive-secondary-bg)` | #ffffff |  |
-| `var(--ds-semantic-color-interactive-secondary-text)` | #171717 |  |
-| `var(--ds-semantic-color-interactive-ghost-bg)` | transparent |  |
-| `var(--ds-semantic-color-interactive-ghost-text)` | #404040 |  |
-| `var(--ds-semantic-color-interactive-destructive-bg)` | #dc2626 |  |
-| `var(--ds-semantic-color-interactive-destructive-text)` | #ffffff |  |
-| `var(--ds-semantic-color-status-error-bg)` | #fef2f2 |  |
-| `var(--ds-semantic-color-status-error-text)` | #b91c1c |  |
-| `var(--ds-semantic-color-status-error-border)` | #fecaca |  |
-| `var(--ds-semantic-color-status-error-icon)` | #ef4444 |  |
-| `var(--ds-semantic-color-status-warning-bg)` | #fffbeb |  |
-| `var(--ds-semantic-color-status-warning-text)` | #b45309 |  |
-| `var(--ds-semantic-color-status-warning-border)` | #fde68a |  |
-| `var(--ds-semantic-color-status-warning-icon)` | #f59e0b |  |
-| `var(--ds-semantic-color-status-success-bg)` | #ecfdf5 |  |
-| `var(--ds-semantic-color-status-success-text)` | #047857 |  |
-| `var(--ds-semantic-color-status-success-border)` | #a7f3d0 |  |
-| `var(--ds-semantic-color-status-success-icon)` | #10b981 |  |
-| `var(--ds-semantic-color-status-info-bg)` | #eff6ff |  |
-| `var(--ds-semantic-color-status-info-text)` | #1d4ed8 |  |
-| `var(--ds-semantic-color-status-info-border)` | #bfdbfe |  |
-| `var(--ds-semantic-color-status-info-icon)` | #3b82f6 |  |
+| `var(--ds-semantic-color-interactive-primary-bg)` | #4f46e5 | Background for primary buttons and CTAs |
+| `var(--ds-semantic-color-interactive-primary-text)` | #ffffff | Text color on primary interactive elements |
+| `var(--ds-semantic-color-interactive-secondary-bg)` | #ffffff | Background for secondary buttons |
+| `var(--ds-semantic-color-interactive-secondary-text)` | #171717 | Text color on secondary interactive elements |
+| `var(--ds-semantic-color-interactive-ghost-bg)` | transparent | Transparent background for ghost buttons |
+| `var(--ds-semantic-color-interactive-ghost-text)` | #404040 | Text color on ghost interactive elements |
+| `var(--ds-semantic-color-interactive-destructive-bg)` | #dc2626 | Background for destructive actions (delete, remove) |
+| `var(--ds-semantic-color-interactive-destructive-text)` | #ffffff | Text color on destructive interactive elements |
+| `var(--ds-semantic-color-status-error-bg)` | #fef2f2 | Background for error status banners and alerts |
+| `var(--ds-semantic-color-status-error-text)` | #b91c1c | Text color in error status contexts |
+| `var(--ds-semantic-color-status-error-border)` | #fecaca | Border for error status containers |
+| `var(--ds-semantic-color-status-error-icon)` | #ef4444 | Icon color in error status contexts |
+| `var(--ds-semantic-color-status-warning-bg)` | #fffbeb | Background for warning status banners and alerts |
+| `var(--ds-semantic-color-status-warning-text)` | #b45309 | Text color in warning status contexts |
+| `var(--ds-semantic-color-status-warning-border)` | #fde68a | Border for warning status containers |
+| `var(--ds-semantic-color-status-warning-icon)` | #f59e0b | Icon color in warning status contexts |
+| `var(--ds-semantic-color-status-success-bg)` | #ecfdf5 | Background for success status banners and alerts |
+| `var(--ds-semantic-color-status-success-text)` | #047857 | Text color in success status contexts |
+| `var(--ds-semantic-color-status-success-border)` | #a7f3d0 | Border for success status containers |
+| `var(--ds-semantic-color-status-success-icon)` | #10b981 | Icon color in success status contexts |
+| `var(--ds-semantic-color-status-info-bg)` | #eff6ff | Background for info status banners and alerts |
+| `var(--ds-semantic-color-status-info-text)` | #1d4ed8 | Text color in info status contexts |
+| `var(--ds-semantic-color-status-info-border)` | #bfdbfe | Border for info status containers |
+| `var(--ds-semantic-color-status-info-icon)` | #3b82f6 | Icon color in info status contexts |
 
 ---
 

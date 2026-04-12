@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "dsm": {
+      "command": "node",
+      "args": ["design-system/src/cli.js", "serve"],
+      "cwd": "/Users/lingsiyu/Projects/DS-Manager"
+    }
+  }
+}
