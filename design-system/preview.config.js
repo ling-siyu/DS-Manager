@@ -10,8 +10,8 @@ export default {
 
   // Optional JSON-serializable default props merged into DSM preview scenarios.
   defaults: {
-    Button: { children: 'Button' },
-    Card: { children: 'Card content' },
+    // Button: { children: 'Button' },
+    // Card: { children: 'Card content' },
   },
 
   // Optional provider wrapper for router/theme/query client setup.
