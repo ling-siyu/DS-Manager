@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import chokidar from 'chokidar';
 import chalk from 'chalk';
+import { buildCommand } from './build.js';
 import { resolveProjectPaths } from '../utils/paths.js';
 import { loadTokens } from '../utils/tokens.js';
 import { getComponents } from './list-components.js';
@@ -96,6 +97,8 @@ export async function uiCommand(options = {}) {
     throw new Error(`Invalid port: ${options.port}`);
   }
 
+  await buildCommand();
+
   const port = await findAvailablePort(requestedPort);
   const clients = new Set();
 
@@ -142,12 +145,24 @@ export async function uiCommand(options = {}) {
     awaitWriteFinish: { stabilityThreshold: 300 },
   });
 
+  let refreshChain = Promise.resolve();
+
   watcher.on('change', (filePath) => {
     const name = filePath.split('/').pop();
-    console.log(chalk.yellow(`\n↻  ${name} changed — reloading preview...`));
-    for (const client of clients) {
-      client.write('data: reload\n\n');
-    }
+    refreshChain = refreshChain.then(async () => {
+      if (filePath === paths.tokensPath) {
+        console.log(chalk.yellow(`\n↻  ${name} changed — rebuilding tokens and reloading preview...`));
+        await buildCommand();
+      } else {
+        console.log(chalk.yellow(`\n↻  ${name} changed — reloading preview...`));
+      }
+
+      for (const client of clients) {
+        client.write('data: reload\n\n');
+      }
+    }).catch((error) => {
+      console.error(chalk.red('UI refresh error:'), error.message);
+    });
   });
 
   watcher.on('error', (error) => {

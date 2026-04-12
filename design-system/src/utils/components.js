@@ -35,6 +35,7 @@ export function enrichComponents(components = []) {
         missingDependencies,
         level: 1,
         levelLabel: 'Lv.1',
+        hasCycle: true,
       };
       cache.set(componentName, fallback);
       return fallback;
@@ -46,8 +47,9 @@ export function enrichComponents(components = []) {
       .filter(Boolean);
     visiting.delete(componentName);
 
+    const hasCycle = containedComponents.some((entry) => entry.hasCycle);
     const baseLevel = containedComponents.length
-      ? Math.max(...containedComponents.map((entry) => entry.level)) + 1
+      ? (hasCycle ? 1 : Math.max(...containedComponents.map((entry) => entry.level)) + 1)
       : 1;
 
     const enriched = {
@@ -56,6 +58,7 @@ export function enrichComponents(components = []) {
       missingDependencies,
       level: baseLevel,
       levelLabel: `Lv.${baseLevel}`,
+      hasCycle,
     };
 
     cache.set(componentName, enriched);

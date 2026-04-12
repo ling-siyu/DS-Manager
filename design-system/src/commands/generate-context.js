@@ -25,7 +25,7 @@ function buildComponentList(components) {
     description: c.description,
     variants: c.variants?.join(', ') ?? 'n/a',
     sizes: c.sizes?.join(', ') ?? 'n/a',
-    contains: c.contains?.join(', ') ?? 'none',
+    contains: c.contains?.length ? c.contains.join(', ') : 'none',
     required: Object.entries(c.props ?? {})
       .filter(([, v]) => v.required)
       .map(([k]) => k)

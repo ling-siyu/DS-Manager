@@ -244,7 +244,7 @@
 - **Description:** Small status or label indicator.
 - **Variants:** default, error, warning, success, info
 - **Sizes:** n/a
-- **Contains:** 
+- **Contains:** none
 - **Required props:** children
 
 ### Button
@@ -253,7 +253,7 @@
 - **Description:** Primary interactive element. Supports multiple variants, sizes, and states.
 - **Variants:** primary, secondary, ghost, destructive
 - **Sizes:** sm, md, lg
-- **Contains:** 
+- **Contains:** none
 - **Required props:** children
 
 ### Card
@@ -262,7 +262,7 @@
 - **Description:** Surface container with consistent padding, radius, and shadow.
 - **Variants:** default, flat, elevated
 - **Sizes:** sm, md, lg
-- **Contains:** 
+- **Contains:** none
 - **Required props:** children
 
 ### Input
@@ -271,7 +271,7 @@
 - **Description:** Text input field. Handles all text-like input types with validation states.
 - **Variants:** default, error
 - **Sizes:** sm, md, lg
-- **Contains:** 
+- **Contains:** none
 - **Required props:** none
 
 ### Tooltip
@@ -280,7 +280,7 @@
 - **Description:** Contextual hint shown on hover.
 - **Variants:** n/a
 - **Sizes:** n/a
-- **Contains:** 
+- **Contains:** none
 - **Required props:** content, children
 
 ### Typography
@@ -289,7 +289,7 @@
 - **Description:** Text rendering with semantic heading and body styles.
 - **Variants:** h1, h2, h3, h4, body, bodyLg, bodySm, label, caption
 - **Sizes:** n/a
-- **Contains:** 
+- **Contains:** none
 - **Required props:** children
 
 ### AssetLevelNav

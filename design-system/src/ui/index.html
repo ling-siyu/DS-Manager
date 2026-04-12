@@ -718,7 +718,8 @@
             ...component,
             contains,
             level: 1,
-            levelLabel: 'Lv.1'
+            levelLabel: 'Lv.1',
+            hasCycle: true
           };
           cache.set(component.name, fallback);
           return fallback;
@@ -731,12 +732,20 @@
           .map((entry) => visit(entry).level);
         visiting.delete(component.name);
 
-        const level = childLevels.length ? Math.max(...childLevels) + 1 : Number(component.level) || 1;
+        const hasCycle = contains
+          .map((name) => byName.get(name))
+          .filter(Boolean)
+          .map((entry) => visit(entry))
+          .some((entry) => entry.hasCycle);
+        const level = childLevels.length
+          ? (hasCycle ? 1 : Math.max(...childLevels) + 1)
+          : Number(component.level) || 1;
         const enriched = {
           ...component,
           contains,
           level,
-          levelLabel: `Lv.${level}`
+          levelLabel: `Lv.${level}`,
+          hasCycle
         };
 
         cache.set(component.name, enriched);
