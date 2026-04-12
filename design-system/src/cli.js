@@ -21,6 +21,7 @@ program
 program
   .command('init')
   .description('Initialize design system config in the current project')
+  .option('--skip-hook', 'Skip installing the pre-commit git hook')
   .action(initCommand);
 
 program
