@@ -20,6 +20,19 @@
         "onClick":  { "type": "function" },
         "children": { "type": "ReactNode", "required": true }
       },
+      "previewProps": {
+        "children": "Click me"
+      },
+      "previewScenarios": [
+        {
+          "name": "Primary",
+          "props": { "variant": "primary", "children": "Primary button" }
+        },
+        {
+          "name": "Disabled",
+          "props": { "disabled": true, "children": "Disabled button" }
+        }
+      ],
       "tokens": ["component.button.*", "semantic.color.interactive.*"],
       "status": "stable",
       "doNotCreate": true
@@ -55,6 +68,9 @@
         "variant": { "type": "string", "default": "default", "options": ["default", "flat", "elevated"] },
         "padding": { "type": "string", "default": "md",      "options": ["sm", "md", "lg", "none"] },
         "children":{ "type": "ReactNode", "required": true }
+      },
+      "previewProps": {
+        "children": "Card content"
       },
       "tokens": ["component.card.*"],
       "status": "stable",

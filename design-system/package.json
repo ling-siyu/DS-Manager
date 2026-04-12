@@ -11,14 +11,18 @@
     "watch": "node src/cli.js watch",
     "scan": "node src/cli.js scan ..",
     "validate": "node src/cli.js validate ..",
-    "generate-context": "node src/cli.js generate-context"
+    "generate-context": "node src/cli.js generate-context",
+    "ui": "node src/cli.js ui"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "chalk": "^5.3.0",
     "chokidar": "^3.6.0",
     "commander": "^12.0.0",
+    "esbuild": "^0.25.3",
     "glob": "^11.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "style-dictionary": "^4.1.0"
   }
 }
