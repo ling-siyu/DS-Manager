@@ -1,6 +1,7 @@
 import {
   isBorderWidthToken,
   isColorToken,
+  isIconToken,
   isMotionToken,
   isRadiusToken,
   isShadowToken,
@@ -69,6 +70,7 @@ function enrichComponents(items) {
 export function createAppState(data) {
   const tokenEntries = Object.entries(data.tokens || {});
   const components = enrichComponents(data.components || []);
+  const usedIcons = data.usedIcons || [];
   const preview = data.preview || {
     framework: null,
     mode: 'metadata',
@@ -90,7 +92,7 @@ export function createAppState(data) {
       id: 'spacing',
       title: 'Spacing Tokens',
       description: 'Spacing, sizing, and dimension values that shape layout rhythm.',
-      entries: tokenEntries.filter(isSpacingToken).filter((entry) => !isColorToken(entry)),
+      entries: tokenEntries.filter((entry) => isSpacingToken(entry) && !isColorToken(entry) && !isIconToken(entry)),
     },
     {
       id: 'border-width',
@@ -109,6 +111,13 @@ export function createAppState(data) {
       title: 'Typography Tokens',
       description: 'Font size, weight, and typography-related decisions for readable UI.',
       entries: tokenEntries.filter(isTypographyToken),
+    },
+    {
+      id: 'icons',
+      title: 'Icon Tokens',
+      description: 'Size scale, stroke weights, and composite style presets for Lucide and Material Symbols.',
+      entries: tokenEntries.filter(isIconToken),
+      usedIcons,
     },
     {
       id: 'motion',

@@ -55,6 +55,10 @@ export function isShadowToken([path, token]) {
   return token.$type === 'shadow' || path.includes('.shadow.');
 }
 
+export function isIconToken([path, token]) {
+  return token.$type === 'iconStyle' || /^(?:primitive|semantic|component)\.icon\./.test(path);
+}
+
 function hexToRgb(hex) {
   const value = hex.replace('#', '').trim();
   if (value.length !== 3 && value.length !== 6) return null;

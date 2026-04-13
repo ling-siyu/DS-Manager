@@ -33,6 +33,23 @@ function dsVariablesFormatter({ dictionary, options = {} }) {
       if (v.fontWeight != null) lines.push(`  ${varBase}-font-weight: ${v.fontWeight};`);
       if (v.lineHeight != null) lines.push(`  ${varBase}-line-height: ${v.lineHeight};`);
       if (v.letterSpacing != null) lines.push(`  ${varBase}-letter-spacing: ${v.letterSpacing};`);
+    } else if (token.$type === 'iconStyle' && originalObj && typeof originalObj === 'object') {
+      // Expand composite iconStyle token into per-property CSS vars.
+      // Reference values like {semantic.icon.size.md} become var(--ds-...) references.
+      function iconRef(val) {
+        if (typeof val === 'string' && /^\{[^}]+\}$/.test(val)) {
+          return `var(--ds-${val.replace(/^\{|\}$/g, '').replace(/\./g, '-')})`;
+        }
+        return val;
+      }
+      const v = originalObj;
+      if (token.$description) lines.push(`  /* ${rawKey} — ${token.$description} */`);
+      if (v.size        != null) lines.push(`  ${varBase}-size: ${iconRef(v.size)};`);
+      if (v.weight      != null) lines.push(`  ${varBase}-weight: ${iconRef(v.weight)};`);
+      if (v.strokeWidth != null) lines.push(`  ${varBase}-stroke-width: ${iconRef(v.strokeWidth)};`);
+      if (v.fill        != null) lines.push(`  ${varBase}-fill: ${iconRef(v.fill)};`);
+      if (v.grade       != null) lines.push(`  ${varBase}-grade: ${iconRef(v.grade)};`);
+      if (v.opticalSize != null) lines.push(`  ${varBase}-optical-size: ${iconRef(v.opticalSize)};`);
     } else if (token.$type === 'transition' && resolvedVal && typeof resolvedVal === 'object') {
       // Compose CSS transition shorthand from resolved duration, timingFunction, delay
       const duration = resolvedVal.duration ?? '0ms';

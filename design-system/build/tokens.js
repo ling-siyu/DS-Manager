@@ -188,6 +188,23 @@ export const PrimitiveCubicBezierEaseOut = "cubic-bezier(0, 0, 0.2, 1)"; // Dece
 export const PrimitiveCubicBezierEaseInOut = "cubic-bezier(0.4, 0, 0.2, 1)"; // Accelerates then decelerates — good for element movements
 export const PrimitiveCubicBezierSpring =
   "cubic-bezier(0.175, 0.885, 0.32, 1.275)"; // Slight overshoot — conveys energy and responsiveness
+export const PrimitiveIconSize12 = "12px";
+export const PrimitiveIconSize16 = "16px";
+export const PrimitiveIconSize20 = "20px";
+export const PrimitiveIconSize24 = "24px";
+export const PrimitiveIconSize32 = "32px";
+export const PrimitiveIconSize48 = "48px";
+export const PrimitiveIconWeight100 = 100;
+export const PrimitiveIconWeight200 = 200;
+export const PrimitiveIconWeight300 = 300;
+export const PrimitiveIconWeight400 = 400;
+export const PrimitiveIconWeight500 = 500;
+export const PrimitiveIconWeight600 = 600;
+export const PrimitiveIconWeight700 = 700;
+export const PrimitiveIconStrokeWidthThin = 1; // Thin strokes — light/delicate icons
+export const PrimitiveIconStrokeWidthDefault = 1.5; // Default Lucide stroke width
+export const PrimitiveIconStrokeWidthMedium = 2; // Slightly bolder — buttons, emphasis
+export const PrimitiveIconStrokeWidthBold = 2.5; // Heavy strokes — high-contrast / accessibility
 export const SemanticColorBackgroundDefault = "#ffffff"; // Page/app background
 export const SemanticColorBackgroundSubtle = "#fafafa"; // Subtle section background
 export const SemanticColorBackgroundMuted = "#f5f5f5"; // Muted / secondary background
@@ -413,6 +430,12 @@ export const SemanticTypographyCode = {
   lineHeight: 1.625,
   letterSpacing: "0em",
 }; // Inline and block code snippets
+export const SemanticIconSizeXs = "12px"; // 12px — compact, inline with caption text
+export const SemanticIconSizeSm = "16px"; // 16px — small, badges and chips
+export const SemanticIconSizeMd = "20px"; // 20px — default, inline with body text
+export const SemanticIconSizeLg = "24px"; // 24px — large, buttons and nav items
+export const SemanticIconSizeXl = "32px"; // 32px — section and feature icons
+export const SemanticIconSize2xl = "48px"; // 48px — display, empty states and illustrations
 export const ComponentButtonHeightSm = "32px";
 export const ComponentButtonHeightMd = "40px";
 export const ComponentButtonHeightLg = "48px";
@@ -470,3 +493,35 @@ export const ComponentPreviewSidebarMaxWidth = "320px";
 export const ComponentPreviewTokenCardMinWidth = "192px";
 export const ComponentPreviewComponentCardMinWidth = "320px";
 export const ComponentPreviewSpacingBarMaxWidth = "320px";
+export const ComponentIconInline = {
+  size: "20px",
+  weight: 400,
+  strokeWidth: 1.5,
+  fill: 0,
+  grade: 0,
+  opticalSize: 20,
+}; // Inline with body copy — 20px, default weight
+export const ComponentIconButton = {
+  size: "20px",
+  weight: 500,
+  strokeWidth: 2,
+  fill: 0,
+  grade: 0,
+  opticalSize: 20,
+}; // Icon inside a button — 20px, medium weight for legibility
+export const ComponentIconNav = {
+  size: "24px",
+  weight: 400,
+  strokeWidth: 1.5,
+  fill: 0,
+  grade: 0,
+  opticalSize: 24,
+}; // Navigation items — 24px, standard weight
+export const ComponentIconDecorative = {
+  size: "48px",
+  weight: 300,
+  strokeWidth: 1,
+  fill: 1,
+  grade: 0,
+  opticalSize: 48,
+}; // Empty states and illustrations — 48px, filled

@@ -1035,3 +1035,236 @@ input {
     overflow-x: auto;
   }
 }
+
+/* ── Icon Tokens ──────────────────────────────────────────────────────────── */
+
+.group-preview--icons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-4);
+}
+
+.icon-section {
+  margin-top: var(--ui-space-8);
+}
+
+.icon-section:first-child {
+  margin-top: 0;
+}
+
+.icon-section-title {
+  font-size: var(--ui-text-xs);
+  font-weight: var(--ui-weight-semibold);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ui-text-muted);
+  margin-bottom: var(--ui-space-4);
+}
+
+/* Size and stroke width cards */
+.icon-size-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-3);
+  align-items: flex-end;
+}
+
+.icon-size-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-3) var(--ui-space-4);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  cursor: pointer;
+  min-width: 72px;
+  transition: border-color var(--ui-transition-fast, 120ms), background var(--ui-transition-fast, 120ms);
+}
+
+.icon-size-card:hover {
+  border-color: var(--ui-border-strong);
+  background: var(--ui-bg);
+}
+
+.icon-size-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  color: var(--ui-text);
+}
+
+.icon-size-label {
+  font-size: var(--ui-text-xs);
+  font-weight: var(--ui-weight-semibold);
+  color: var(--ui-text);
+}
+
+.icon-size-value {
+  font-size: 11px;
+  color: var(--ui-text-muted);
+  font-family: var(--ui-font-mono);
+}
+
+/* Composite preset rows */
+.icon-composite-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+}
+
+.icon-composite-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-4);
+  padding: var(--ui-space-3) var(--ui-space-4);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: border-color var(--ui-transition-fast, 120ms), background var(--ui-transition-fast, 120ms);
+}
+
+.icon-composite-row:hover {
+  border-color: var(--ui-border-strong);
+  background: var(--ui-bg);
+}
+
+.icon-composite-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: var(--ui-bg);
+  border-radius: var(--ui-radius-md);
+  flex-shrink: 0;
+  color: var(--ui-text);
+}
+
+/* CSS custom properties cascade to the SVG */
+.icon-composite-preview svg {
+  width: var(--_icon-size, 20px);
+  height: var(--_icon-size, 20px);
+  stroke-width: var(--_icon-sw, 1.5);
+}
+
+.icon-composite-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.icon-composite-name {
+  font-size: var(--ui-text-sm);
+  font-weight: var(--ui-weight-semibold);
+  color: var(--ui-text);
+  display: block;
+}
+
+.icon-composite-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+  margin-top: var(--ui-space-3);
+}
+
+/* Detail page preview for iconStyle tokens */
+.token-detail-preview--icon {
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+}
+
+.icon-detail-demo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ui-space-8);
+  color: var(--ui-text);
+}
+
+.icon-detail-demo svg {
+  width: var(--_icon-size, 24px);
+  height: var(--_icon-size, 24px);
+  stroke-width: var(--_icon-sw, 1.5);
+}
+
+/* ── Icons in Use grid ───────────────────────────────────────────── */
+.icon-section-count {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--ui-text-subtle);
+  margin-left: 4px;
+}
+
+.icon-usage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+}
+
+.icon-usage-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px 10px;
+  border-radius: var(--ds-semantic-shape-radius-md, 8px);
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+  cursor: default;
+  text-align: center;
+  transition: background var(--ui-transition-fast, 120ms);
+}
+
+.icon-usage-card:hover {
+  background: var(--ui-surface-weak);
+}
+
+.icon-usage-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--ui-text);
+}
+
+.icon-usage-preview svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 1.5;
+}
+
+.icon-usage-no-preview {
+  font-size: 1.25rem;
+  color: var(--ui-text-subtle);
+}
+
+.icon-usage-name {
+  font-size: 0.6875rem;
+  color: var(--ui-text);
+  word-break: break-all;
+  line-height: 1.3;
+}
+
+.icon-usage-badge {
+  font-size: 0.625rem;
+  font-weight: 500;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--ui-warning-bg, #fef3c7);
+  color: var(--ui-warning-text, #92400e);
+  line-height: 1.4;
+}
+
+.icon-usage-files {
+  font-size: 0.625rem;
+  color: var(--ui-text-subtle);
+}

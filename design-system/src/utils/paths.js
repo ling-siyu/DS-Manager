@@ -24,5 +24,6 @@ export function resolveProjectPaths(cwd = process.cwd()) {
     styleDictionaryConfigPath: resolve(dsRoot, 'style-dictionary.config.mjs'),
     claudePath: resolve(repoRoot, 'CLAUDE.md'),
     agentsPath: resolve(repoRoot, 'AGENTS.md'),
+    iconsPath: resolve(dsRoot, 'icons.json'),
   };
 }

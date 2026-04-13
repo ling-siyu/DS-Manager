@@ -5,6 +5,10 @@ import {
   renderComponentPreviewPanel,
   renderDetailCard,
   renderEmpty,
+  renderIconCompositeRow,
+  renderIconSizeCard,
+  renderIconStrokeCard,
+  renderUsedIconCard,
   renderLevelOverviewCard,
   renderPropsTable,
   renderStatusPill,
@@ -56,6 +60,50 @@ function renderTypographyList(group) {
   `;
 }
 
+function renderIconList(group) {
+  if (group.entries.length === 0) return renderEmpty('No icon tokens found.');
+
+  const semanticSizes  = group.entries.filter(([k]) => k.startsWith('semantic.icon.size.'));
+  const strokeWidths   = group.entries.filter(([k]) => k.startsWith('primitive.icon.strokeWidth.'));
+  const composites     = group.entries.filter(([, t]) => t.$type === 'iconStyle');
+  const usedIcons      = group.usedIcons || [];
+
+  return `
+    ${usedIcons.length ? `
+      <div class="icon-section">
+        <h3 class="icon-section-title">Icons in Use <span class="icon-section-count">${usedIcons.length}</span></h3>
+        <div class="icon-usage-grid">
+          ${usedIcons.map(renderUsedIconCard).join('')}
+        </div>
+      </div>
+    ` : ''}
+    ${semanticSizes.length ? `
+      <div class="icon-section">
+        <h3 class="icon-section-title">Size Scale</h3>
+        <div class="icon-size-row">
+          ${semanticSizes.map(([path, token]) => renderIconSizeCard(path, token, group.id)).join('')}
+        </div>
+      </div>
+    ` : ''}
+    ${strokeWidths.length ? `
+      <div class="icon-section">
+        <h3 class="icon-section-title">Stroke Width — Lucide</h3>
+        <div class="icon-size-row">
+          ${strokeWidths.map(([path, token]) => renderIconStrokeCard(path, token, group.id)).join('')}
+        </div>
+      </div>
+    ` : ''}
+    ${composites.length ? `
+      <div class="icon-section">
+        <h3 class="icon-section-title">Composite Presets</h3>
+        <div class="icon-composite-list">
+          ${composites.map(([path, token]) => renderIconCompositeRow(path, token, group.id)).join('')}
+        </div>
+      </div>
+    ` : ''}
+  `;
+}
+
 function renderTokenGroupList(group) {
   if (group.entries.length === 0) return renderEmpty(`No ${group.title.toLowerCase()} found.`);
   if (group.id === 'colors') return renderColorGroupList(group);
@@ -63,6 +111,7 @@ function renderTokenGroupList(group) {
     return `<div class="spacing-list">${group.entries.map(([path, token]) => renderTokenCard(path, token, group.id)).join('')}</div>`;
   }
   if (group.id === 'typography') return renderTypographyList(group);
+  if (group.id === 'icons') return renderIconList(group);
   return `<div class="token-grid">${group.entries.map(([path, token]) => renderTokenCard(path, token, group.id)).join('')}</div>`;
 }
 
@@ -154,7 +203,15 @@ export function renderTokenDetailPage(state, groupId, tokenPath) {
         </div>
         ${renderTokenDetailPreview(groupId, entry)}
         <div class="detail-grid">
-          ${token.$type === 'typography' && token.resolvedValue && typeof token.resolvedValue === 'object' ? `
+          ${token.$type === 'iconStyle' ? `
+            ${renderDetailCard('Token type', 'iconStyle (composite)')}
+            ${renderDetailCard('Size', `${token.cssVar}-size`, true)}
+            ${renderDetailCard('Stroke width', `${token.cssVar}-stroke-width`, true)}
+            ${renderDetailCard('Fill', `${token.cssVar}-fill`, true)}
+            ${renderDetailCard('Weight', `${token.cssVar}-weight`, true)}
+            ${renderDetailCard('Grade', `${token.cssVar}-grade`, true)}
+            ${renderDetailCard('Optical size', `${token.cssVar}-optical-size`, true)}
+          ` : token.$type === 'typography' && token.resolvedValue && typeof token.resolvedValue === 'object' ? `
             ${renderDetailCard('Font size', formatValue(token.resolvedValue.fontSize ?? 'n/a'))}
             ${renderDetailCard('Font weight', formatValue(token.resolvedValue.fontWeight ?? 'n/a'))}
             ${renderDetailCard('Line height', formatValue(token.resolvedValue.lineHeight ?? 'n/a'))}

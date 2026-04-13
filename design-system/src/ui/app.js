@@ -42,6 +42,7 @@ function renderApp() {
 
   nav.innerHTML = renderLevelNav(state.getLevelModels(), getActiveLevelId(route));
   panels.innerHTML = renderPage(state, route);
+  window.lucide?.createIcons();
   applySearch(search ? search.value : '');
 }
 

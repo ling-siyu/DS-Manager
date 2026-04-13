@@ -164,6 +164,16 @@ function renderGroupPreview(group) {
     return `<div class="group-preview"><div class="mini-shadow-box"></div></div>`;
   }
 
+  if (group.id === 'icons') {
+    return `
+      <div class="group-preview group-preview--icons">
+        <i data-lucide="star" style="width:12px;height:12px;color:var(--ui-text-subtle)"></i>
+        <i data-lucide="star" style="width:20px;height:20px;color:var(--ui-text)"></i>
+        <i data-lucide="star" style="width:32px;height:32px;color:var(--ui-accent)"></i>
+      </div>
+    `;
+  }
+
   // 'all' or fallback — mixed dot grid using brand color shades
   const dotColors = [
     'var(--ds-primitive-color-brand-300)',
@@ -391,11 +401,107 @@ export function renderTypographyRow(path, token, groupId) {
   `;
 }
 
+export function renderIconSizeCard(path, token, groupId) {
+  const shortName = path.split('.').pop();
+  const value = formatValue(token.resolvedValue);
+  const tokenRoute = { name: 'token', groupId, tokenPath: path };
+
+  return `
+    <button class="icon-size-card" type="button"
+      ${tokenButtonAttributes(path, token)}
+      data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
+      <div class="icon-size-preview">
+        <i data-lucide="star" style="width:${escapeHTML(value)};height:${escapeHTML(value)};stroke-width:1.5"></i>
+      </div>
+      <span class="icon-size-label">${escapeHTML(shortName)}</span>
+      <span class="icon-size-value">${escapeHTML(value)}</span>
+    </button>
+  `;
+}
+
+export function renderIconStrokeCard(path, token, groupId) {
+  const shortName = path.split('.').pop();
+  const value = formatValue(token.resolvedValue);
+  const tokenRoute = { name: 'token', groupId, tokenPath: path };
+
+  return `
+    <button class="icon-size-card" type="button"
+      ${tokenButtonAttributes(path, token)}
+      data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
+      <div class="icon-size-preview">
+        <i data-lucide="star" style="width:24px;height:24px;stroke-width:${escapeHTML(value)}"></i>
+      </div>
+      <span class="icon-size-label">${escapeHTML(shortName)}</span>
+      <span class="icon-size-value">${escapeHTML(value)}</span>
+    </button>
+  `;
+}
+
+export function renderIconCompositeRow(path, token, groupId) {
+  const presetName = path.split('.').pop();
+  const baseVar = `--ds-${path.replace(/\./g, '-')}`;
+  const sizeVar = `${baseVar}-size`;
+  const strokeVar = `${baseVar}-stroke-width`;
+  const tokenRoute = { name: 'token', groupId, tokenPath: path };
+  const query = `${path} ${token.cssVar || ''} iconStyle ${presetName} icon composite preset`;
+
+  return `
+    <button class="icon-composite-row" type="button"
+      data-filter-item="token" data-query="${escapeHTML(query.toLowerCase())}"
+      data-copy="${escapeHTML(sizeVar)}"
+      data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
+      <div class="icon-composite-preview" style="--_icon-size:var(${escapeHTML(sizeVar)});--_icon-sw:var(${escapeHTML(strokeVar)})">
+        <i data-lucide="star"></i>
+      </div>
+      <div class="icon-composite-info">
+        <span class="icon-composite-name">${escapeHTML(presetName)}</span>
+        <p class="helper" style="margin-top:2px">${escapeHTML(token.$description || '')}</p>
+        <div class="icon-composite-meta">
+          <span class="chip mono">${escapeHTML(sizeVar)}</span>
+          <span class="chip mono">${escapeHTML(strokeVar)}</span>
+        </div>
+      </div>
+    </button>
+  `;
+}
+
+export function renderUsedIconCard(icon) {
+  const name = icon.alias || icon.lucideId || icon.materialName || '?';
+  const hasLucide = !!icon.lucideId;
+  const fileCount = icon.files ? icon.files.length : 0;
+  const filesTitle = icon.files ? icon.files.join('\n') : '';
+  return `
+    <div class="icon-usage-card" title="${escapeHTML(filesTitle)}">
+      <div class="icon-usage-preview">
+        ${hasLucide
+          ? `<i data-lucide="${escapeHTML(icon.lucideId)}"></i>`
+          : `<span class="icon-usage-no-preview">?</span>`}
+      </div>
+      <span class="icon-usage-name">${escapeHTML(name)}</span>
+      ${!icon.alias ? `<span class="icon-usage-badge">unaliased</span>` : ''}
+      <span class="icon-usage-files">${fileCount} file${fileCount !== 1 ? 's' : ''}</span>
+    </div>
+  `;
+}
+
 export function renderTokenDetailPreview(groupId, entry) {
   const [, token] = entry;
   const value = formatValue(token.resolvedValue);
   const isColor = groupId === 'colors' || isColorToken(entry);
   const isShadow = groupId === 'shadows' || isShadowToken(entry);
+
+  if (token.$type === 'iconStyle') {
+    const baseVar = token.cssVar;
+    const sizeVar = `${baseVar}-size`;
+    const strokeVar = `${baseVar}-stroke-width`;
+    return `
+      <div class="token-detail-preview token-detail-preview--icon">
+        <div class="icon-detail-demo" style="--_icon-size:var(${escapeHTML(sizeVar)});--_icon-sw:var(${escapeHTML(strokeVar)})">
+          <i data-lucide="star"></i>
+        </div>
+      </div>
+    `;
+  }
 
   if (token.$type === 'typography' && token.resolvedValue && typeof token.resolvedValue === 'object') {
     const val = token.resolvedValue;

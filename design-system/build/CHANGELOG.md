@@ -3,6 +3,57 @@
 
 ## 2026-04-13
 
+### Added
+
+- `--ds-primitive-icon-size-12`: `12px`
+- `--ds-primitive-icon-size-16`: `16px`
+- `--ds-primitive-icon-size-20`: `20px`
+- `--ds-primitive-icon-size-24`: `24px`
+- `--ds-primitive-icon-size-32`: `32px`
+- `--ds-primitive-icon-size-48`: `48px`
+- `--ds-primitive-icon-weight-100`: `100`
+- `--ds-primitive-icon-weight-200`: `200`
+- `--ds-primitive-icon-weight-300`: `300`
+- `--ds-primitive-icon-weight-400`: `400`
+- `--ds-primitive-icon-weight-500`: `500`
+- `--ds-primitive-icon-weight-600`: `600`
+- `--ds-primitive-icon-weight-700`: `700`
+- `--ds-primitive-icon-strokeWidth-thin`: `1`
+- `--ds-primitive-icon-strokeWidth-default`: `1.5`
+- `--ds-primitive-icon-strokeWidth-medium`: `2`
+- `--ds-primitive-icon-strokeWidth-bold`: `2.5`
+- `--ds-semantic-icon-size-xs`: `var(--ds-primitive-icon-size-12)`
+- `--ds-semantic-icon-size-sm`: `var(--ds-primitive-icon-size-16)`
+- `--ds-semantic-icon-size-md`: `var(--ds-primitive-icon-size-20)`
+- `--ds-semantic-icon-size-lg`: `var(--ds-primitive-icon-size-24)`
+- `--ds-semantic-icon-size-xl`: `var(--ds-primitive-icon-size-32)`
+- `--ds-semantic-icon-size-2xl`: `var(--ds-primitive-icon-size-48)`
+- `--ds-component-icon-inline-size`: `var(--ds-semantic-icon-size-md)`
+- `--ds-component-icon-inline-weight`: `var(--ds-primitive-icon-weight-400)`
+- `--ds-component-icon-inline-stroke-width`: `var(--ds-primitive-icon-strokeWidth-default)`
+- `--ds-component-icon-inline-fill`: `0`
+- `--ds-component-icon-inline-grade`: `0`
+- `--ds-component-icon-inline-optical-size`: `20`
+- `--ds-component-icon-button-size`: `var(--ds-semantic-icon-size-md)`
+- `--ds-component-icon-button-weight`: `var(--ds-primitive-icon-weight-500)`
+- `--ds-component-icon-button-stroke-width`: `var(--ds-primitive-icon-strokeWidth-medium)`
+- `--ds-component-icon-button-fill`: `0`
+- `--ds-component-icon-button-grade`: `0`
+- `--ds-component-icon-button-optical-size`: `20`
+- `--ds-component-icon-nav-size`: `var(--ds-semantic-icon-size-lg)`
+- `--ds-component-icon-nav-weight`: `var(--ds-primitive-icon-weight-400)`
+- `--ds-component-icon-nav-stroke-width`: `var(--ds-primitive-icon-strokeWidth-default)`
+- `--ds-component-icon-nav-fill`: `0`
+- `--ds-component-icon-nav-grade`: `0`
+- `--ds-component-icon-nav-optical-size`: `24`
+- `--ds-component-icon-decorative-size`: `var(--ds-semantic-icon-size-2xl)`
+- `--ds-component-icon-decorative-weight`: `var(--ds-primitive-icon-weight-300)`
+- `--ds-component-icon-decorative-stroke-width`: `var(--ds-primitive-icon-strokeWidth-thin)`
+- `--ds-component-icon-decorative-fill`: `1`
+- `--ds-component-icon-decorative-grade`: `0`
+- `--ds-component-icon-decorative-optical-size`: `48`
+## 2026-04-13
+
 ### Changed
 
 - `--ds-semantic-shape-radius-none`: `var(--ds-primitive-border-radius-none)` → `var(--ds-primitive-borderRadius-none)`

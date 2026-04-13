@@ -17,6 +17,7 @@ import {
   renderPreviewFrameHTML,
 } from '../utils/preview.js';
 import { getComponents } from './list-components.js';
+import { scanIconUsage } from '../utils/icons.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -80,10 +81,21 @@ function getData(paths, previewSummary) {
     ? (getComponents(paths.componentsPath) ?? [])
     : [];
 
+  let iconsData = { aliases: {} };
+  if (existsSync(paths.iconsPath)) {
+    try {
+      iconsData = JSON.parse(readFileSync(paths.iconsPath, 'utf8'));
+    } catch (error) {
+      console.warn(chalk.yellow(`Warning: Could not parse icons.json: ${error.message}`));
+    }
+  }
+  const usedIcons = scanIconUsage(paths.repoRoot, iconsData);
+
   return {
     tokens,
     components: decorateComponentsWithPreview(components, previewSummary),
     preview: previewSummary,
+    usedIcons,
   };
 }
 

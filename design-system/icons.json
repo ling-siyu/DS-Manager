@@ -1,0 +1,72 @@
+{
+  "_metadata": {
+    "description": "Icon set registry and cross-set aliases for the design system.",
+    "schemaVersion": "1.0"
+  },
+  "sets": {
+    "lucide": {
+      "source": "lucide-react",
+      "style": "outline",
+      "weightSupport": false,
+      "strokeWidthSupport": true,
+      "fillSupport": false,
+      "axes": []
+    },
+    "material-symbols": {
+      "source": "@material-symbols/font-400",
+      "style": "outlined",
+      "weightSupport": true,
+      "strokeWidthSupport": false,
+      "fillSupport": true,
+      "variants": ["outlined", "rounded", "sharp"],
+      "axes": ["wght", "FILL", "GRAD", "opsz"]
+    }
+  },
+  "defaultSet": "lucide",
+  "aliases": {
+    "add":          { "lucide": "Plus",           "material-symbols": "add" },
+    "close":        { "lucide": "X",              "material-symbols": "close" },
+    "check":        { "lucide": "Check",          "material-symbols": "check" },
+    "chevron-down": { "lucide": "ChevronDown",    "material-symbols": "keyboard_arrow_down" },
+    "chevron-up":   { "lucide": "ChevronUp",      "material-symbols": "keyboard_arrow_up" },
+    "chevron-left": { "lucide": "ChevronLeft",    "material-symbols": "keyboard_arrow_left" },
+    "chevron-right":{ "lucide": "ChevronRight",   "material-symbols": "keyboard_arrow_right" },
+    "search":       { "lucide": "Search",         "material-symbols": "search" },
+    "settings":     { "lucide": "Settings",       "material-symbols": "settings" },
+    "menu":         { "lucide": "Menu",           "material-symbols": "menu" },
+    "home":         { "lucide": "House",          "material-symbols": "home" },
+    "user":         { "lucide": "User",           "material-symbols": "person" },
+    "edit":         { "lucide": "Pencil",         "material-symbols": "edit" },
+    "delete":       { "lucide": "Trash2",         "material-symbols": "delete" },
+    "download":     { "lucide": "Download",       "material-symbols": "download" },
+    "upload":       { "lucide": "Upload",         "material-symbols": "upload" },
+    "external-link":{ "lucide": "ExternalLink",   "material-symbols": "open_in_new" },
+    "copy":         { "lucide": "Copy",           "material-symbols": "content_copy" },
+    "info":         { "lucide": "Info",           "material-symbols": "info" },
+    "warning":      { "lucide": "TriangleAlert",  "material-symbols": "warning" },
+    "error":        { "lucide": "CircleX",        "material-symbols": "error" },
+    "success":      { "lucide": "CircleCheck",    "material-symbols": "check_circle" },
+    "eye":          { "lucide": "Eye",            "material-symbols": "visibility" },
+    "eye-off":      { "lucide": "EyeOff",         "material-symbols": "visibility_off" },
+    "lock":         { "lucide": "Lock",           "material-symbols": "lock" },
+    "unlock":       { "lucide": "LockOpen",       "material-symbols": "lock_open" },
+    "calendar":     { "lucide": "Calendar",       "material-symbols": "calendar_today" },
+    "clock":        { "lucide": "Clock",          "material-symbols": "schedule" },
+    "filter":       { "lucide": "Filter",         "material-symbols": "filter_list" },
+    "sort":         { "lucide": "ArrowUpDown",    "material-symbols": "sort" },
+    "refresh":      { "lucide": "RefreshCw",      "material-symbols": "refresh" },
+    "star":         { "lucide": "Star",           "material-symbols": "star" },
+    "heart":        { "lucide": "Heart",          "material-symbols": "favorite" },
+    "share":        { "lucide": "Share2",         "material-symbols": "share" },
+    "bell":         { "lucide": "Bell",           "material-symbols": "notifications" },
+    "tag":          { "lucide": "Tag",            "material-symbols": "label" },
+    "link":         { "lucide": "Link",           "material-symbols": "link" },
+    "image":        { "lucide": "Image",          "material-symbols": "image" },
+    "file":         { "lucide": "File",           "material-symbols": "description" },
+    "folder":       { "lucide": "Folder",         "material-symbols": "folder" },
+    "arrow-left":   { "lucide": "ArrowLeft",      "material-symbols": "arrow_back" },
+    "arrow-right":  { "lucide": "ArrowRight",     "material-symbols": "arrow_forward" },
+    "arrow-up":     { "lucide": "ArrowUp",        "material-symbols": "arrow_upward" },
+    "arrow-down":   { "lucide": "ArrowDown",      "material-symbols": "arrow_downward" }
+  }
+}

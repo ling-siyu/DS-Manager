@@ -225,12 +225,32 @@ function generateContextMd(flat, semColors, components) {
     .join('\n');
 
   const componentTokenRows = Object.entries(flat)
-    .filter(([k]) => k.startsWith('component.'))
+    .filter(([k]) => k.startsWith('component.') && typeof flat[k].$value !== 'object')
     .map(([path, token]) => {
       const val = typeof token.$value === 'string' && token.$value.startsWith('{')
         ? `${token.$value} → ${resolveReference(token.$value, flat)}`
         : token.$value;
       return `| \`${path}\` | \`${val}\` |`;
+    })
+    .join('\n');
+
+  const iconSizeRows = Object.entries(flat)
+    .filter(([k]) => k.startsWith('semantic.icon.size.'))
+    .map(([path, token]) => {
+      const shortPath = path.replace('semantic.icon.size.', '');
+      const resolved  = typeof token.$value === 'string' && token.$value.startsWith('{')
+        ? resolveReference(token.$value, flat)
+        : token.$value;
+      return `| \`${shortPath}\` | \`--ds-${path.replace(/\./g, '-')}\` | \`${resolved}\` | ${token.$description ?? ''} |`;
+    })
+    .join('\n');
+
+  const iconCompositeRows = Object.entries(flat)
+    .filter(([k]) => k.startsWith('component.icon.') && typeof flat[k].$value === 'object')
+    .map(([path, token]) => {
+      const shortPath = path.replace('component.icon.', '');
+      const sizeVar = `--ds-${path.replace(/\./g, '-')}-size`;
+      return `| \`${shortPath}\` | \`${sizeVar}\` | ${token.$description ?? ''} |`;
     })
     .join('\n');
 
@@ -258,6 +278,26 @@ ${primitiveColors}
 | Token Path | Value |
 |---|---|
 ${spacingRows}
+
+---
+
+## Icon Sizes
+
+| Size | CSS Variable | Value | Description |
+|---|---|---|---|
+${iconSizeRows}
+
+---
+
+## Icon Style Composites
+
+Each composite emits individual CSS vars: \`-size\`, \`-weight\`, \`-stroke-width\`, \`-fill\`, \`-grade\`, \`-optical-size\`.
+Material Symbols: apply \`font-variation-settings: 'wght' var(--ds-component-icon-{preset}-weight), 'FILL' var(--ds-component-icon-{preset}-fill), ...\`
+Lucide: apply \`width/height: var(--ds-component-icon-{preset}-size)\` and \`stroke-width: var(--ds-component-icon-{preset}-stroke-width)\`.
+
+| Preset | Base CSS Var | Description |
+|---|---|---|
+${iconCompositeRows}
 
 ---
 

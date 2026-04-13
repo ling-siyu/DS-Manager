@@ -173,6 +173,34 @@
 
 ---
 
+## Icon Sizes
+
+| Size | CSS Variable | Value | Description |
+|---|---|---|---|
+| `xs` | `--ds-semantic-icon-size-xs` | `12px` | 12px — compact, inline with caption text |
+| `sm` | `--ds-semantic-icon-size-sm` | `16px` | 16px — small, badges and chips |
+| `md` | `--ds-semantic-icon-size-md` | `20px` | 20px — default, inline with body text |
+| `lg` | `--ds-semantic-icon-size-lg` | `24px` | 24px — large, buttons and nav items |
+| `xl` | `--ds-semantic-icon-size-xl` | `32px` | 32px — section and feature icons |
+| `2xl` | `--ds-semantic-icon-size-2xl` | `48px` | 48px — display, empty states and illustrations |
+
+---
+
+## Icon Style Composites
+
+Each composite emits individual CSS vars: `-size`, `-weight`, `-stroke-width`, `-fill`, `-grade`, `-optical-size`.
+Material Symbols: apply `font-variation-settings: 'wght' var(--ds-component-icon-{preset}-weight), 'FILL' var(--ds-component-icon-{preset}-fill), ...`
+Lucide: apply `width/height: var(--ds-component-icon-{preset}-size)` and `stroke-width: var(--ds-component-icon-{preset}-stroke-width)`.
+
+| Preset | Base CSS Var | Description |
+|---|---|---|
+| `inline` | `--ds-component-icon-inline-size` | Inline with body copy — 20px, default weight |
+| `button` | `--ds-component-icon-button-size` | Icon inside a button — 20px, medium weight for legibility |
+| `nav` | `--ds-component-icon-nav-size` | Navigation items — 24px, standard weight |
+| `decorative` | `--ds-component-icon-decorative-size` | Empty states and illustrations — 48px, filled |
+
+---
+
 ## Component Tokens
 
 | Token Path | Value |
