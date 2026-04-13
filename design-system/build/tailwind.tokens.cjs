@@ -223,6 +223,12 @@ module.exports = {
   "3xl": "24px",
   "full": "9999px"
 },
+  borderWidth: {
+  "0": "0px",
+  "1": "1px",
+  "2": "2px",
+  "4": "4px"
+},
   boxShadow: {
   "none": "none",
   "sm": "0 1px 2px 0 rgba(0,0,0,0.05)",
@@ -248,5 +254,24 @@ module.exports = {
   "75": 0.75,
   "90": 0.9,
   "100": 1
+},
+  transitionDuration: {
+  "0": "0ms",
+  "75": "75ms",
+  "100": "100ms",
+  "150": "150ms",
+  "200": "200ms",
+  "300": "300ms",
+  "500": "500ms",
+  "700": "700ms",
+  "1000": "1000ms"
+},
+  transitionTimingFunction: {
+  "linear": "cubic-bezier(0, 0, 1, 1)",
+  "ease": "cubic-bezier(0.25, 0.1, 0.25, 1)",
+  "ease-in": "cubic-bezier(0.4, 0, 1, 1)",
+  "ease-out": "cubic-bezier(0, 0, 0.2, 1)",
+  "ease-in-out": "cubic-bezier(0.4, 0, 0.2, 1)",
+  "spring": "cubic-bezier(0.175, 0.885, 0.32, 1.275)"
 },
 };

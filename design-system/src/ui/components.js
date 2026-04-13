@@ -152,12 +152,10 @@ function renderGroupPreview(group) {
 
   if (group.id === 'typography') {
     return `
-      <div class="group-preview">
-        <div class="mini-type-preview">
-          <span style="font-size:var(--ds-primitive-typography-font-size-sm)">Aa</span>
-          <span style="font-size:var(--ds-primitive-typography-font-size-xl)">Aa</span>
-          <span style="font-size:var(--ds-primitive-typography-font-size-3xl);color:var(--ds-semantic-color-text-subtle)">Aa</span>
-        </div>
+      <div class="group-preview" style="flex-direction:column;align-items:flex-start;justify-content:center;padding:var(--ui-space-3) var(--ui-space-4);gap:3px">
+        <span style="font-size:22px;font-weight:700;line-height:1;color:var(--ui-text);letter-spacing:-0.02em">Heading</span>
+        <span style="font-size:13px;font-weight:400;line-height:1.4;color:var(--ui-text-subtle)">Body text reads like this</span>
+        <span style="font-size:10px;font-weight:500;line-height:1;color:var(--ui-text-muted);letter-spacing:0.06em;text-transform:uppercase">LABEL · CAPTION</span>
       </div>
     `;
   }
@@ -222,11 +220,13 @@ export function renderTokenCard(path, token, groupId) {
 
   if (groupId === 'spacing') {
     return `
-      <button class="spacing-card" type="button" ${tokenButtonAttributes(path, token)} data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
-        <div class="spacing-bar" style="width:clamp(var(--ds-primitive-spacing-1), ${escapeHTML(value)}, var(--ui-spacing-bar-max-width))"></div>
-        <p class="token-short-name">${escapeHTML(shortName)}</p>
-        <p class="token-full-path">${escapeHTML(path)}</p>
-        <p class="token-value">${escapeHTML(value)}</p>
+      <button class="spacing-row" type="button" ${tokenButtonAttributes(path, token)} data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
+        <div class="spacing-row-bar-wrap" aria-hidden="true">
+          <div class="spacing-row-bar" style="width:min(${escapeHTML(value)}, 100%)"></div>
+        </div>
+        <span class="spacing-row-name">${escapeHTML(shortName)}</span>
+        <span class="spacing-row-path mono">${escapeHTML(path)}</span>
+        <span class="spacing-row-value mono">${escapeHTML(value)}</span>
       </button>
     `;
   }
@@ -344,11 +344,88 @@ export function renderComponentPreviewPanel(component, previewSummary) {
   `;
 }
 
+export function renderCompactSwatch(path, token, groupId) {
+  const value = formatValue(token.resolvedValue);
+  const shortName = path.split('.').pop();
+  const transparent = normalize(value) === 'transparent';
+  const tokenRoute = { name: 'token', groupId, tokenPath: path };
+
+  return `
+    <button class="compact-swatch" type="button"
+      ${tokenButtonAttributes(path, token)}
+      data-route="${escapeHTML(JSON.stringify(tokenRoute))}"
+      title="${escapeHTML(path)}: ${escapeHTML(value)}">
+      <div class="compact-swatch-color ${transparent ? 'transparent' : ''}"${transparent ? '' : ` style="background:${escapeHTML(value)};"`}></div>
+      <span class="compact-swatch-label">${escapeHTML(shortName)}</span>
+    </button>
+  `;
+}
+
+export function renderTypographyRow(path, token, groupId) {
+  const val = token.$value ?? {};
+  const roleName = path.split('.').slice(2).join('.'); // semantic.typography.body.base → body.base
+  const tokenRoute = { name: 'token', groupId, tokenPath: path };
+  const query = `${path} ${token.cssVar ?? ''} typography ${roleName} ${val.fontSize ?? ''} ${val.fontWeight ?? ''}`;
+
+  const previewStyle = [
+    val.fontFamily ? `font-family:${val.fontFamily}` : '',
+    val.fontSize ? `font-size:${val.fontSize}` : '',
+    val.fontWeight != null ? `font-weight:${val.fontWeight}` : '',
+    val.lineHeight != null ? `line-height:${val.lineHeight}` : '',
+    val.letterSpacing ? `letter-spacing:${val.letterSpacing}` : '',
+  ].filter(Boolean).join(';');
+
+  return `
+    <button class="type-row" type="button"
+      data-filter-item="token" data-query="${escapeHTML(query.toLowerCase())}"
+      data-copy="${escapeHTML(token.cssVar ?? path)}"
+      data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
+      <span class="type-preview-text" aria-hidden="true" style="${escapeHTML(previewStyle)}">The quick brown fox jumps over the lazy dog</span>
+      <span class="type-row-name">${escapeHTML(roleName)}</span>
+      <div class="type-row-meta">
+        ${val.fontSize ? `<span class="type-row-prop">${escapeHTML(String(val.fontSize))}</span>` : ''}
+        ${val.fontWeight != null ? `<span class="type-row-prop">${escapeHTML(String(val.fontWeight))}</span>` : ''}
+        ${val.lineHeight != null ? `<span class="type-row-prop">${escapeHTML(String(val.lineHeight))}</span>` : ''}
+      </div>
+    </button>
+  `;
+}
+
 export function renderTokenDetailPreview(groupId, entry) {
-  const [path, token] = entry;
+  const [, token] = entry;
   const value = formatValue(token.resolvedValue);
   const isColor = groupId === 'colors' || isColorToken(entry);
   const isShadow = groupId === 'shadows' || isShadowToken(entry);
+
+  if (token.$type === 'typography' && token.resolvedValue && typeof token.resolvedValue === 'object') {
+    const val = token.resolvedValue;
+    const style = [
+      val.fontFamily ? `font-family:${val.fontFamily}` : '',
+      val.fontSize ? `font-size:${val.fontSize}` : '',
+      val.fontWeight != null ? `font-weight:${val.fontWeight}` : '',
+      val.lineHeight != null ? `line-height:${val.lineHeight}` : '',
+      val.letterSpacing ? `letter-spacing:${val.letterSpacing}` : '',
+    ].filter(Boolean).join(';');
+    return `
+      <div class="token-detail-preview token-detail-preview--typography">
+        <p class="type-detail-specimen" style="${escapeHTML(style)}">The quick brown fox jumps over the lazy dog</p>
+      </div>
+    `;
+  }
+  const [path] = entry;
+  const isSpacing = groupId === 'spacing';
+
+  if (isSpacing) {
+    return `
+      <div class="token-detail-preview token-detail-preview--spacing">
+        <span class="spacing-detail-label">${escapeHTML(value)}</span>
+        <div class="spacing-detail-track">
+          <div class="spacing-detail-bar" style="width:min(${escapeHTML(value)}, 100%)"></div>
+        </div>
+      </div>
+    `;
+  }
+
   const previewStyle = isColor
     ? `background:${escapeHTML(value)};color:${labelColorForBackground(value)};`
     : isShadow

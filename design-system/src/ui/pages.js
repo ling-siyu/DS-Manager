@@ -1,5 +1,6 @@
 import {
   renderBreadcrumbs,
+  renderCompactSwatch,
   renderComponentCard,
   renderComponentPreviewPanel,
   renderDetailCard,
@@ -10,11 +11,58 @@ import {
   renderTokenCard,
   renderTokenDetailPreview,
   renderTokenGroupCard,
+  renderTypographyRow,
 } from './components.js';
 import { escapeHTML, formatValue } from './utils.js';
 
+function colorFamilyLabel(parentPath) {
+  const exclude = new Set(['primitive', 'semantic', 'component', 'color']);
+  const meaningful = parentPath.split('.').filter((s) => !exclude.has(s));
+  return meaningful.length === 0 ? 'base' : meaningful.join(' / ');
+}
+
+function renderColorGroupList(group) {
+  if (group.entries.length === 0) return renderEmpty('No colors found.');
+
+  const families = new Map();
+  for (const [path, token] of group.entries) {
+    const segs = path.split('.');
+    const parentKey = segs.slice(0, -1).join('.');
+    if (!families.has(parentKey)) families.set(parentKey, []);
+    families.get(parentKey).push([path, token]);
+  }
+
+  const rows = [...families.entries()].map(([parentKey, entries]) => {
+    const label = colorFamilyLabel(parentKey);
+    const swatches = entries.map(([p, t]) => renderCompactSwatch(p, t, group.id)).join('');
+    return `
+      <div class="color-family-row">
+        <span class="color-family-label">${escapeHTML(label)}</span>
+        <div class="color-family-swatches">${swatches}</div>
+      </div>
+    `;
+  }).join('');
+
+  return `<div class="color-families">${rows}</div>`;
+}
+
+function renderTypographyList(group) {
+  if (group.entries.length === 0) return renderEmpty('No typography tokens found.');
+  const composites = group.entries.filter(([, t]) => t.$type === 'typography');
+  const primitives = group.entries.filter(([, t]) => t.$type !== 'typography');
+  return `
+    ${composites.length ? `<div class="type-list">${composites.map(([path, token]) => renderTypographyRow(path, token, group.id)).join('')}</div>` : ''}
+    ${primitives.length ? `<div class="token-grid" style="margin-top:var(--ui-space-4)">${primitives.map(([path, token]) => renderTokenCard(path, token, group.id)).join('')}</div>` : ''}
+  `;
+}
+
 function renderTokenGroupList(group) {
   if (group.entries.length === 0) return renderEmpty(`No ${group.title.toLowerCase()} found.`);
+  if (group.id === 'colors') return renderColorGroupList(group);
+  if (group.id === 'spacing') {
+    return `<div class="spacing-list">${group.entries.map(([path, token]) => renderTokenCard(path, token, group.id)).join('')}</div>`;
+  }
+  if (group.id === 'typography') return renderTypographyList(group);
   return `<div class="token-grid">${group.entries.map(([path, token]) => renderTokenCard(path, token, group.id)).join('')}</div>`;
 }
 
@@ -106,10 +154,25 @@ export function renderTokenDetailPage(state, groupId, tokenPath) {
         </div>
         ${renderTokenDetailPreview(groupId, entry)}
         <div class="detail-grid">
-          ${renderDetailCard('Resolved value', formatValue(token.resolvedValue))}
-          ${renderDetailCard('CSS variable', token.cssVar, true)}
-          ${renderDetailCard('Token type', formatValue(token.$type))}
-          ${renderDetailCard('Group', group.title)}
+          ${token.$type === 'typography' && token.resolvedValue && typeof token.resolvedValue === 'object' ? `
+            ${renderDetailCard('Font size', formatValue(token.resolvedValue.fontSize ?? 'n/a'))}
+            ${renderDetailCard('Font weight', formatValue(token.resolvedValue.fontWeight ?? 'n/a'))}
+            ${renderDetailCard('Line height', formatValue(token.resolvedValue.lineHeight ?? 'n/a'))}
+            ${renderDetailCard('Letter spacing', formatValue(token.resolvedValue.letterSpacing ?? 'n/a'))}
+            ${renderDetailCard('Token type', 'typography (composite)')}
+            ${renderDetailCard('CSS vars', [
+              token.resolvedValue.fontFamily != null ? `${token.cssVar}-font-family` : null,
+              token.resolvedValue.fontSize != null ? `${token.cssVar}-font-size` : null,
+              token.resolvedValue.fontWeight != null ? `${token.cssVar}-font-weight` : null,
+              token.resolvedValue.lineHeight != null ? `${token.cssVar}-line-height` : null,
+              token.resolvedValue.letterSpacing != null ? `${token.cssVar}-letter-spacing` : null,
+            ].filter(Boolean).join(', '), true)}
+          ` : `
+            ${renderDetailCard('Resolved value', formatValue(token.resolvedValue))}
+            ${renderDetailCard('CSS variable', token.cssVar, true)}
+            ${renderDetailCard('Token type', formatValue(token.$type))}
+            ${renderDetailCard('Group', group.title)}
+          `}
         </div>
         <article class="group-card">
           <div class="group-head">

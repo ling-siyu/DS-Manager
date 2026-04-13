@@ -4,6 +4,58 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
+ * Custom CSS variables formatter.
+ * Behaves like `css/variables` with outputReferences, but also expands
+ * composite `$type: "typography"` tokens into property-specific CSS vars:
+ *   --ds-semantic-typography-body-base-font-size
+ *   --ds-semantic-typography-body-base-font-weight
+ *   etc.
+ */
+function dsVariablesFormatter({ dictionary, options = {} }) {
+  const selector = options.selector ?? ':root';
+  const lines = [`${selector} {`];
+
+  for (const token of dictionary.allTokens) {
+    const rawKey = (token.key ?? '').replace(/^\{|\}$/g, '');
+    const varBase = `--ds-${rawKey.replace(/\./g, '-')}`;
+    const originalVal = token.original?.$value ?? token.original?.value ?? '';
+    const resolvedVal = token.$value ?? token.value;
+    const desc = token.$description ? ` /** ${token.$description} */` : '';
+
+    // Use original $value for composites — CSS transforms convert the object to
+    // a font shorthand string before the formatter runs, so we bypass that here.
+    const originalObj = token.original?.$value;
+    if (token.$type === 'typography' && originalObj && typeof originalObj === 'object') {
+      const v = originalObj;
+      if (token.$description) lines.push(`  /* ${rawKey} — ${token.$description} */`);
+      if (v.fontFamily != null) lines.push(`  ${varBase}-font-family: ${v.fontFamily};`);
+      if (v.fontSize != null)   lines.push(`  ${varBase}-font-size: ${v.fontSize};`);
+      if (v.fontWeight != null) lines.push(`  ${varBase}-font-weight: ${v.fontWeight};`);
+      if (v.lineHeight != null) lines.push(`  ${varBase}-line-height: ${v.lineHeight};`);
+      if (v.letterSpacing != null) lines.push(`  ${varBase}-letter-spacing: ${v.letterSpacing};`);
+    } else if (token.$type === 'transition' && resolvedVal && typeof resolvedVal === 'object') {
+      // Compose CSS transition shorthand from resolved duration, timingFunction, delay
+      const duration = resolvedVal.duration ?? '0ms';
+      const timingFunction = Array.isArray(resolvedVal.timingFunction)
+        ? `cubic-bezier(${resolvedVal.timingFunction.join(', ')})`
+        : resolvedVal.timingFunction ?? 'ease';
+      const delay = resolvedVal.delay ?? '0ms';
+      lines.push(`  ${varBase}: ${duration} ${timingFunction} ${delay};${desc}`);
+    } else {
+      // Output var() reference if original was a pure {reference}, else resolved value
+      const isRef = typeof originalVal === 'string' && /^\{[^}]+\}$/.test(originalVal);
+      const outputVal = isRef
+        ? `var(--ds-${originalVal.replace(/^\{|\}$/g, '').replace(/\./g, '-')})`
+        : (Array.isArray(resolvedVal) ? resolvedVal.join(', ') : String(resolvedVal));
+      lines.push(`  ${varBase}: ${outputVal};${desc}`);
+    }
+  }
+
+  lines.push('}');
+  return lines.join('\n') + '\n';
+}
+
+/**
  * Custom formatter: outputs a CJS module with token values
  * organized for direct use in tailwind.config.js `theme.extend`.
  *
@@ -20,9 +72,12 @@ function tailwindFormatter({ dictionary }) {
   const lineHeight = {};
   const letterSpacing = {};
   const borderRadius = {};
+  const borderWidth = {};
   const boxShadow  = {};
   const fontFamily = {};
   const opacity   = {};
+  const transitionDuration = {};
+  const transitionTimingFunction = {};
 
   // Helper: derive kebab-case CSS variable name from a token key
   // e.g. "{semantic.color.text.default}" → "--ds-semantic-color-text-default"
@@ -68,12 +123,21 @@ function tailwindFormatter({ dictionary }) {
         const k = path[2];
         borderRadius[k === 'default' ? 'DEFAULT' : k] = value;
       }
+      if (category === 'borderWidth') {
+        borderWidth[path[2]] = value;
+      }
       if (category === 'shadow') {
         const key = path[2];
         boxShadow[key === 'default' ? 'DEFAULT' : key] = value;
       }
       if (category === 'opacity') {
         opacity[path[2]] = value;
+      }
+      if (category === 'duration') {
+        transitionDuration[path[2]] = value;
+      }
+      if (category === 'cubicBezier') {
+        transitionTimingFunction[path[2]] = value;
       }
     }
 
@@ -98,9 +162,12 @@ module.exports = {
   lineHeight: ${JSON.stringify(lineHeight, null, 2)},
   letterSpacing: ${JSON.stringify(letterSpacing, null, 2)},
   borderRadius: ${JSON.stringify(borderRadius, null, 2)},
+  borderWidth: ${JSON.stringify(borderWidth, null, 2)},
   boxShadow: ${JSON.stringify(boxShadow, null, 2)},
   fontFamily: ${JSON.stringify(fontFamily, null, 2)},
   opacity: ${JSON.stringify(opacity, null, 2)},
+  transitionDuration: ${JSON.stringify(transitionDuration, null, 2)},
+  transitionTimingFunction: ${JSON.stringify(transitionTimingFunction, null, 2)},
 };
 `;
 }
@@ -121,11 +188,8 @@ export default {
       files: [
         {
           destination: 'css-vars.css',
-          format: 'css/variables',
-          options: {
-            selector: ':root',
-            outputReferences: true,
-          },
+          format: 'custom/ds-variables',
+          options: { selector: ':root' },
         },
       ],
     },
@@ -160,6 +224,10 @@ export default {
 // (Style Dictionary v4 requires registering via the SD instance,
 //  so we export a setup function that build.js calls before buildAllPlatforms)
 export function registerFormats(sd) {
+  sd.registerFormat({
+    name: 'custom/ds-variables',
+    format: dsVariablesFormatter,
+  });
   sd.registerFormat({
     name: 'custom/tailwind',
     format: tailwindFormatter,

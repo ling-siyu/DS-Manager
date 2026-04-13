@@ -28,8 +28,23 @@ export function isColorToken([path, token]) {
 }
 
 export function isSpacingToken([path, token]) {
+  if (isBorderWidthToken([path, token])) return false;
+  if (isRadiusToken([path, token])) return false;
   if (token.$type === 'dimension') return true;
-  return /(?:^|\.)(space|spacing|gap|padding|margin|inset|radius|width|height)(?:\.|$)/.test(path);
+  return /(?:^|\.)(space|spacing|gap|padding|margin|inset|height)(?:\.|$)/.test(path);
+}
+
+export function isBorderWidthToken([path]) {
+  return /(?:^|\.)borderWidth(?:\.|$)/.test(path) || /(?:^|\.)border\.width(?:\.|$)/.test(path);
+}
+
+export function isRadiusToken([path]) {
+  return /(?:^|\.)borderRadius(?:\.|$)/.test(path) || /(?:^|\.)shape\.radius(?:\.|$)/.test(path);
+}
+
+export function isMotionToken([path, token]) {
+  if (token.$type === 'duration' || token.$type === 'cubicBezier' || token.$type === 'transition') return true;
+  return /(?:^|\.)(?:duration|cubicBezier|motion)(?:\.|$)/.test(path);
 }
 
 export function isTypographyToken([path, token]) {

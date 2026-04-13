@@ -5,6 +5,1030 @@
 
 ### Changed
 
+- `--ds-semantic-shape-radius-none`: `var(--ds-primitive-border-radius-none)` → `var(--ds-primitive-borderRadius-none)`
+- `--ds-semantic-shape-radius-sm`: `var(--ds-primitive-border-radius-sm)` → `var(--ds-primitive-borderRadius-sm)`
+- `--ds-semantic-shape-radius-md`: `var(--ds-primitive-border-radius-md)` → `var(--ds-primitive-borderRadius-md)`
+- `--ds-semantic-shape-radius-lg`: `var(--ds-primitive-border-radius-lg)` → `var(--ds-primitive-borderRadius-lg)`
+- `--ds-semantic-shape-radius-xl`: `var(--ds-primitive-border-radius-xl)` → `var(--ds-primitive-borderRadius-xl)`
+- `--ds-semantic-shape-radius-full`: `var(--ds-primitive-border-radius-full)` → `var(--ds-primitive-borderRadius-full)`
+- `--ds-semantic-shape-radius-interactive`: `var(--ds-primitive-border-radius-md)` → `var(--ds-primitive-borderRadius-md)`
+- `--ds-semantic-shape-radius-container`: `var(--ds-primitive-border-radius-lg)` → `var(--ds-primitive-borderRadius-lg)`
+- `--ds-semantic-border-width-none`: `var(--ds-primitive-border-width-0)` → `var(--ds-primitive-borderWidth-0)`
+- `--ds-semantic-border-width-default`: `var(--ds-primitive-border-width-1)` → `var(--ds-primitive-borderWidth-1)`
+- `--ds-semantic-border-width-strong`: `var(--ds-primitive-border-width-2)` → `var(--ds-primitive-borderWidth-2)`
+- `--ds-semantic-border-width-heavy`: `var(--ds-primitive-border-width-4)` → `var(--ds-primitive-borderWidth-4)`
+- `--ds-semantic-motion-easing-default`: `var(--ds-primitive-cubic-bezier-ease-in-out)` → `var(--ds-primitive-cubicBezier-ease-in-out)`
+- `--ds-semantic-motion-easing-enter`: `var(--ds-primitive-cubic-bezier-ease-out)` → `var(--ds-primitive-cubicBezier-ease-out)`
+- `--ds-semantic-motion-easing-exit`: `var(--ds-primitive-cubic-bezier-ease-in)` → `var(--ds-primitive-cubicBezier-ease-in)`
+- `--ds-semantic-motion-easing-spring`: `var(--ds-primitive-cubic-bezier-spring)` → `var(--ds-primitive-cubicBezier-spring)`
+- `--ds-semantic-motion-easing-linear`: `var(--ds-primitive-cubic-bezier-linear)` → `var(--ds-primitive-cubicBezier-linear)`
+- `--ds-semantic-motion-transition-exit`: `var(--ds-primitive-duration-150) var(--ds-semantic-motion-easing-exit) 0ms` → `150ms cubic-bezier(0.4, 0, 1, 1) 0ms`
+- `--ds-component-button-radius`: `var(--ds-primitive-border-radius-md)` → `var(--ds-primitive-borderRadius-md)`
+- `--ds-component-input-radius`: `var(--ds-primitive-border-radius-md)` → `var(--ds-primitive-borderRadius-md)`
+- `--ds-component-card-radius`: `var(--ds-primitive-border-radius-lg)` → `var(--ds-primitive-borderRadius-lg)`
+- `--ds-component-badge-radius`: `var(--ds-primitive-border-radius-full)` → `var(--ds-primitive-borderRadius-full)`
+- `--ds-component-tooltip-radius`: `var(--ds-primitive-border-radius-md)` → `var(--ds-primitive-borderRadius-md)`
+- `--ds-component-modal-radius`: `var(--ds-primitive-border-radius-xl)` → `var(--ds-primitive-borderRadius-xl)`
+- `--ds-semantic-motion-transition-default`: `var(--ds-semantic-motion-duration-default) var(--ds-semantic-motion-easing-default) 0ms` → `200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms`
+- `--ds-semantic-motion-transition-fast`: `var(--ds-semantic-motion-duration-fast) var(--ds-semantic-motion-easing-default) 0ms` → `100ms cubic-bezier(0.4, 0, 0.2, 1) 0ms`
+- `--ds-semantic-motion-transition-slow`: `var(--ds-semantic-motion-duration-slow) var(--ds-semantic-motion-easing-default) 0ms` → `300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms`
+- `--ds-semantic-motion-transition-enter`: `var(--ds-semantic-motion-duration-default) var(--ds-semantic-motion-easing-enter) 0ms` → `200ms cubic-bezier(0, 0, 0.2, 1) 0ms`
+- `--ds-semantic-motion-transition-fade`: `var(--ds-semantic-motion-duration-default) var(--ds-semantic-motion-easing-linear) 0ms` → `200ms cubic-bezier(0, 0, 1, 1) 0ms`
+
+### Added
+
+- `--ds-primitive-typography-fontFamily-sans`: `'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans JP', 'Noto Sans KR', sans-serif`
+- `--ds-primitive-typography-fontFamily-serif`: `ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif`
+- `--ds-primitive-typography-fontFamily-mono`: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace`
+- `--ds-primitive-typography-fontSize-xs`: `12px`
+- `--ds-primitive-typography-fontSize-sm`: `14px`
+- `--ds-primitive-typography-fontSize-base`: `16px`
+- `--ds-primitive-typography-fontSize-lg`: `18px`
+- `--ds-primitive-typography-fontSize-xl`: `20px`
+- `--ds-primitive-typography-fontSize-2xl`: `24px`
+- `--ds-primitive-typography-fontSize-3xl`: `30px`
+- `--ds-primitive-typography-fontSize-4xl`: `36px`
+- `--ds-primitive-typography-fontSize-5xl`: `48px`
+- `--ds-primitive-typography-fontSize-6xl`: `60px`
+- `--ds-primitive-typography-fontSize-7xl`: `72px`
+- `--ds-primitive-typography-fontWeight-thin`: `100`
+- `--ds-primitive-typography-fontWeight-extralight`: `200`
+- `--ds-primitive-typography-fontWeight-light`: `300`
+- `--ds-primitive-typography-fontWeight-normal`: `400`
+- `--ds-primitive-typography-fontWeight-medium`: `500`
+- `--ds-primitive-typography-fontWeight-semibold`: `600`
+- `--ds-primitive-typography-fontWeight-bold`: `700`
+- `--ds-primitive-typography-fontWeight-extrabold`: `800`
+- `--ds-primitive-typography-fontWeight-black`: `900`
+- `--ds-primitive-typography-lineHeight-none`: `1`
+- `--ds-primitive-typography-lineHeight-tight`: `1.25`
+- `--ds-primitive-typography-lineHeight-snug`: `1.375`
+- `--ds-primitive-typography-lineHeight-normal`: `1.5`
+- `--ds-primitive-typography-lineHeight-relaxed`: `1.625`
+- `--ds-primitive-typography-lineHeight-loose`: `2`
+- `--ds-primitive-typography-letterSpacing-tighter`: `-0.05em`
+- `--ds-primitive-typography-letterSpacing-tight`: `-0.025em`
+- `--ds-primitive-typography-letterSpacing-normal`: `0em`
+- `--ds-primitive-typography-letterSpacing-wide`: `0.025em`
+- `--ds-primitive-typography-letterSpacing-wider`: `0.05em`
+- `--ds-primitive-typography-letterSpacing-widest`: `0.1em`
+- `--ds-primitive-borderRadius-none`: `0px`
+- `--ds-primitive-borderRadius-sm`: `2px`
+- `--ds-primitive-borderRadius-default`: `4px`
+- `--ds-primitive-borderRadius-md`: `6px`
+- `--ds-primitive-borderRadius-lg`: `8px`
+- `--ds-primitive-borderRadius-xl`: `12px`
+- `--ds-primitive-borderRadius-2xl`: `16px`
+- `--ds-primitive-borderRadius-3xl`: `24px`
+- `--ds-primitive-borderRadius-full`: `9999px`
+- `--ds-primitive-borderWidth-0`: `0px`
+- `--ds-primitive-borderWidth-1`: `1px`
+- `--ds-primitive-borderWidth-2`: `2px`
+- `--ds-primitive-borderWidth-4`: `4px`
+- `--ds-primitive-cubicBezier-linear`: `cubic-bezier(0, 0, 1, 1)`
+- `--ds-primitive-cubicBezier-ease`: `cubic-bezier(0.25, 0.1, 0.25, 1)`
+- `--ds-primitive-cubicBezier-ease-in`: `cubic-bezier(0.4, 0, 1, 1)`
+- `--ds-primitive-cubicBezier-ease-out`: `cubic-bezier(0, 0, 0.2, 1)`
+- `--ds-primitive-cubicBezier-ease-in-out`: `cubic-bezier(0.4, 0, 0.2, 1)`
+- `--ds-primitive-cubicBezier-spring`: `cubic-bezier(0.175, 0.885, 0.32, 1.275)`
+- `--ds-semantic-color-interactive-primary-bgHover`: `var(--ds-primitive-color-brand-700)`
+- `--ds-semantic-color-interactive-primary-bgActive`: `var(--ds-primitive-color-brand-800)`
+- `--ds-semantic-color-interactive-primary-bgDisabled`: `var(--ds-primitive-color-neutral-200)`
+- `--ds-semantic-color-interactive-primary-textDisabled`: `var(--ds-primitive-color-neutral-400)`
+- `--ds-semantic-color-interactive-secondary-bgHover`: `var(--ds-primitive-color-neutral-50)`
+- `--ds-semantic-color-interactive-secondary-bgActive`: `var(--ds-primitive-color-neutral-100)`
+- `--ds-semantic-color-interactive-ghost-bgHover`: `var(--ds-primitive-color-neutral-100)`
+- `--ds-semantic-color-interactive-ghost-bgActive`: `var(--ds-primitive-color-neutral-200)`
+- `--ds-semantic-color-interactive-destructive-bgHover`: `var(--ds-primitive-color-red-700)`
+- `--ds-semantic-color-interactive-destructive-bgActive`: `var(--ds-primitive-color-red-800)`
+- `--ds-semantic-typography-display-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-display-font-size`: `60px`
+- `--ds-semantic-typography-display-font-weight`: `700`
+- `--ds-semantic-typography-display-line-height`: `1.1`
+- `--ds-semantic-typography-display-letter-spacing`: `-0.025em`
+- `--ds-semantic-typography-heading-xl-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-xl-font-size`: `48px`
+- `--ds-semantic-typography-heading-xl-font-weight`: `700`
+- `--ds-semantic-typography-heading-xl-line-height`: `1.1`
+- `--ds-semantic-typography-heading-xl-letter-spacing`: `-0.025em`
+- `--ds-semantic-typography-heading-lg-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-lg-font-size`: `36px`
+- `--ds-semantic-typography-heading-lg-font-weight`: `600`
+- `--ds-semantic-typography-heading-lg-line-height`: `1.25`
+- `--ds-semantic-typography-heading-lg-letter-spacing`: `-0.025em`
+- `--ds-semantic-typography-heading-md-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-md-font-size`: `30px`
+- `--ds-semantic-typography-heading-md-font-weight`: `600`
+- `--ds-semantic-typography-heading-md-line-height`: `1.3`
+- `--ds-semantic-typography-heading-md-letter-spacing`: `-0.025em`
+- `--ds-semantic-typography-heading-sm-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-sm-font-size`: `24px`
+- `--ds-semantic-typography-heading-sm-font-weight`: `600`
+- `--ds-semantic-typography-heading-sm-line-height`: `1.375`
+- `--ds-semantic-typography-heading-sm-letter-spacing`: `0em`
+- `--ds-semantic-typography-heading-xs-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-xs-font-size`: `20px`
+- `--ds-semantic-typography-heading-xs-font-weight`: `500`
+- `--ds-semantic-typography-heading-xs-line-height`: `1.4`
+- `--ds-semantic-typography-heading-xs-letter-spacing`: `0em`
+- `--ds-semantic-typography-body-lg-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-body-lg-font-size`: `18px`
+- `--ds-semantic-typography-body-lg-font-weight`: `400`
+- `--ds-semantic-typography-body-lg-line-height`: `1.625`
+- `--ds-semantic-typography-body-lg-letter-spacing`: `0em`
+- `--ds-semantic-typography-body-base-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-body-base-font-size`: `16px`
+- `--ds-semantic-typography-body-base-font-weight`: `400`
+- `--ds-semantic-typography-body-base-line-height`: `1.5`
+- `--ds-semantic-typography-body-base-letter-spacing`: `0em`
+- `--ds-semantic-typography-body-sm-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-body-sm-font-size`: `14px`
+- `--ds-semantic-typography-body-sm-font-weight`: `400`
+- `--ds-semantic-typography-body-sm-line-height`: `1.5`
+- `--ds-semantic-typography-body-sm-letter-spacing`: `0em`
+- `--ds-semantic-typography-label-lg-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-label-lg-font-size`: `16px`
+- `--ds-semantic-typography-label-lg-font-weight`: `500`
+- `--ds-semantic-typography-label-lg-line-height`: `1`
+- `--ds-semantic-typography-label-lg-letter-spacing`: `0em`
+- `--ds-semantic-typography-label-base-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-label-base-font-size`: `14px`
+- `--ds-semantic-typography-label-base-font-weight`: `500`
+- `--ds-semantic-typography-label-base-line-height`: `1`
+- `--ds-semantic-typography-label-base-letter-spacing`: `0em`
+- `--ds-semantic-typography-label-sm-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-label-sm-font-size`: `12px`
+- `--ds-semantic-typography-label-sm-font-weight`: `500`
+- `--ds-semantic-typography-label-sm-line-height`: `1`
+- `--ds-semantic-typography-label-sm-letter-spacing`: `0em`
+- `--ds-semantic-typography-caption-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-caption-font-size`: `12px`
+- `--ds-semantic-typography-caption-font-weight`: `400`
+- `--ds-semantic-typography-caption-line-height`: `1.5`
+- `--ds-semantic-typography-caption-letter-spacing`: `0.025em`
+- `--ds-semantic-typography-overline-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-overline-font-size`: `11px`
+- `--ds-semantic-typography-overline-font-weight`: `600`
+- `--ds-semantic-typography-overline-line-height`: `1.5`
+- `--ds-semantic-typography-overline-letter-spacing`: `0.1em`
+- `--ds-semantic-typography-code-font-family`: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace`
+- `--ds-semantic-typography-code-font-size`: `14px`
+- `--ds-semantic-typography-code-font-weight`: `400`
+- `--ds-semantic-typography-code-line-height`: `1.625`
+- `--ds-semantic-typography-code-letter-spacing`: `0em`
+- `--ds-component-button-paddingX-sm`: `var(--ds-primitive-spacing-3)`
+- `--ds-component-button-paddingX-md`: `var(--ds-primitive-spacing-4)`
+- `--ds-component-button-paddingX-lg`: `var(--ds-primitive-spacing-6)`
+- `--ds-component-button-fontSize-sm`: `var(--ds-primitive-typography-fontSize-xs)`
+- `--ds-component-button-fontSize-md`: `var(--ds-primitive-typography-fontSize-sm)`
+- `--ds-component-button-fontSize-lg`: `var(--ds-primitive-typography-fontSize-base)`
+- `--ds-component-button-fontWeight`: `var(--ds-primitive-typography-fontWeight-medium)`
+- `--ds-component-input-paddingX`: `var(--ds-primitive-spacing-3)`
+- `--ds-component-input-fontSize`: `var(--ds-primitive-typography-fontSize-sm)`
+- `--ds-component-input-bgDisabled`: `var(--ds-primitive-color-neutral-50)`
+- `--ds-component-input-borderFocus`: `var(--ds-semantic-color-border-focus)`
+- `--ds-component-input-borderError`: `var(--ds-semantic-color-border-error)`
+- `--ds-component-badge-paddingX`: `var(--ds-primitive-spacing-2)`
+- `--ds-component-badge-paddingY`: `var(--ds-primitive-spacing-0-5)`
+- `--ds-component-badge-fontSize`: `var(--ds-primitive-typography-fontSize-xs)`
+- `--ds-component-badge-fontWeight`: `var(--ds-primitive-typography-fontWeight-medium)`
+- `--ds-component-tooltip-fontSize`: `var(--ds-primitive-typography-fontSize-xs)`
+- `--ds-component-modal-overlayBg`: `rgba(0, 0, 0, 0.5)`
+- `--ds-component-modal-maxWidth-sm`: `var(--ds-primitive-spacing-80)`
+- `--ds-component-modal-maxWidth-md`: `var(--ds-primitive-spacing-96)`
+- `--ds-component-preview-shell-maxWidth`: `93.75rem`
+- `--ds-component-preview-search-minWidth`: `var(--ds-primitive-spacing-80)`
+- `--ds-component-preview-sidebar-minWidth`: `var(--ds-primitive-spacing-64)`
+- `--ds-component-preview-sidebar-maxWidth`: `var(--ds-primitive-spacing-80)`
+- `--ds-component-preview-tokenCard-minWidth`: `var(--ds-primitive-spacing-48)`
+- `--ds-component-preview-componentCard-minWidth`: `var(--ds-primitive-spacing-80)`
+- `--ds-component-preview-spacingBar-maxWidth`: `var(--ds-primitive-spacing-80)`
+
+### Removed
+
+- `--ds-primitive-typography-font-family-sans`
+- `--ds-primitive-typography-font-family-serif`
+- `--ds-primitive-typography-font-family-mono`
+- `--ds-primitive-typography-font-size-xs`
+- `--ds-primitive-typography-font-size-sm`
+- `--ds-primitive-typography-font-size-base`
+- `--ds-primitive-typography-font-size-lg`
+- `--ds-primitive-typography-font-size-xl`
+- `--ds-primitive-typography-font-size-2xl`
+- `--ds-primitive-typography-font-size-3xl`
+- `--ds-primitive-typography-font-size-4xl`
+- `--ds-primitive-typography-font-size-5xl`
+- `--ds-primitive-typography-font-size-6xl`
+- `--ds-primitive-typography-font-size-7xl`
+- `--ds-primitive-typography-font-weight-thin`
+- `--ds-primitive-typography-font-weight-extralight`
+- `--ds-primitive-typography-font-weight-light`
+- `--ds-primitive-typography-font-weight-normal`
+- `--ds-primitive-typography-font-weight-medium`
+- `--ds-primitive-typography-font-weight-semibold`
+- `--ds-primitive-typography-font-weight-bold`
+- `--ds-primitive-typography-font-weight-extrabold`
+- `--ds-primitive-typography-font-weight-black`
+- `--ds-primitive-typography-line-height-none`
+- `--ds-primitive-typography-line-height-tight`
+- `--ds-primitive-typography-line-height-snug`
+- `--ds-primitive-typography-line-height-normal`
+- `--ds-primitive-typography-line-height-relaxed`
+- `--ds-primitive-typography-line-height-loose`
+- `--ds-primitive-typography-letter-spacing-tighter`
+- `--ds-primitive-typography-letter-spacing-tight`
+- `--ds-primitive-typography-letter-spacing-normal`
+- `--ds-primitive-typography-letter-spacing-wide`
+- `--ds-primitive-typography-letter-spacing-wider`
+- `--ds-primitive-typography-letter-spacing-widest`
+- `--ds-primitive-border-radius-none`
+- `--ds-primitive-border-radius-sm`
+- `--ds-primitive-border-radius-default`
+- `--ds-primitive-border-radius-md`
+- `--ds-primitive-border-radius-lg`
+- `--ds-primitive-border-radius-xl`
+- `--ds-primitive-border-radius-2xl`
+- `--ds-primitive-border-radius-3xl`
+- `--ds-primitive-border-radius-full`
+- `--ds-primitive-border-width-0`
+- `--ds-primitive-border-width-1`
+- `--ds-primitive-border-width-2`
+- `--ds-primitive-border-width-4`
+- `--ds-primitive-cubic-bezier-linear`
+- `--ds-primitive-cubic-bezier-ease`
+- `--ds-primitive-cubic-bezier-ease-in`
+- `--ds-primitive-cubic-bezier-ease-out`
+- `--ds-primitive-cubic-bezier-ease-in-out`
+- `--ds-primitive-cubic-bezier-spring`
+- `--ds-semantic-typography-display`
+- `--ds-semantic-typography-heading-xl`
+- `--ds-semantic-typography-heading-lg`
+- `--ds-semantic-typography-heading-md`
+- `--ds-semantic-typography-heading-sm`
+- `--ds-semantic-typography-heading-xs`
+- `--ds-semantic-typography-body-lg`
+- `--ds-semantic-typography-body-base`
+- `--ds-semantic-typography-body-sm`
+- `--ds-semantic-typography-label-lg`
+- `--ds-semantic-typography-label-base`
+- `--ds-semantic-typography-label-sm`
+- `--ds-semantic-typography-caption`
+- `--ds-semantic-typography-overline`
+- `--ds-semantic-typography-code`
+- `--ds-component-modal-overlay-bg`
+- `--ds-component-preview-shell-max-width`
+- `--ds-semantic-color-interactive-primary-bg-hover`
+- `--ds-semantic-color-interactive-primary-bg-active`
+- `--ds-semantic-color-interactive-primary-bg-disabled`
+- `--ds-semantic-color-interactive-primary-text-disabled`
+- `--ds-semantic-color-interactive-secondary-bg-hover`
+- `--ds-semantic-color-interactive-secondary-bg-active`
+- `--ds-semantic-color-interactive-ghost-bg-hover`
+- `--ds-semantic-color-interactive-ghost-bg-active`
+- `--ds-semantic-color-interactive-destructive-bg-hover`
+- `--ds-semantic-color-interactive-destructive-bg-active`
+- `--ds-component-button-padding-x-sm`
+- `--ds-component-button-padding-x-md`
+- `--ds-component-button-padding-x-lg`
+- `--ds-component-button-font-size-sm`
+- `--ds-component-button-font-size-md`
+- `--ds-component-button-font-size-lg`
+- `--ds-component-button-font-weight`
+- `--ds-component-input-padding-x`
+- `--ds-component-input-font-size`
+- `--ds-component-input-bg-disabled`
+- `--ds-component-badge-padding-x`
+- `--ds-component-badge-padding-y`
+- `--ds-component-badge-font-size`
+- `--ds-component-badge-font-weight`
+- `--ds-component-tooltip-font-size`
+- `--ds-component-modal-max-width-sm`
+- `--ds-component-modal-max-width-md`
+- `--ds-component-preview-search-min-width`
+- `--ds-component-preview-sidebar-min-width`
+- `--ds-component-preview-sidebar-max-width`
+- `--ds-component-preview-token-card-min-width`
+- `--ds-component-preview-component-card-min-width`
+- `--ds-component-preview-spacing-bar-max-width`
+- `--ds-component-input-border-focus`
+- `--ds-component-input-border-error`
+## 2026-04-13
+
+### Changed
+
+- `--ds-semantic-shape-radius-none`: `var(--ds-primitive-borderRadius-none)` → `var(--ds-primitive-border-radius-none)`
+- `--ds-semantic-shape-radius-sm`: `var(--ds-primitive-borderRadius-sm)` → `var(--ds-primitive-border-radius-sm)`
+- `--ds-semantic-shape-radius-md`: `var(--ds-primitive-borderRadius-md)` → `var(--ds-primitive-border-radius-md)`
+- `--ds-semantic-shape-radius-lg`: `var(--ds-primitive-borderRadius-lg)` → `var(--ds-primitive-border-radius-lg)`
+- `--ds-semantic-shape-radius-xl`: `var(--ds-primitive-borderRadius-xl)` → `var(--ds-primitive-border-radius-xl)`
+- `--ds-semantic-shape-radius-full`: `var(--ds-primitive-borderRadius-full)` → `var(--ds-primitive-border-radius-full)`
+- `--ds-semantic-shape-radius-interactive`: `var(--ds-primitive-borderRadius-md)` → `var(--ds-primitive-border-radius-md)`
+- `--ds-semantic-shape-radius-container`: `var(--ds-primitive-borderRadius-lg)` → `var(--ds-primitive-border-radius-lg)`
+- `--ds-semantic-border-width-none`: `var(--ds-primitive-borderWidth-0)` → `var(--ds-primitive-border-width-0)`
+- `--ds-semantic-border-width-default`: `var(--ds-primitive-borderWidth-1)` → `var(--ds-primitive-border-width-1)`
+- `--ds-semantic-border-width-strong`: `var(--ds-primitive-borderWidth-2)` → `var(--ds-primitive-border-width-2)`
+- `--ds-semantic-border-width-heavy`: `var(--ds-primitive-borderWidth-4)` → `var(--ds-primitive-border-width-4)`
+- `--ds-semantic-motion-easing-default`: `var(--ds-primitive-cubicBezier-ease-in-out)` → `var(--ds-primitive-cubic-bezier-ease-in-out)`
+- `--ds-semantic-motion-easing-enter`: `var(--ds-primitive-cubicBezier-ease-out)` → `var(--ds-primitive-cubic-bezier-ease-out)`
+- `--ds-semantic-motion-easing-exit`: `var(--ds-primitive-cubicBezier-ease-in)` → `var(--ds-primitive-cubic-bezier-ease-in)`
+- `--ds-semantic-motion-easing-spring`: `var(--ds-primitive-cubicBezier-spring)` → `var(--ds-primitive-cubic-bezier-spring)`
+- `--ds-semantic-motion-easing-linear`: `var(--ds-primitive-cubicBezier-linear)` → `var(--ds-primitive-cubic-bezier-linear)`
+- `--ds-semantic-motion-transition-default`: `200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms` → `var(--ds-semantic-motion-duration-default) var(--ds-semantic-motion-easing-default) 0ms`
+- `--ds-semantic-motion-transition-fast`: `100ms cubic-bezier(0.4, 0, 0.2, 1) 0ms` → `var(--ds-semantic-motion-duration-fast) var(--ds-semantic-motion-easing-default) 0ms`
+- `--ds-semantic-motion-transition-slow`: `300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms` → `var(--ds-semantic-motion-duration-slow) var(--ds-semantic-motion-easing-default) 0ms`
+- `--ds-semantic-motion-transition-enter`: `200ms cubic-bezier(0, 0, 0.2, 1) 0ms` → `var(--ds-semantic-motion-duration-default) var(--ds-semantic-motion-easing-enter) 0ms`
+- `--ds-semantic-motion-transition-exit`: `150ms cubic-bezier(0.4, 0, 1, 1) 0ms` → `var(--ds-primitive-duration-150) var(--ds-semantic-motion-easing-exit) 0ms`
+- `--ds-semantic-motion-transition-fade`: `200ms cubic-bezier(0, 0, 1, 1) 0ms` → `var(--ds-semantic-motion-duration-default) var(--ds-semantic-motion-easing-linear) 0ms`
+- `--ds-component-button-radius`: `var(--ds-primitive-borderRadius-md)` → `var(--ds-primitive-border-radius-md)`
+- `--ds-component-input-radius`: `var(--ds-primitive-borderRadius-md)` → `var(--ds-primitive-border-radius-md)`
+- `--ds-component-card-radius`: `var(--ds-primitive-borderRadius-lg)` → `var(--ds-primitive-border-radius-lg)`
+- `--ds-component-badge-radius`: `var(--ds-primitive-borderRadius-full)` → `var(--ds-primitive-border-radius-full)`
+- `--ds-component-tooltip-radius`: `var(--ds-primitive-borderRadius-md)` → `var(--ds-primitive-border-radius-md)`
+- `--ds-component-modal-radius`: `var(--ds-primitive-borderRadius-xl)` → `var(--ds-primitive-border-radius-xl)`
+
+### Added
+
+- `--ds-primitive-typography-font-family-sans`: `'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans JP', 'Noto Sans KR', sans-serif`
+- `--ds-primitive-typography-font-family-serif`: `ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif`
+- `--ds-primitive-typography-font-family-mono`: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace`
+- `--ds-primitive-typography-font-size-xs`: `12px`
+- `--ds-primitive-typography-font-size-sm`: `14px`
+- `--ds-primitive-typography-font-size-base`: `16px`
+- `--ds-primitive-typography-font-size-lg`: `18px`
+- `--ds-primitive-typography-font-size-xl`: `20px`
+- `--ds-primitive-typography-font-size-2xl`: `24px`
+- `--ds-primitive-typography-font-size-3xl`: `30px`
+- `--ds-primitive-typography-font-size-4xl`: `36px`
+- `--ds-primitive-typography-font-size-5xl`: `48px`
+- `--ds-primitive-typography-font-size-6xl`: `60px`
+- `--ds-primitive-typography-font-size-7xl`: `72px`
+- `--ds-primitive-typography-font-weight-thin`: `100`
+- `--ds-primitive-typography-font-weight-extralight`: `200`
+- `--ds-primitive-typography-font-weight-light`: `300`
+- `--ds-primitive-typography-font-weight-normal`: `400`
+- `--ds-primitive-typography-font-weight-medium`: `500`
+- `--ds-primitive-typography-font-weight-semibold`: `600`
+- `--ds-primitive-typography-font-weight-bold`: `700`
+- `--ds-primitive-typography-font-weight-extrabold`: `800`
+- `--ds-primitive-typography-font-weight-black`: `900`
+- `--ds-primitive-typography-line-height-none`: `1`
+- `--ds-primitive-typography-line-height-tight`: `1.25`
+- `--ds-primitive-typography-line-height-snug`: `1.375`
+- `--ds-primitive-typography-line-height-normal`: `1.5`
+- `--ds-primitive-typography-line-height-relaxed`: `1.625`
+- `--ds-primitive-typography-line-height-loose`: `2`
+- `--ds-primitive-typography-letter-spacing-tighter`: `-0.05em`
+- `--ds-primitive-typography-letter-spacing-tight`: `-0.025em`
+- `--ds-primitive-typography-letter-spacing-normal`: `0em`
+- `--ds-primitive-typography-letter-spacing-wide`: `0.025em`
+- `--ds-primitive-typography-letter-spacing-wider`: `0.05em`
+- `--ds-primitive-typography-letter-spacing-widest`: `0.1em`
+- `--ds-primitive-border-radius-none`: `0px`
+- `--ds-primitive-border-radius-sm`: `2px`
+- `--ds-primitive-border-radius-default`: `4px`
+- `--ds-primitive-border-radius-md`: `6px`
+- `--ds-primitive-border-radius-lg`: `8px`
+- `--ds-primitive-border-radius-xl`: `12px`
+- `--ds-primitive-border-radius-2xl`: `16px`
+- `--ds-primitive-border-radius-3xl`: `24px`
+- `--ds-primitive-border-radius-full`: `9999px`
+- `--ds-primitive-border-width-0`: `0px`
+- `--ds-primitive-border-width-1`: `1px`
+- `--ds-primitive-border-width-2`: `2px`
+- `--ds-primitive-border-width-4`: `4px`
+- `--ds-primitive-cubic-bezier-linear`: `cubic-bezier(0, 0, 1, 1)`
+- `--ds-primitive-cubic-bezier-ease`: `cubic-bezier(0.25, 0.1, 0.25, 1)`
+- `--ds-primitive-cubic-bezier-ease-in`: `cubic-bezier(0.4, 0, 1, 1)`
+- `--ds-primitive-cubic-bezier-ease-out`: `cubic-bezier(0, 0, 0.2, 1)`
+- `--ds-primitive-cubic-bezier-ease-in-out`: `cubic-bezier(0.4, 0, 0.2, 1)`
+- `--ds-primitive-cubic-bezier-spring`: `cubic-bezier(0.175, 0.885, 0.32, 1.275)`
+- `--ds-semantic-typography-display`: `700 60px/1.1 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-xl`: `700 48px/1.1 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-lg`: `600 36px/1.25 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-md`: `600 30px/1.3 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-sm`: `600 24px/1.375 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-xs`: `500 20px/1.4 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-body-lg`: `400 18px/1.625 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-body-base`: `400 16px/1.5 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-body-sm`: `400 14px/1.5 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-label-lg`: `500 16px/1 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-label-base`: `500 14px/1 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-label-sm`: `500 12px/1 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-caption`: `400 12px/1.5 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-overline`: `600 11px/1.5 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-code`: `400 14px/1.625 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace`
+- `--ds-component-modal-overlay-bg`: `rgba(0, 0, 0, 0.5)`
+- `--ds-component-preview-shell-max-width`: `93.75rem`
+- `--ds-semantic-color-interactive-primary-bg-hover`: `var(--ds-primitive-color-brand-700)`
+- `--ds-semantic-color-interactive-primary-bg-active`: `var(--ds-primitive-color-brand-800)`
+- `--ds-semantic-color-interactive-primary-bg-disabled`: `var(--ds-primitive-color-neutral-200)`
+- `--ds-semantic-color-interactive-primary-text-disabled`: `var(--ds-primitive-color-neutral-400)`
+- `--ds-semantic-color-interactive-secondary-bg-hover`: `var(--ds-primitive-color-neutral-50)`
+- `--ds-semantic-color-interactive-secondary-bg-active`: `var(--ds-primitive-color-neutral-100)`
+- `--ds-semantic-color-interactive-ghost-bg-hover`: `var(--ds-primitive-color-neutral-100)`
+- `--ds-semantic-color-interactive-ghost-bg-active`: `var(--ds-primitive-color-neutral-200)`
+- `--ds-semantic-color-interactive-destructive-bg-hover`: `var(--ds-primitive-color-red-700)`
+- `--ds-semantic-color-interactive-destructive-bg-active`: `var(--ds-primitive-color-red-800)`
+- `--ds-component-button-padding-x-sm`: `var(--ds-primitive-spacing-3)`
+- `--ds-component-button-padding-x-md`: `var(--ds-primitive-spacing-4)`
+- `--ds-component-button-padding-x-lg`: `var(--ds-primitive-spacing-6)`
+- `--ds-component-button-font-size-sm`: `var(--ds-primitive-typography-font-size-xs)`
+- `--ds-component-button-font-size-md`: `var(--ds-primitive-typography-font-size-sm)`
+- `--ds-component-button-font-size-lg`: `var(--ds-primitive-typography-font-size-base)`
+- `--ds-component-button-font-weight`: `var(--ds-primitive-typography-font-weight-medium)`
+- `--ds-component-input-padding-x`: `var(--ds-primitive-spacing-3)`
+- `--ds-component-input-font-size`: `var(--ds-primitive-typography-font-size-sm)`
+- `--ds-component-input-bg-disabled`: `var(--ds-primitive-color-neutral-50)`
+- `--ds-component-badge-padding-x`: `var(--ds-primitive-spacing-2)`
+- `--ds-component-badge-padding-y`: `var(--ds-primitive-spacing-0-5)`
+- `--ds-component-badge-font-size`: `var(--ds-primitive-typography-font-size-xs)`
+- `--ds-component-badge-font-weight`: `var(--ds-primitive-typography-font-weight-medium)`
+- `--ds-component-tooltip-font-size`: `var(--ds-primitive-typography-font-size-xs)`
+- `--ds-component-modal-max-width-sm`: `var(--ds-primitive-spacing-80)`
+- `--ds-component-modal-max-width-md`: `var(--ds-primitive-spacing-96)`
+- `--ds-component-preview-search-min-width`: `var(--ds-primitive-spacing-80)`
+- `--ds-component-preview-sidebar-min-width`: `var(--ds-primitive-spacing-64)`
+- `--ds-component-preview-sidebar-max-width`: `var(--ds-primitive-spacing-80)`
+- `--ds-component-preview-token-card-min-width`: `var(--ds-primitive-spacing-48)`
+- `--ds-component-preview-component-card-min-width`: `var(--ds-primitive-spacing-80)`
+- `--ds-component-preview-spacing-bar-max-width`: `var(--ds-primitive-spacing-80)`
+- `--ds-component-input-border-focus`: `var(--ds-semantic-color-border-focus)`
+- `--ds-component-input-border-error`: `var(--ds-semantic-color-border-error)`
+
+### Removed
+
+- `--ds-primitive-typography-fontFamily-sans`
+- `--ds-primitive-typography-fontFamily-serif`
+- `--ds-primitive-typography-fontFamily-mono`
+- `--ds-primitive-typography-fontSize-xs`
+- `--ds-primitive-typography-fontSize-sm`
+- `--ds-primitive-typography-fontSize-base`
+- `--ds-primitive-typography-fontSize-lg`
+- `--ds-primitive-typography-fontSize-xl`
+- `--ds-primitive-typography-fontSize-2xl`
+- `--ds-primitive-typography-fontSize-3xl`
+- `--ds-primitive-typography-fontSize-4xl`
+- `--ds-primitive-typography-fontSize-5xl`
+- `--ds-primitive-typography-fontSize-6xl`
+- `--ds-primitive-typography-fontSize-7xl`
+- `--ds-primitive-typography-fontWeight-thin`
+- `--ds-primitive-typography-fontWeight-extralight`
+- `--ds-primitive-typography-fontWeight-light`
+- `--ds-primitive-typography-fontWeight-normal`
+- `--ds-primitive-typography-fontWeight-medium`
+- `--ds-primitive-typography-fontWeight-semibold`
+- `--ds-primitive-typography-fontWeight-bold`
+- `--ds-primitive-typography-fontWeight-extrabold`
+- `--ds-primitive-typography-fontWeight-black`
+- `--ds-primitive-typography-lineHeight-none`
+- `--ds-primitive-typography-lineHeight-tight`
+- `--ds-primitive-typography-lineHeight-snug`
+- `--ds-primitive-typography-lineHeight-normal`
+- `--ds-primitive-typography-lineHeight-relaxed`
+- `--ds-primitive-typography-lineHeight-loose`
+- `--ds-primitive-typography-letterSpacing-tighter`
+- `--ds-primitive-typography-letterSpacing-tight`
+- `--ds-primitive-typography-letterSpacing-normal`
+- `--ds-primitive-typography-letterSpacing-wide`
+- `--ds-primitive-typography-letterSpacing-wider`
+- `--ds-primitive-typography-letterSpacing-widest`
+- `--ds-primitive-borderRadius-none`
+- `--ds-primitive-borderRadius-sm`
+- `--ds-primitive-borderRadius-default`
+- `--ds-primitive-borderRadius-md`
+- `--ds-primitive-borderRadius-lg`
+- `--ds-primitive-borderRadius-xl`
+- `--ds-primitive-borderRadius-2xl`
+- `--ds-primitive-borderRadius-3xl`
+- `--ds-primitive-borderRadius-full`
+- `--ds-primitive-borderWidth-0`
+- `--ds-primitive-borderWidth-1`
+- `--ds-primitive-borderWidth-2`
+- `--ds-primitive-borderWidth-4`
+- `--ds-primitive-cubicBezier-linear`
+- `--ds-primitive-cubicBezier-ease`
+- `--ds-primitive-cubicBezier-ease-in`
+- `--ds-primitive-cubicBezier-ease-out`
+- `--ds-primitive-cubicBezier-ease-in-out`
+- `--ds-primitive-cubicBezier-spring`
+- `--ds-semantic-color-interactive-primary-bgHover`
+- `--ds-semantic-color-interactive-primary-bgActive`
+- `--ds-semantic-color-interactive-primary-bgDisabled`
+- `--ds-semantic-color-interactive-primary-textDisabled`
+- `--ds-semantic-color-interactive-secondary-bgHover`
+- `--ds-semantic-color-interactive-secondary-bgActive`
+- `--ds-semantic-color-interactive-ghost-bgHover`
+- `--ds-semantic-color-interactive-ghost-bgActive`
+- `--ds-semantic-color-interactive-destructive-bgHover`
+- `--ds-semantic-color-interactive-destructive-bgActive`
+- `--ds-semantic-typography-display-font-family`
+- `--ds-semantic-typography-display-font-size`
+- `--ds-semantic-typography-display-font-weight`
+- `--ds-semantic-typography-display-line-height`
+- `--ds-semantic-typography-display-letter-spacing`
+- `--ds-semantic-typography-heading-xl-font-family`
+- `--ds-semantic-typography-heading-xl-font-size`
+- `--ds-semantic-typography-heading-xl-font-weight`
+- `--ds-semantic-typography-heading-xl-line-height`
+- `--ds-semantic-typography-heading-xl-letter-spacing`
+- `--ds-semantic-typography-heading-lg-font-family`
+- `--ds-semantic-typography-heading-lg-font-size`
+- `--ds-semantic-typography-heading-lg-font-weight`
+- `--ds-semantic-typography-heading-lg-line-height`
+- `--ds-semantic-typography-heading-lg-letter-spacing`
+- `--ds-semantic-typography-heading-md-font-family`
+- `--ds-semantic-typography-heading-md-font-size`
+- `--ds-semantic-typography-heading-md-font-weight`
+- `--ds-semantic-typography-heading-md-line-height`
+- `--ds-semantic-typography-heading-md-letter-spacing`
+- `--ds-semantic-typography-heading-sm-font-family`
+- `--ds-semantic-typography-heading-sm-font-size`
+- `--ds-semantic-typography-heading-sm-font-weight`
+- `--ds-semantic-typography-heading-sm-line-height`
+- `--ds-semantic-typography-heading-sm-letter-spacing`
+- `--ds-semantic-typography-heading-xs-font-family`
+- `--ds-semantic-typography-heading-xs-font-size`
+- `--ds-semantic-typography-heading-xs-font-weight`
+- `--ds-semantic-typography-heading-xs-line-height`
+- `--ds-semantic-typography-heading-xs-letter-spacing`
+- `--ds-semantic-typography-body-lg-font-family`
+- `--ds-semantic-typography-body-lg-font-size`
+- `--ds-semantic-typography-body-lg-font-weight`
+- `--ds-semantic-typography-body-lg-line-height`
+- `--ds-semantic-typography-body-lg-letter-spacing`
+- `--ds-semantic-typography-body-base-font-family`
+- `--ds-semantic-typography-body-base-font-size`
+- `--ds-semantic-typography-body-base-font-weight`
+- `--ds-semantic-typography-body-base-line-height`
+- `--ds-semantic-typography-body-base-letter-spacing`
+- `--ds-semantic-typography-body-sm-font-family`
+- `--ds-semantic-typography-body-sm-font-size`
+- `--ds-semantic-typography-body-sm-font-weight`
+- `--ds-semantic-typography-body-sm-line-height`
+- `--ds-semantic-typography-body-sm-letter-spacing`
+- `--ds-semantic-typography-label-lg-font-family`
+- `--ds-semantic-typography-label-lg-font-size`
+- `--ds-semantic-typography-label-lg-font-weight`
+- `--ds-semantic-typography-label-lg-line-height`
+- `--ds-semantic-typography-label-lg-letter-spacing`
+- `--ds-semantic-typography-label-base-font-family`
+- `--ds-semantic-typography-label-base-font-size`
+- `--ds-semantic-typography-label-base-font-weight`
+- `--ds-semantic-typography-label-base-line-height`
+- `--ds-semantic-typography-label-base-letter-spacing`
+- `--ds-semantic-typography-label-sm-font-family`
+- `--ds-semantic-typography-label-sm-font-size`
+- `--ds-semantic-typography-label-sm-font-weight`
+- `--ds-semantic-typography-label-sm-line-height`
+- `--ds-semantic-typography-label-sm-letter-spacing`
+- `--ds-semantic-typography-caption-font-family`
+- `--ds-semantic-typography-caption-font-size`
+- `--ds-semantic-typography-caption-font-weight`
+- `--ds-semantic-typography-caption-line-height`
+- `--ds-semantic-typography-caption-letter-spacing`
+- `--ds-semantic-typography-overline-font-family`
+- `--ds-semantic-typography-overline-font-size`
+- `--ds-semantic-typography-overline-font-weight`
+- `--ds-semantic-typography-overline-line-height`
+- `--ds-semantic-typography-overline-letter-spacing`
+- `--ds-semantic-typography-code-font-family`
+- `--ds-semantic-typography-code-font-size`
+- `--ds-semantic-typography-code-font-weight`
+- `--ds-semantic-typography-code-line-height`
+- `--ds-semantic-typography-code-letter-spacing`
+- `--ds-component-button-paddingX-sm`
+- `--ds-component-button-paddingX-md`
+- `--ds-component-button-paddingX-lg`
+- `--ds-component-button-fontSize-sm`
+- `--ds-component-button-fontSize-md`
+- `--ds-component-button-fontSize-lg`
+- `--ds-component-button-fontWeight`
+- `--ds-component-input-paddingX`
+- `--ds-component-input-fontSize`
+- `--ds-component-input-bgDisabled`
+- `--ds-component-input-borderFocus`
+- `--ds-component-input-borderError`
+- `--ds-component-badge-paddingX`
+- `--ds-component-badge-paddingY`
+- `--ds-component-badge-fontSize`
+- `--ds-component-badge-fontWeight`
+- `--ds-component-tooltip-fontSize`
+- `--ds-component-modal-overlayBg`
+- `--ds-component-modal-maxWidth-sm`
+- `--ds-component-modal-maxWidth-md`
+- `--ds-component-preview-shell-maxWidth`
+- `--ds-component-preview-search-minWidth`
+- `--ds-component-preview-sidebar-minWidth`
+- `--ds-component-preview-sidebar-maxWidth`
+- `--ds-component-preview-tokenCard-minWidth`
+- `--ds-component-preview-componentCard-minWidth`
+- `--ds-component-preview-spacingBar-maxWidth`
+## 2026-04-13
+
+### Added
+
+- `--ds-semantic-typography-display-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-display-font-size`: `60px`
+- `--ds-semantic-typography-display-font-weight`: `700`
+- `--ds-semantic-typography-display-line-height`: `1.1`
+- `--ds-semantic-typography-display-letter-spacing`: `-0.025em`
+- `--ds-semantic-typography-heading-xl-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-xl-font-size`: `48px`
+- `--ds-semantic-typography-heading-xl-font-weight`: `700`
+- `--ds-semantic-typography-heading-xl-line-height`: `1.1`
+- `--ds-semantic-typography-heading-xl-letter-spacing`: `-0.025em`
+- `--ds-semantic-typography-heading-lg-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-lg-font-size`: `36px`
+- `--ds-semantic-typography-heading-lg-font-weight`: `600`
+- `--ds-semantic-typography-heading-lg-line-height`: `1.25`
+- `--ds-semantic-typography-heading-lg-letter-spacing`: `-0.025em`
+- `--ds-semantic-typography-heading-md-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-md-font-size`: `30px`
+- `--ds-semantic-typography-heading-md-font-weight`: `600`
+- `--ds-semantic-typography-heading-md-line-height`: `1.3`
+- `--ds-semantic-typography-heading-md-letter-spacing`: `-0.025em`
+- `--ds-semantic-typography-heading-sm-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-sm-font-size`: `24px`
+- `--ds-semantic-typography-heading-sm-font-weight`: `600`
+- `--ds-semantic-typography-heading-sm-line-height`: `1.375`
+- `--ds-semantic-typography-heading-sm-letter-spacing`: `0em`
+- `--ds-semantic-typography-heading-xs-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-xs-font-size`: `20px`
+- `--ds-semantic-typography-heading-xs-font-weight`: `500`
+- `--ds-semantic-typography-heading-xs-line-height`: `1.4`
+- `--ds-semantic-typography-heading-xs-letter-spacing`: `0em`
+- `--ds-semantic-typography-body-lg-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-body-lg-font-size`: `18px`
+- `--ds-semantic-typography-body-lg-font-weight`: `400`
+- `--ds-semantic-typography-body-lg-line-height`: `1.625`
+- `--ds-semantic-typography-body-lg-letter-spacing`: `0em`
+- `--ds-semantic-typography-body-base-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-body-base-font-size`: `16px`
+- `--ds-semantic-typography-body-base-font-weight`: `400`
+- `--ds-semantic-typography-body-base-line-height`: `1.5`
+- `--ds-semantic-typography-body-base-letter-spacing`: `0em`
+- `--ds-semantic-typography-body-sm-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-body-sm-font-size`: `14px`
+- `--ds-semantic-typography-body-sm-font-weight`: `400`
+- `--ds-semantic-typography-body-sm-line-height`: `1.5`
+- `--ds-semantic-typography-body-sm-letter-spacing`: `0em`
+- `--ds-semantic-typography-label-lg-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-label-lg-font-size`: `16px`
+- `--ds-semantic-typography-label-lg-font-weight`: `500`
+- `--ds-semantic-typography-label-lg-line-height`: `1`
+- `--ds-semantic-typography-label-lg-letter-spacing`: `0em`
+- `--ds-semantic-typography-label-base-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-label-base-font-size`: `14px`
+- `--ds-semantic-typography-label-base-font-weight`: `500`
+- `--ds-semantic-typography-label-base-line-height`: `1`
+- `--ds-semantic-typography-label-base-letter-spacing`: `0em`
+- `--ds-semantic-typography-label-sm-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-label-sm-font-size`: `12px`
+- `--ds-semantic-typography-label-sm-font-weight`: `500`
+- `--ds-semantic-typography-label-sm-line-height`: `1`
+- `--ds-semantic-typography-label-sm-letter-spacing`: `0em`
+- `--ds-semantic-typography-caption-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-caption-font-size`: `12px`
+- `--ds-semantic-typography-caption-font-weight`: `400`
+- `--ds-semantic-typography-caption-line-height`: `1.5`
+- `--ds-semantic-typography-caption-letter-spacing`: `0.025em`
+- `--ds-semantic-typography-overline-font-family`: `'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-overline-font-size`: `11px`
+- `--ds-semantic-typography-overline-font-weight`: `600`
+- `--ds-semantic-typography-overline-line-height`: `1.5`
+- `--ds-semantic-typography-overline-letter-spacing`: `0.1em`
+- `--ds-semantic-typography-code-font-family`: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace`
+- `--ds-semantic-typography-code-font-size`: `14px`
+- `--ds-semantic-typography-code-font-weight`: `400`
+- `--ds-semantic-typography-code-line-height`: `1.625`
+- `--ds-semantic-typography-code-letter-spacing`: `0em`
+
+### Removed
+
+- `--ds-semantic-typography-display`
+- `--ds-semantic-typography-heading-xl`
+- `--ds-semantic-typography-heading-lg`
+- `--ds-semantic-typography-heading-md`
+- `--ds-semantic-typography-heading-sm`
+- `--ds-semantic-typography-heading-xs`
+- `--ds-semantic-typography-body-lg`
+- `--ds-semantic-typography-body-base`
+- `--ds-semantic-typography-body-sm`
+- `--ds-semantic-typography-label-lg`
+- `--ds-semantic-typography-label-base`
+- `--ds-semantic-typography-label-sm`
+- `--ds-semantic-typography-caption`
+- `--ds-semantic-typography-overline`
+- `--ds-semantic-typography-code`
+## 2026-04-13
+
+### Changed
+
+- `--ds-semantic-shape-radius-none`: `var(--ds-primitive-border-radius-none)` → `var(--ds-primitive-borderRadius-none)`
+- `--ds-semantic-shape-radius-sm`: `var(--ds-primitive-border-radius-sm)` → `var(--ds-primitive-borderRadius-sm)`
+- `--ds-semantic-shape-radius-md`: `var(--ds-primitive-border-radius-md)` → `var(--ds-primitive-borderRadius-md)`
+- `--ds-semantic-shape-radius-lg`: `var(--ds-primitive-border-radius-lg)` → `var(--ds-primitive-borderRadius-lg)`
+- `--ds-semantic-shape-radius-xl`: `var(--ds-primitive-border-radius-xl)` → `var(--ds-primitive-borderRadius-xl)`
+- `--ds-semantic-shape-radius-full`: `var(--ds-primitive-border-radius-full)` → `var(--ds-primitive-borderRadius-full)`
+- `--ds-semantic-shape-radius-interactive`: `var(--ds-primitive-border-radius-md)` → `var(--ds-primitive-borderRadius-md)`
+- `--ds-semantic-shape-radius-container`: `var(--ds-primitive-border-radius-lg)` → `var(--ds-primitive-borderRadius-lg)`
+- `--ds-semantic-border-width-none`: `var(--ds-primitive-border-width-0)` → `var(--ds-primitive-borderWidth-0)`
+- `--ds-semantic-border-width-default`: `var(--ds-primitive-border-width-1)` → `var(--ds-primitive-borderWidth-1)`
+- `--ds-semantic-border-width-strong`: `var(--ds-primitive-border-width-2)` → `var(--ds-primitive-borderWidth-2)`
+- `--ds-semantic-border-width-heavy`: `var(--ds-primitive-border-width-4)` → `var(--ds-primitive-borderWidth-4)`
+- `--ds-semantic-motion-easing-default`: `var(--ds-primitive-cubic-bezier-ease-in-out)` → `var(--ds-primitive-cubicBezier-ease-in-out)`
+- `--ds-semantic-motion-easing-enter`: `var(--ds-primitive-cubic-bezier-ease-out)` → `var(--ds-primitive-cubicBezier-ease-out)`
+- `--ds-semantic-motion-easing-exit`: `var(--ds-primitive-cubic-bezier-ease-in)` → `var(--ds-primitive-cubicBezier-ease-in)`
+- `--ds-semantic-motion-easing-spring`: `var(--ds-primitive-cubic-bezier-spring)` → `var(--ds-primitive-cubicBezier-spring)`
+- `--ds-semantic-motion-easing-linear`: `var(--ds-primitive-cubic-bezier-linear)` → `var(--ds-primitive-cubicBezier-linear)`
+- `--ds-component-button-radius`: `var(--ds-primitive-border-radius-md)` → `var(--ds-primitive-borderRadius-md)`
+- `--ds-component-input-radius`: `var(--ds-primitive-border-radius-md)` → `var(--ds-primitive-borderRadius-md)`
+- `--ds-component-card-radius`: `var(--ds-primitive-border-radius-lg)` → `var(--ds-primitive-borderRadius-lg)`
+- `--ds-component-badge-radius`: `var(--ds-primitive-border-radius-full)` → `var(--ds-primitive-borderRadius-full)`
+- `--ds-component-tooltip-radius`: `var(--ds-primitive-border-radius-md)` → `var(--ds-primitive-borderRadius-md)`
+- `--ds-component-modal-radius`: `var(--ds-primitive-border-radius-xl)` → `var(--ds-primitive-borderRadius-xl)`
+
+### Added
+
+- `--ds-primitive-typography-fontFamily-sans`: `'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans JP', 'Noto Sans KR', sans-serif`
+- `--ds-primitive-typography-fontFamily-serif`: `ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif`
+- `--ds-primitive-typography-fontFamily-mono`: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace`
+- `--ds-primitive-typography-fontSize-xs`: `12px`
+- `--ds-primitive-typography-fontSize-sm`: `14px`
+- `--ds-primitive-typography-fontSize-base`: `16px`
+- `--ds-primitive-typography-fontSize-lg`: `18px`
+- `--ds-primitive-typography-fontSize-xl`: `20px`
+- `--ds-primitive-typography-fontSize-2xl`: `24px`
+- `--ds-primitive-typography-fontSize-3xl`: `30px`
+- `--ds-primitive-typography-fontSize-4xl`: `36px`
+- `--ds-primitive-typography-fontSize-5xl`: `48px`
+- `--ds-primitive-typography-fontSize-6xl`: `60px`
+- `--ds-primitive-typography-fontSize-7xl`: `72px`
+- `--ds-primitive-typography-fontWeight-thin`: `100`
+- `--ds-primitive-typography-fontWeight-extralight`: `200`
+- `--ds-primitive-typography-fontWeight-light`: `300`
+- `--ds-primitive-typography-fontWeight-normal`: `400`
+- `--ds-primitive-typography-fontWeight-medium`: `500`
+- `--ds-primitive-typography-fontWeight-semibold`: `600`
+- `--ds-primitive-typography-fontWeight-bold`: `700`
+- `--ds-primitive-typography-fontWeight-extrabold`: `800`
+- `--ds-primitive-typography-fontWeight-black`: `900`
+- `--ds-primitive-typography-lineHeight-none`: `1`
+- `--ds-primitive-typography-lineHeight-tight`: `1.25`
+- `--ds-primitive-typography-lineHeight-snug`: `1.375`
+- `--ds-primitive-typography-lineHeight-normal`: `1.5`
+- `--ds-primitive-typography-lineHeight-relaxed`: `1.625`
+- `--ds-primitive-typography-lineHeight-loose`: `2`
+- `--ds-primitive-typography-letterSpacing-tighter`: `-0.05em`
+- `--ds-primitive-typography-letterSpacing-tight`: `-0.025em`
+- `--ds-primitive-typography-letterSpacing-normal`: `0em`
+- `--ds-primitive-typography-letterSpacing-wide`: `0.025em`
+- `--ds-primitive-typography-letterSpacing-wider`: `0.05em`
+- `--ds-primitive-typography-letterSpacing-widest`: `0.1em`
+- `--ds-primitive-borderRadius-none`: `0px`
+- `--ds-primitive-borderRadius-sm`: `2px`
+- `--ds-primitive-borderRadius-default`: `4px`
+- `--ds-primitive-borderRadius-md`: `6px`
+- `--ds-primitive-borderRadius-lg`: `8px`
+- `--ds-primitive-borderRadius-xl`: `12px`
+- `--ds-primitive-borderRadius-2xl`: `16px`
+- `--ds-primitive-borderRadius-3xl`: `24px`
+- `--ds-primitive-borderRadius-full`: `9999px`
+- `--ds-primitive-borderWidth-0`: `0px`
+- `--ds-primitive-borderWidth-1`: `1px`
+- `--ds-primitive-borderWidth-2`: `2px`
+- `--ds-primitive-borderWidth-4`: `4px`
+- `--ds-primitive-cubicBezier-linear`: `cubic-bezier(0, 0, 1, 1)`
+- `--ds-primitive-cubicBezier-ease`: `cubic-bezier(0.25, 0.1, 0.25, 1)`
+- `--ds-primitive-cubicBezier-ease-in`: `cubic-bezier(0.4, 0, 1, 1)`
+- `--ds-primitive-cubicBezier-ease-out`: `cubic-bezier(0, 0, 0.2, 1)`
+- `--ds-primitive-cubicBezier-ease-in-out`: `cubic-bezier(0.4, 0, 0.2, 1)`
+- `--ds-primitive-cubicBezier-spring`: `cubic-bezier(0.175, 0.885, 0.32, 1.275)`
+- `--ds-semantic-color-interactive-primary-bgHover`: `var(--ds-primitive-color-brand-700)`
+- `--ds-semantic-color-interactive-primary-bgActive`: `var(--ds-primitive-color-brand-800)`
+- `--ds-semantic-color-interactive-primary-bgDisabled`: `var(--ds-primitive-color-neutral-200)`
+- `--ds-semantic-color-interactive-primary-textDisabled`: `var(--ds-primitive-color-neutral-400)`
+- `--ds-semantic-color-interactive-secondary-bgHover`: `var(--ds-primitive-color-neutral-50)`
+- `--ds-semantic-color-interactive-secondary-bgActive`: `var(--ds-primitive-color-neutral-100)`
+- `--ds-semantic-color-interactive-ghost-bgHover`: `var(--ds-primitive-color-neutral-100)`
+- `--ds-semantic-color-interactive-ghost-bgActive`: `var(--ds-primitive-color-neutral-200)`
+- `--ds-semantic-color-interactive-destructive-bgHover`: `var(--ds-primitive-color-red-700)`
+- `--ds-semantic-color-interactive-destructive-bgActive`: `var(--ds-primitive-color-red-800)`
+- `--ds-component-button-paddingX-sm`: `var(--ds-primitive-spacing-3)`
+- `--ds-component-button-paddingX-md`: `var(--ds-primitive-spacing-4)`
+- `--ds-component-button-paddingX-lg`: `var(--ds-primitive-spacing-6)`
+- `--ds-component-button-fontSize-sm`: `var(--ds-primitive-typography-fontSize-xs)`
+- `--ds-component-button-fontSize-md`: `var(--ds-primitive-typography-fontSize-sm)`
+- `--ds-component-button-fontSize-lg`: `var(--ds-primitive-typography-fontSize-base)`
+- `--ds-component-button-fontWeight`: `var(--ds-primitive-typography-fontWeight-medium)`
+- `--ds-component-input-paddingX`: `var(--ds-primitive-spacing-3)`
+- `--ds-component-input-fontSize`: `var(--ds-primitive-typography-fontSize-sm)`
+- `--ds-component-input-bgDisabled`: `var(--ds-primitive-color-neutral-50)`
+- `--ds-component-input-borderFocus`: `var(--ds-semantic-color-border-focus)`
+- `--ds-component-input-borderError`: `var(--ds-semantic-color-border-error)`
+- `--ds-component-badge-paddingX`: `var(--ds-primitive-spacing-2)`
+- `--ds-component-badge-paddingY`: `var(--ds-primitive-spacing-0-5)`
+- `--ds-component-badge-fontSize`: `var(--ds-primitive-typography-fontSize-xs)`
+- `--ds-component-badge-fontWeight`: `var(--ds-primitive-typography-fontWeight-medium)`
+- `--ds-component-tooltip-fontSize`: `var(--ds-primitive-typography-fontSize-xs)`
+- `--ds-component-modal-overlayBg`: `rgba(0, 0, 0, 0.5)`
+- `--ds-component-modal-maxWidth-sm`: `var(--ds-primitive-spacing-80)`
+- `--ds-component-modal-maxWidth-md`: `var(--ds-primitive-spacing-96)`
+- `--ds-component-preview-shell-maxWidth`: `93.75rem`
+- `--ds-component-preview-search-minWidth`: `var(--ds-primitive-spacing-80)`
+- `--ds-component-preview-sidebar-minWidth`: `var(--ds-primitive-spacing-64)`
+- `--ds-component-preview-sidebar-maxWidth`: `var(--ds-primitive-spacing-80)`
+- `--ds-component-preview-tokenCard-minWidth`: `var(--ds-primitive-spacing-48)`
+- `--ds-component-preview-componentCard-minWidth`: `var(--ds-primitive-spacing-80)`
+- `--ds-component-preview-spacingBar-maxWidth`: `var(--ds-primitive-spacing-80)`
+
+### Removed
+
+- `--ds-primitive-typography-font-family-sans`
+- `--ds-primitive-typography-font-family-serif`
+- `--ds-primitive-typography-font-family-mono`
+- `--ds-primitive-typography-font-size-xs`
+- `--ds-primitive-typography-font-size-sm`
+- `--ds-primitive-typography-font-size-base`
+- `--ds-primitive-typography-font-size-lg`
+- `--ds-primitive-typography-font-size-xl`
+- `--ds-primitive-typography-font-size-2xl`
+- `--ds-primitive-typography-font-size-3xl`
+- `--ds-primitive-typography-font-size-4xl`
+- `--ds-primitive-typography-font-size-5xl`
+- `--ds-primitive-typography-font-size-6xl`
+- `--ds-primitive-typography-font-size-7xl`
+- `--ds-primitive-typography-font-weight-thin`
+- `--ds-primitive-typography-font-weight-extralight`
+- `--ds-primitive-typography-font-weight-light`
+- `--ds-primitive-typography-font-weight-normal`
+- `--ds-primitive-typography-font-weight-medium`
+- `--ds-primitive-typography-font-weight-semibold`
+- `--ds-primitive-typography-font-weight-bold`
+- `--ds-primitive-typography-font-weight-extrabold`
+- `--ds-primitive-typography-font-weight-black`
+- `--ds-primitive-typography-line-height-none`
+- `--ds-primitive-typography-line-height-tight`
+- `--ds-primitive-typography-line-height-snug`
+- `--ds-primitive-typography-line-height-normal`
+- `--ds-primitive-typography-line-height-relaxed`
+- `--ds-primitive-typography-line-height-loose`
+- `--ds-primitive-typography-letter-spacing-tighter`
+- `--ds-primitive-typography-letter-spacing-tight`
+- `--ds-primitive-typography-letter-spacing-normal`
+- `--ds-primitive-typography-letter-spacing-wide`
+- `--ds-primitive-typography-letter-spacing-wider`
+- `--ds-primitive-typography-letter-spacing-widest`
+- `--ds-primitive-border-radius-none`
+- `--ds-primitive-border-radius-sm`
+- `--ds-primitive-border-radius-default`
+- `--ds-primitive-border-radius-md`
+- `--ds-primitive-border-radius-lg`
+- `--ds-primitive-border-radius-xl`
+- `--ds-primitive-border-radius-2xl`
+- `--ds-primitive-border-radius-3xl`
+- `--ds-primitive-border-radius-full`
+- `--ds-primitive-border-width-0`
+- `--ds-primitive-border-width-1`
+- `--ds-primitive-border-width-2`
+- `--ds-primitive-border-width-4`
+- `--ds-primitive-cubic-bezier-linear`
+- `--ds-primitive-cubic-bezier-ease`
+- `--ds-primitive-cubic-bezier-ease-in`
+- `--ds-primitive-cubic-bezier-ease-out`
+- `--ds-primitive-cubic-bezier-ease-in-out`
+- `--ds-primitive-cubic-bezier-spring`
+- `--ds-component-modal-overlay-bg`
+- `--ds-component-preview-shell-max-width`
+- `--ds-semantic-color-interactive-primary-bg-hover`
+- `--ds-semantic-color-interactive-primary-bg-active`
+- `--ds-semantic-color-interactive-primary-bg-disabled`
+- `--ds-semantic-color-interactive-primary-text-disabled`
+- `--ds-semantic-color-interactive-secondary-bg-hover`
+- `--ds-semantic-color-interactive-secondary-bg-active`
+- `--ds-semantic-color-interactive-ghost-bg-hover`
+- `--ds-semantic-color-interactive-ghost-bg-active`
+- `--ds-semantic-color-interactive-destructive-bg-hover`
+- `--ds-semantic-color-interactive-destructive-bg-active`
+- `--ds-component-button-padding-x-sm`
+- `--ds-component-button-padding-x-md`
+- `--ds-component-button-padding-x-lg`
+- `--ds-component-button-font-size-sm`
+- `--ds-component-button-font-size-md`
+- `--ds-component-button-font-size-lg`
+- `--ds-component-button-font-weight`
+- `--ds-component-input-padding-x`
+- `--ds-component-input-font-size`
+- `--ds-component-input-bg-disabled`
+- `--ds-component-badge-padding-x`
+- `--ds-component-badge-padding-y`
+- `--ds-component-badge-font-size`
+- `--ds-component-badge-font-weight`
+- `--ds-component-tooltip-font-size`
+- `--ds-component-modal-max-width-sm`
+- `--ds-component-modal-max-width-md`
+- `--ds-component-preview-search-min-width`
+- `--ds-component-preview-sidebar-min-width`
+- `--ds-component-preview-sidebar-max-width`
+- `--ds-component-preview-token-card-min-width`
+- `--ds-component-preview-component-card-min-width`
+- `--ds-component-preview-spacing-bar-max-width`
+- `--ds-component-input-border-focus`
+- `--ds-component-input-border-error`
+## 2026-04-13
+
+### Changed
+
+- `--ds-semantic-typography-body-sm`: `var(--ds-primitive-typography-font-size-sm)` → `400 14px/1.5 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-body-base`: `var(--ds-primitive-typography-font-size-base)` → `400 16px/1.5 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-body-lg`: `var(--ds-primitive-typography-font-size-lg)` → `400 18px/1.625 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-xs`: `var(--ds-primitive-typography-font-size-lg)` → `500 20px/1.4 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-sm`: `var(--ds-primitive-typography-font-size-xl)` → `600 24px/1.375 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-md`: `var(--ds-primitive-typography-font-size-2xl)` → `600 30px/1.3 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-lg`: `var(--ds-primitive-typography-font-size-3xl)` → `600 36px/1.25 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-heading-xl`: `var(--ds-primitive-typography-font-size-4xl)` → `700 48px/1.1 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-label-sm`: `var(--ds-primitive-typography-font-size-sm)` → `500 12px/1 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-label-base`: `var(--ds-primitive-typography-font-size-base)` → `500 14px/1 'Inter', ui-sans-serif, system-ui, sans-serif`
+
+### Added
+
+- `--ds-semantic-typography-display`: `700 60px/1.1 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-label-lg`: `500 16px/1 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-caption`: `400 12px/1.5 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-overline`: `600 11px/1.5 'Inter', ui-sans-serif, system-ui, sans-serif`
+- `--ds-semantic-typography-code`: `400 14px/1.625 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace`
+
+### Removed
+
+- `--ds-semantic-typography-heading-2xl`
+- `--ds-semantic-typography-label-xs`
+## 2026-04-13
+
+### Added
+
+- `--ds-semantic-motion-transition-default`: `200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms`
+- `--ds-semantic-motion-transition-fast`: `100ms cubic-bezier(0.4, 0, 0.2, 1) 0ms`
+- `--ds-semantic-motion-transition-slow`: `300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms`
+- `--ds-semantic-motion-transition-enter`: `200ms cubic-bezier(0, 0, 0.2, 1) 0ms`
+- `--ds-semantic-motion-transition-exit`: `150ms cubic-bezier(0.4, 0, 1, 1) 0ms`
+- `--ds-semantic-motion-transition-fade`: `200ms cubic-bezier(0, 0, 1, 1) 0ms`
+- `--ds-semantic-motion-duration-instant`: `var(--ds-primitive-duration-0)`
+- `--ds-semantic-motion-duration-fast`: `var(--ds-primitive-duration-100)`
+- `--ds-semantic-motion-duration-default`: `var(--ds-primitive-duration-200)`
+- `--ds-semantic-motion-duration-slow`: `var(--ds-primitive-duration-300)`
+- `--ds-semantic-motion-duration-deliberate`: `var(--ds-primitive-duration-500)`
+- `--ds-semantic-motion-easing-default`: `var(--ds-primitive-cubic-bezier-ease-in-out)`
+- `--ds-semantic-motion-easing-enter`: `var(--ds-primitive-cubic-bezier-ease-out)`
+- `--ds-semantic-motion-easing-exit`: `var(--ds-primitive-cubic-bezier-ease-in)`
+- `--ds-semantic-motion-easing-spring`: `var(--ds-primitive-cubic-bezier-spring)`
+- `--ds-semantic-motion-easing-linear`: `var(--ds-primitive-cubic-bezier-linear)`
+## 2026-04-13
+
+### Added
+
+- `--ds-primitive-duration-0`: `0ms`
+- `--ds-primitive-duration-75`: `75ms`
+- `--ds-primitive-duration-100`: `100ms`
+- `--ds-primitive-duration-150`: `150ms`
+- `--ds-primitive-duration-200`: `200ms`
+- `--ds-primitive-duration-300`: `300ms`
+- `--ds-primitive-duration-500`: `500ms`
+- `--ds-primitive-duration-700`: `700ms`
+- `--ds-primitive-duration-1000`: `1000ms`
+- `--ds-primitive-cubic-bezier-linear`: `cubic-bezier(0, 0, 1, 1)`
+- `--ds-primitive-cubic-bezier-ease`: `cubic-bezier(0.25, 0.1, 0.25, 1)`
+- `--ds-primitive-cubic-bezier-ease-in`: `cubic-bezier(0.4, 0, 1, 1)`
+- `--ds-primitive-cubic-bezier-ease-out`: `cubic-bezier(0, 0, 0.2, 1)`
+- `--ds-primitive-cubic-bezier-ease-in-out`: `cubic-bezier(0.4, 0, 0.2, 1)`
+- `--ds-primitive-cubic-bezier-spring`: `cubic-bezier(0.175, 0.885, 0.32, 1.275)`
+## 2026-04-13
+
+### Added
+
+- `--ds-semantic-shape-radius-none`: `var(--ds-primitive-border-radius-none)`
+- `--ds-semantic-shape-radius-sm`: `var(--ds-primitive-border-radius-sm)`
+- `--ds-semantic-shape-radius-md`: `var(--ds-primitive-border-radius-md)`
+- `--ds-semantic-shape-radius-lg`: `var(--ds-primitive-border-radius-lg)`
+- `--ds-semantic-shape-radius-xl`: `var(--ds-primitive-border-radius-xl)`
+- `--ds-semantic-shape-radius-full`: `var(--ds-primitive-border-radius-full)`
+- `--ds-semantic-shape-radius-interactive`: `var(--ds-primitive-border-radius-md)`
+- `--ds-semantic-shape-radius-container`: `var(--ds-primitive-border-radius-lg)`
+- `--ds-semantic-border-width-none`: `var(--ds-primitive-border-width-0)`
+- `--ds-semantic-border-width-default`: `var(--ds-primitive-border-width-1)`
+- `--ds-semantic-border-width-strong`: `var(--ds-primitive-border-width-2)`
+- `--ds-semantic-border-width-heavy`: `var(--ds-primitive-border-width-4)`
+## 2026-04-13
+
+### Added
+
+- `--ds-primitive-border-width-0`: `0px`
+- `--ds-primitive-border-width-1`: `1px`
+- `--ds-primitive-border-width-2`: `2px`
+- `--ds-primitive-border-width-4`: `4px`
+## 2026-04-13
+
+### Changed
+
 - `--ds-primitive-typography-font-family-sans`: `ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif` → `'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans JP', 'Noto Sans KR', sans-serif`
 ## 2026-04-12
 

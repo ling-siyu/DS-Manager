@@ -147,6 +147,10 @@ export const PrimitiveBorderRadiusXl = "12px";
 export const PrimitiveBorderRadius2xl = "16px";
 export const PrimitiveBorderRadius3xl = "24px";
 export const PrimitiveBorderRadiusFull = "9999px";
+export const PrimitiveBorderWidth0 = "0px";
+export const PrimitiveBorderWidth1 = "1px";
+export const PrimitiveBorderWidth2 = "2px";
+export const PrimitiveBorderWidth4 = "4px";
 export const PrimitiveShadowNone = "none";
 export const PrimitiveShadowSm = "0 1px 2px 0 rgba(0,0,0,0.05)";
 export const PrimitiveShadowDefault =
@@ -168,6 +172,22 @@ export const PrimitiveOpacity50 = 0.5;
 export const PrimitiveOpacity75 = 0.75;
 export const PrimitiveOpacity90 = 0.9;
 export const PrimitiveOpacity100 = 1;
+export const PrimitiveDuration0 = "0ms";
+export const PrimitiveDuration75 = "75ms";
+export const PrimitiveDuration100 = "100ms";
+export const PrimitiveDuration150 = "150ms";
+export const PrimitiveDuration200 = "200ms";
+export const PrimitiveDuration300 = "300ms";
+export const PrimitiveDuration500 = "500ms";
+export const PrimitiveDuration700 = "700ms";
+export const PrimitiveDuration1000 = "1000ms";
+export const PrimitiveCubicBezierLinear = "cubic-bezier(0, 0, 1, 1)"; // No easing — constant speed
+export const PrimitiveCubicBezierEase = "cubic-bezier(0.25, 0.1, 0.25, 1)"; // Browser default ease
+export const PrimitiveCubicBezierEaseIn = "cubic-bezier(0.4, 0, 1, 1)"; // Accelerates into the transition — good for exits
+export const PrimitiveCubicBezierEaseOut = "cubic-bezier(0, 0, 0.2, 1)"; // Decelerates out of the transition — good for entrances
+export const PrimitiveCubicBezierEaseInOut = "cubic-bezier(0.4, 0, 0.2, 1)"; // Accelerates then decelerates — good for element movements
+export const PrimitiveCubicBezierSpring =
+  "cubic-bezier(0.175, 0.885, 0.32, 1.275)"; // Slight overshoot — conveys energy and responsiveness
 export const SemanticColorBackgroundDefault = "#ffffff"; // Page/app background
 export const SemanticColorBackgroundSubtle = "#fafafa"; // Subtle section background
 export const SemanticColorBackgroundMuted = "#f5f5f5"; // Muted / secondary background
@@ -234,18 +254,165 @@ export const SemanticSpacingLayoutMd = "32px"; // 32px — default section gap
 export const SemanticSpacingLayoutLg = "48px"; // 48px
 export const SemanticSpacingLayoutXl = "64px"; // 64px
 export const SemanticSpacingLayout2xl = "96px"; // 96px — page-level spacing
-export const SemanticTypographyBodySm = "14px";
-export const SemanticTypographyBodyBase = "16px";
-export const SemanticTypographyBodyLg = "18px";
-export const SemanticTypographyHeadingXs = "18px";
-export const SemanticTypographyHeadingSm = "20px";
-export const SemanticTypographyHeadingMd = "24px";
-export const SemanticTypographyHeadingLg = "30px";
-export const SemanticTypographyHeadingXl = "36px";
-export const SemanticTypographyHeading2xl = "48px";
-export const SemanticTypographyLabelXs = "12px";
-export const SemanticTypographyLabelSm = "14px";
-export const SemanticTypographyLabelBase = "16px";
+export const SemanticShapeRadiusNone = "0px"; // No rounding — sharp corners
+export const SemanticShapeRadiusSm = "2px"; // Subtle rounding — tags, badges, chips
+export const SemanticShapeRadiusMd = "6px"; // Default rounding — inputs, cards, buttons
+export const SemanticShapeRadiusLg = "8px"; // Prominent rounding — modals, panels, popovers
+export const SemanticShapeRadiusXl = "12px"; // Large rounding — sheets, drawers
+export const SemanticShapeRadiusFull = "9999px"; // Pill / fully rounded — toggles, avatars, circular buttons
+export const SemanticShapeRadiusInteractive = "6px"; // Canonical radius for interactive controls (buttons, inputs, selects)
+export const SemanticShapeRadiusContainer = "8px"; // Canonical radius for container surfaces (cards, dialogs, popovers)
+export const SemanticBorderWidthNone = "0px"; // No border
+export const SemanticBorderWidthDefault = "1px"; // Standard 1px border — inputs, cards, dividers
+export const SemanticBorderWidthStrong = "2px"; // Emphasized border — focus rings, selected state
+export const SemanticBorderWidthHeavy = "4px"; // Heavy border — accents, active nav indicator
+export const SemanticMotionDurationInstant = "0ms"; // No delay — immediate feedback (toggles, checkboxes)
+export const SemanticMotionDurationFast = "100ms"; // Snappy — micro-interactions, button presses
+export const SemanticMotionDurationDefault = "200ms"; // Standard — most UI transitions
+export const SemanticMotionDurationSlow = "300ms"; // Relaxed — panels, drawers, modals appearing
+export const SemanticMotionDurationDeliberate = "500ms"; // Intentionally slow — onboarding, celebratory moments
+export const SemanticMotionEasingDefault = "cubic-bezier(0.4, 0, 0.2, 1)"; // General-purpose easing for element movements
+export const SemanticMotionEasingEnter = "cubic-bezier(0, 0, 0.2, 1)"; // Elements entering the screen — decelerates to rest
+export const SemanticMotionEasingExit = "cubic-bezier(0.4, 0, 1, 1)"; // Elements leaving the screen — accelerates away
+export const SemanticMotionEasingSpring =
+  "cubic-bezier(0.175, 0.885, 0.32, 1.275)"; // Playful overshoot — conveys energy
+export const SemanticMotionEasingLinear = "cubic-bezier(0, 0, 1, 1)"; // No easing — for opacity fades and color shifts
+export const SemanticMotionTransitionDefault = {
+  duration: "200ms",
+  timingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+  delay: "0ms",
+}; // Standard transition — buttons, inputs, hover states
+export const SemanticMotionTransitionFast = {
+  duration: "100ms",
+  timingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+  delay: "0ms",
+}; // Quick transition — micro-interactions
+export const SemanticMotionTransitionSlow = {
+  duration: "300ms",
+  timingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+  delay: "0ms",
+}; // Slower transition — panels, sidebars
+export const SemanticMotionTransitionEnter = {
+  duration: "200ms",
+  timingFunction: "cubic-bezier(0, 0, 0.2, 1)",
+  delay: "0ms",
+}; // Entrance transition — elements arriving on screen
+export const SemanticMotionTransitionExit = {
+  duration: "150ms",
+  timingFunction: "cubic-bezier(0.4, 0, 1, 1)",
+  delay: "0ms",
+}; // Exit transition — elements leaving the screen
+export const SemanticMotionTransitionFade = {
+  duration: "200ms",
+  timingFunction: "cubic-bezier(0, 0, 1, 1)",
+  delay: "0ms",
+}; // Linear fade — opacity transitions
+export const SemanticTypographyDisplay = {
+  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontSize: "60px",
+  fontWeight: 700,
+  lineHeight: 1.1,
+  letterSpacing: "-0.025em",
+}; // Hero / marketing headline — largest display text
+export const SemanticTypographyHeadingXl = {
+  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontSize: "48px",
+  fontWeight: 700,
+  lineHeight: 1.1,
+  letterSpacing: "-0.025em",
+}; // Page-level hero heading
+export const SemanticTypographyHeadingLg = {
+  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontSize: "36px",
+  fontWeight: 600,
+  lineHeight: 1.25,
+  letterSpacing: "-0.025em",
+}; // Primary section heading
+export const SemanticTypographyHeadingMd = {
+  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontSize: "30px",
+  fontWeight: 600,
+  lineHeight: 1.3,
+  letterSpacing: "-0.025em",
+}; // Secondary section heading
+export const SemanticTypographyHeadingSm = {
+  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontSize: "24px",
+  fontWeight: 600,
+  lineHeight: 1.375,
+  letterSpacing: "0em",
+}; // Subsection heading
+export const SemanticTypographyHeadingXs = {
+  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontSize: "20px",
+  fontWeight: 500,
+  lineHeight: 1.4,
+  letterSpacing: "0em",
+}; // Card title, dialog heading
+export const SemanticTypographyBodyLg = {
+  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontSize: "18px",
+  fontWeight: 400,
+  lineHeight: 1.625,
+  letterSpacing: "0em",
+}; // Large body — lead paragraphs, introductory text
+export const SemanticTypographyBodyBase = {
+  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontSize: "16px",
+  fontWeight: 400,
+  lineHeight: 1.5,
+  letterSpacing: "0em",
+}; // Default body copy
+export const SemanticTypographyBodySm = {
+  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontSize: "14px",
+  fontWeight: 400,
+  lineHeight: 1.5,
+  letterSpacing: "0em",
+}; // Small body — secondary content, descriptions
+export const SemanticTypographyLabelLg = {
+  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontSize: "16px",
+  fontWeight: 500,
+  lineHeight: 1,
+  letterSpacing: "0em",
+}; // Large UI label — form labels, nav items
+export const SemanticTypographyLabelBase = {
+  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontSize: "14px",
+  fontWeight: 500,
+  lineHeight: 1,
+  letterSpacing: "0em",
+}; // Default UI label — buttons, tabs, badges
+export const SemanticTypographyLabelSm = {
+  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontSize: "12px",
+  fontWeight: 500,
+  lineHeight: 1,
+  letterSpacing: "0em",
+}; // Small UI label — chips, tags, compact controls
+export const SemanticTypographyCaption = {
+  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontSize: "12px",
+  fontWeight: 400,
+  lineHeight: 1.5,
+  letterSpacing: "0.025em",
+}; // Caption / helper text — timestamps, supporting detail
+export const SemanticTypographyOverline = {
+  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontSize: "11px",
+  fontWeight: 600,
+  lineHeight: 1.5,
+  letterSpacing: "0.1em",
+}; // Overline / eyebrow — uppercase category labels above headings
+export const SemanticTypographyCode = {
+  fontFamily:
+    "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+  fontSize: "14px",
+  fontWeight: 400,
+  lineHeight: 1.625,
+  letterSpacing: "0em",
+}; // Inline and block code snippets
 export const ComponentButtonHeightSm = "32px";
 export const ComponentButtonHeightMd = "40px";
 export const ComponentButtonHeightLg = "48px";

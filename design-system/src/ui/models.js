@@ -1,5 +1,8 @@
 import {
+  isBorderWidthToken,
   isColorToken,
+  isMotionToken,
+  isRadiusToken,
   isShadowToken,
   isSpacingToken,
   isTypographyToken,
@@ -86,14 +89,32 @@ export function createAppState(data) {
     {
       id: 'spacing',
       title: 'Spacing Tokens',
-      description: 'Spacing, sizing, radius, and dimension values that shape layout rhythm.',
+      description: 'Spacing, sizing, and dimension values that shape layout rhythm.',
       entries: tokenEntries.filter(isSpacingToken).filter((entry) => !isColorToken(entry)),
+    },
+    {
+      id: 'border-width',
+      title: 'Border Width Tokens',
+      description: 'Primitive and semantic border width values for strokes, dividers, and focus rings.',
+      entries: tokenEntries.filter(isBorderWidthToken),
+    },
+    {
+      id: 'radius',
+      title: 'Border Radius Tokens',
+      description: 'Corner radius values from sharp to pill, including semantic intent aliases.',
+      entries: tokenEntries.filter(isRadiusToken),
     },
     {
       id: 'typography',
       title: 'Typography Tokens',
       description: 'Font size, weight, and typography-related decisions for readable UI.',
       entries: tokenEntries.filter(isTypographyToken),
+    },
+    {
+      id: 'motion',
+      title: 'Motion Tokens',
+      description: 'Duration, easing curves, and transition presets for animation and interaction.',
+      entries: tokenEntries.filter(isMotionToken),
     },
     {
       id: 'shadows',
