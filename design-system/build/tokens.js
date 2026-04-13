@@ -101,7 +101,7 @@ export const PrimitiveSpacing15 = "6px";
 export const PrimitiveSpacing25 = "10px";
 export const PrimitiveSpacing35 = "14px";
 export const PrimitiveTypographyFontFamilySans =
-  "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+  "'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans JP', 'Noto Sans KR', sans-serif";
 export const PrimitiveTypographyFontFamilySerif =
   "ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif";
 export const PrimitiveTypographyFontFamilyMono =

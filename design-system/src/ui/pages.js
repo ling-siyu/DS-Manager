@@ -7,7 +7,6 @@ import {
   renderLevelOverviewCard,
   renderPropsTable,
   renderStatusPill,
-  renderSummaryCard,
   renderTokenCard,
   renderTokenDetailPreview,
   renderTokenGroupCard,
@@ -32,18 +31,7 @@ export function renderHomePage(state) {
     <section class="panel is-active" data-panel="home" data-panel-label="Levels overview">
       <div class="section-card page-stack">
         ${renderBreadcrumbs([{ label: 'Levels' }])}
-        <div class="section-head">
-          <div>
-            <h2 class="section-title">Level Overview</h2>
-            <p class="section-copy">Start with a level, open its asset list, then drill into token or component details.</p>
-          </div>
-          <span class="level-chip">${levels.length} levels</span>
-        </div>
-        <div class="summary-strip">
-          ${renderSummaryCard('Tokens', String(state.tokenEntries.length))}
-          ${renderSummaryCard('Components', String(state.components.length))}
-          ${renderSummaryCard('Highest level', levels[levels.length - 1]?.label || 'Lv.0')}
-        </div>
+        <h2 class="section-title">Design Token Foundation</h2>
         <div class="level-overview-grid">
           ${levels.map(renderLevelOverviewCard).join('')}
         </div>
@@ -54,13 +42,6 @@ export function renderHomePage(state) {
 
 export function renderLevelPage(state, levelId) {
   const level = state.getLevel(levelId);
-  const items = level.numericLevel === 0
-    ? state.tokenGroupModels.length
-    : state.components.filter((component) => component.level === level.numericLevel).length;
-  const composedCount = level.numericLevel === 0
-    ? state.tokenGroupModels.filter((group) => group.entries.length > 0).length
-    : state.components.filter((component) => component.level === level.numericLevel && (component.contains || []).length).length;
-  const leafCount = level.numericLevel === 0 ? 0 : items - composedCount;
 
   return `
     <section class="panel is-active" data-panel="${escapeHTML(level.id)}" data-panel-label="${escapeHTML(level.title)}">
@@ -70,16 +51,8 @@ export function renderLevelPage(state, levelId) {
           { label: level.label },
         ])}
         <div class="section-head">
-          <div>
-            <h2 class="section-title">${escapeHTML(level.title)}</h2>
-            <p class="section-copy">${escapeHTML(level.description)}</p>
-          </div>
+          <h2 class="section-title">${escapeHTML(level.title)}</h2>
           <span class="level-chip">${escapeHTML(level.label)}</span>
-        </div>
-        <div class="summary-strip">
-          ${renderSummaryCard(level.numericLevel === 0 ? 'Token types' : 'Registered', String(items))}
-          ${renderSummaryCard(level.numericLevel === 0 ? 'Populated types' : 'Composed', String(composedCount))}
-          ${renderSummaryCard(level.numericLevel === 0 ? 'Total tokens' : 'Leaf', String(level.numericLevel === 0 ? state.tokenEntries.length : leafCount))}
         </div>
         ${level.numericLevel === 0
           ? `<div class="category-grid">${state.tokenGroupModels.map(renderTokenGroupCard).join('')}</div>`
@@ -100,13 +73,7 @@ export function renderTokenGroupPage(state, groupId) {
           { label: state.getLevel('lv0').label, route: { name: 'level', levelId: 'lv0' } },
           { label: group.title },
         ])}
-        <div class="section-head">
-          <div>
-            <h2 class="section-title">${escapeHTML(group.title)}</h2>
-            <p class="section-copy">${escapeHTML(group.description)}</p>
-          </div>
-          <span class="level-chip">${group.entries.length} tokens</span>
-        </div>
+        <h2 class="section-title">${escapeHTML(group.title)}</h2>
         ${renderTokenGroupList(group)}
       </div>
     </section>
@@ -119,6 +86,7 @@ export function renderTokenDetailPage(state, groupId, tokenPath) {
   if (!entry) return renderHomePage(state);
 
   const [path, token] = entry;
+  const shortName = path.split('.').pop();
 
   return `
     <section class="panel is-active" data-panel="token-detail" data-panel-label="${escapeHTML(path)}">
@@ -127,18 +95,14 @@ export function renderTokenDetailPage(state, groupId, tokenPath) {
           { label: 'Levels', route: { name: 'home' } },
           { label: state.getLevel('lv0').label, route: { name: 'level', levelId: 'lv0' } },
           { label: group.title, route: { name: 'token-group', groupId } },
-          { label: path },
+          { label: shortName },
         ])}
         <div class="section-head">
           <div>
-            <h2 class="section-title">${escapeHTML(path)}</h2>
-            <p class="section-copy">${escapeHTML(token.$description || 'Token detail view for inspection and handoff.')}</p>
+            <h2 class="section-title">${escapeHTML(shortName)}</h2>
+            <p class="helper mono" style="margin-top:2px">${escapeHTML(path)}</p>
           </div>
           <span class="level-chip">${escapeHTML(token.$type || 'token')}</span>
-        </div>
-        <div class="section-actions">
-          <button class="link-button" type="button" data-copy="${escapeHTML(token.cssVar)}">Copy CSS variable</button>
-          <p class="helper mono">${escapeHTML(token.cssVar)}</p>
         </div>
         ${renderTokenDetailPreview(groupId, entry)}
         <div class="detail-grid">
@@ -150,6 +114,7 @@ export function renderTokenDetailPage(state, groupId, tokenPath) {
         <article class="group-card">
           <div class="group-head">
             <h3 class="group-title">Metadata</h3>
+            <button class="link-button" type="button" data-copy="${escapeHTML(token.cssVar)}">Copy CSS var</button>
           </div>
           <table class="all-table">
             <tbody>
@@ -187,15 +152,11 @@ export function renderComponentDetailPage(state, levelId, componentName) {
           { label: component.name },
         ])}
         <div class="section-head">
-          <div>
-            <h2 class="section-title">${escapeHTML(component.name)}</h2>
-            <p class="section-copy">${escapeHTML(component.description || 'Registered component in the DSM registry.')}</p>
+          <h2 class="section-title">${escapeHTML(component.name)}</h2>
+          <div style="display:flex;gap:var(--ui-space-2);align-items:center">
+            ${renderStatusPill(component.status || 'stable')}
+            <span class="level-chip">${escapeHTML(component.levelLabel)}</span>
           </div>
-          <span class="level-chip">${escapeHTML(component.levelLabel)}</span>
-        </div>
-        <div class="section-actions">
-          <button class="link-button" type="button" data-copy="${escapeHTML(component.path)}">Copy file path</button>
-          ${renderStatusPill(component.status || 'stable')}
         </div>
         <div class="detail-grid">
           ${renderDetailCard('File', component.path, true)}
@@ -203,6 +164,7 @@ export function renderComponentDetailPage(state, levelId, componentName) {
           ${renderDetailCard('Sizes', (component.sizes || []).join(', ') || 'n/a')}
           ${renderDetailCard('Contains', (component.contains || []).join(', ') || 'Leaf component')}
         </div>
+        ${component.description ? `<p class="helper">${escapeHTML(component.description)}</p>` : ''}
         ${renderComponentPreviewPanel(component, state.preview)}
         <article class="group-card">
           <div class="group-head">
@@ -210,16 +172,16 @@ export function renderComponentDetailPage(state, levelId, componentName) {
           </div>
           ${renderPropsTable(component.props)}
         </article>
-        <article class="group-card">
-          <div class="group-head">
-            <h3 class="group-title">Registry Metadata</h3>
-          </div>
-          <div class="chip-row">
-            ${(component.tokens || []).length
-              ? (component.tokens || []).map((tokenRef) => `<span class="chip mono">${escapeHTML(tokenRef)}</span>`).join('')
-              : '<span class="chip">No token references</span>'}
-          </div>
-        </article>
+        ${(component.tokens || []).length ? `
+          <article class="group-card">
+            <div class="group-head">
+              <h3 class="group-title">Token References</h3>
+            </div>
+            <div class="chip-row" style="margin-top:var(--ui-space-3)">
+              ${(component.tokens || []).map((tokenRef) => `<span class="chip mono">${escapeHTML(tokenRef)}</span>`).join('')}
+            </div>
+          </article>
+        ` : ''}
       </div>
     </section>
   `;

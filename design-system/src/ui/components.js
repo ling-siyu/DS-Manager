@@ -43,9 +43,9 @@ export function renderStatusPill(status = 'stable') {
 
 export function renderSummaryCard(label, value) {
   return `
-    <article class="summary-card">
-      <span class="summary-label">${escapeHTML(label)}</span>
-      <span class="summary-value">${escapeHTML(value)}</span>
+    <article class="detail-card">
+      <span class="detail-label">${escapeHTML(label)}</span>
+      <span class="token-short-name">${escapeHTML(value)}</span>
     </article>
   `;
 }
@@ -109,43 +109,74 @@ export function renderLevelNav(levels, activeLevelId) {
       data-route="${escapeHTML(JSON.stringify({ name: 'level', levelId: level.id }))}"
       aria-current="${level.id === activeLevelId ? 'page' : 'false'}"
     >
-      <span class="level-label">
-        <span>${escapeHTML(level.label)}</span>
-        <span class="level-count">${level.count}</span>
-      </span>
+      <span class="level-label">${escapeHTML(level.label)}</span>
       <span class="level-name">${escapeHTML(level.title)}</span>
-      <span class="helper">${escapeHTML(level.count)} ${escapeHTML(level.itemLabel)}</span>
     </button>
   `).join('');
 }
 
 export function renderLevelOverviewCard(level) {
-  const summary = level.numericLevel === 0
-    ? `${level.count} tokens across foundation categories`
-    : `${level.count} component${level.count === 1 ? '' : 's'} in this layer`;
-
   return `
     <button
       class="nav-card"
       type="button"
       data-route="${escapeHTML(JSON.stringify({ name: 'level', levelId: level.id }))}"
       data-filter-item="level"
-      data-query="${escapeHTML(`${level.label} ${level.title} ${level.description} ${summary}`.toLowerCase())}"
+      data-query="${escapeHTML(`${level.label} ${level.title} ${level.description}`.toLowerCase())}"
     >
       <div class="component-top">
         <div>
           <p class="helper">${escapeHTML(level.label)}</p>
           <h3 class="component-name">${escapeHTML(level.title)}</h3>
         </div>
-        <span class="level-chip">${escapeHTML(level.count)} ${escapeHTML(level.itemLabel)}</span>
-      </div>
-      <p class="section-copy">${escapeHTML(level.description)}</p>
-      <div class="chip-row">
-        <span class="chip">${escapeHTML(summary)}</span>
-        <span class="chip">Open list</span>
       </div>
     </button>
   `;
+}
+
+function renderGroupPreview(group) {
+  if (group.id === 'colors') {
+    const swatches = group.entries.slice(0, 7).map(([, token]) => {
+      const value = formatValue(token.resolvedValue);
+      const isTransparent = normalize(value) === 'transparent';
+      return `<span class="mini-swatch ${isTransparent ? 'transparent' : ''}" style="${isTransparent ? '' : `background:${escapeHTML(value)};`}"></span>`;
+    }).join('');
+    return `<div class="group-preview">${swatches}</div>`;
+  }
+
+  if (group.id === 'spacing') {
+    const heights = [8, 16, 24, 36, 48];
+    const bars = heights.map((h) => `<span class="mini-spacing-bar" style="height:${h}px;"></span>`).join('');
+    return `<div class="group-preview"><div class="mini-spacing-bars">${bars}</div></div>`;
+  }
+
+  if (group.id === 'typography') {
+    return `
+      <div class="group-preview">
+        <div class="mini-type-preview">
+          <span style="font-size:var(--ds-primitive-typography-font-size-sm)">Aa</span>
+          <span style="font-size:var(--ds-primitive-typography-font-size-xl)">Aa</span>
+          <span style="font-size:var(--ds-primitive-typography-font-size-3xl);color:var(--ds-semantic-color-text-subtle)">Aa</span>
+        </div>
+      </div>
+    `;
+  }
+
+  if (group.id === 'shadows') {
+    return `<div class="group-preview"><div class="mini-shadow-box"></div></div>`;
+  }
+
+  // 'all' or fallback — mixed dot grid using brand color shades
+  const dotColors = [
+    'var(--ds-primitive-color-brand-300)',
+    'var(--ds-primitive-color-brand-500)',
+    'var(--ds-primitive-color-brand-700)',
+    'var(--ds-primitive-color-neutral-200)',
+    'var(--ds-primitive-color-neutral-400)',
+    'var(--ds-primitive-color-neutral-600)',
+  ];
+  const dots = dotColors.map((c) => `<span class="mini-grid-dot" style="background:${c};"></span>`).join('');
+  return `<div class="group-preview"><div class="mini-grid">${dots}</div></div>`;
 }
 
 export function renderTokenGroupCard(group) {
@@ -155,19 +186,12 @@ export function renderTokenGroupCard(group) {
       type="button"
       data-route="${escapeHTML(JSON.stringify({ name: 'token-group', groupId: group.id }))}"
       data-filter-item="token-group"
-      data-query="${escapeHTML(`${group.title} ${group.description} ${group.entries.length}`.toLowerCase())}"
+      data-query="${escapeHTML(`${group.title} ${group.description}`.toLowerCase())}"
     >
-      <div class="component-top">
-        <div>
-          <p class="helper">Token type</p>
-          <h3 class="component-name">${escapeHTML(group.title)}</h3>
-        </div>
-        <span class="level-chip">${group.entries.length}</span>
-      </div>
-      <p class="section-copy">${escapeHTML(group.description)}</p>
-      <div class="chip-row">
-        <span class="chip">${group.entries.length} token${group.entries.length === 1 ? '' : 's'}</span>
-        <span class="chip">View details</span>
+      ${renderGroupPreview(group)}
+      <div>
+        <h3 class="component-name">${escapeHTML(group.title)}</h3>
+        <p class="helper" style="margin-top:2px">${escapeHTML(group.description)}</p>
       </div>
     </button>
   `;
@@ -175,6 +199,7 @@ export function renderTokenGroupCard(group) {
 
 export function renderTokenCard(path, token, groupId) {
   const value = formatValue(token.resolvedValue);
+  const shortName = path.split('.').pop();
   const tokenRoute = { name: 'token', groupId, tokenPath: path };
 
   if (groupId === 'colors') {
@@ -187,11 +212,10 @@ export function renderTokenCard(path, token, groupId) {
     return `
       <button class="swatch" type="button" ${tokenButtonAttributes(path, token)} data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
         <div class="swatch-preview ${transparent ? 'transparent' : ''}" style="${style}">
-          <span>${escapeHTML(path.split('.').pop())}</span>
-          <span>${escapeHTML(value)}</span>
+          <span>${escapeHTML(shortName)}</span>
         </div>
-        <p class="token-name">${escapeHTML(path)}</p>
-        <p class="token-var mono">${escapeHTML(token.cssVar)}</p>
+        <p class="token-short-name">${escapeHTML(shortName)}</p>
+        <p class="token-full-path">${escapeHTML(path)}</p>
       </button>
     `;
   }
@@ -200,9 +224,9 @@ export function renderTokenCard(path, token, groupId) {
     return `
       <button class="spacing-card" type="button" ${tokenButtonAttributes(path, token)} data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
         <div class="spacing-bar" style="width:clamp(var(--ds-primitive-spacing-1), ${escapeHTML(value)}, var(--ui-spacing-bar-max-width))"></div>
-        <p class="token-name">${escapeHTML(path)}</p>
+        <p class="token-short-name">${escapeHTML(shortName)}</p>
+        <p class="token-full-path">${escapeHTML(path)}</p>
         <p class="token-value">${escapeHTML(value)}</p>
-        <p class="token-var mono">${escapeHTML(token.cssVar)}</p>
       </button>
     `;
   }
@@ -211,9 +235,8 @@ export function renderTokenCard(path, token, groupId) {
     return `
       <button class="shadow-card" type="button" ${tokenButtonAttributes(path, token)} data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
         <div class="shadow-preview" style="box-shadow:${escapeHTML(value)}"></div>
-        <p class="token-name">${escapeHTML(path)}</p>
-        <p class="token-value">${escapeHTML(value)}</p>
-        <p class="token-var mono">${escapeHTML(token.cssVar)}</p>
+        <p class="token-short-name">${escapeHTML(shortName)}</p>
+        <p class="token-full-path">${escapeHTML(path)}</p>
       </button>
     `;
   }
@@ -224,10 +247,10 @@ export function renderTokenCard(path, token, groupId) {
 
     return `
       <button class="specimen-card" type="button" ${tokenButtonAttributes(path, token)} data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
-        <p class="specimen" style="font-size:${fontSize};font-weight:${fontWeight}">The quick brown fox jumps over the lazy dog.</p>
-        <p class="token-name">${escapeHTML(path)}</p>
+        <p class="specimen" style="font-size:${fontSize};font-weight:${fontWeight}">Ag</p>
+        <p class="token-short-name">${escapeHTML(shortName)}</p>
+        <p class="token-full-path">${escapeHTML(path)}</p>
         <p class="token-value">${escapeHTML(value)}</p>
-        <p class="token-var mono">${escapeHTML(token.cssVar)}</p>
       </button>
     `;
   }
@@ -236,10 +259,10 @@ export function renderTokenCard(path, token, groupId) {
     <button class="nav-card" type="button" ${tokenButtonAttributes(path, token)} data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
       <div>
         <p class="helper">${escapeHTML(token.$type || 'token')}</p>
-        <h3 class="component-name">${escapeHTML(path)}</h3>
+        <h3 class="token-short-name">${escapeHTML(shortName)}</h3>
       </div>
+      <p class="token-full-path">${escapeHTML(path)}</p>
       <p class="token-value">${escapeHTML(value)}</p>
-      <p class="token-var mono">${escapeHTML(token.cssVar)}</p>
     </button>
   `;
 }
@@ -253,18 +276,10 @@ export function renderComponentCard(component, levelId) {
       data-route="${escapeHTML(JSON.stringify({ name: 'component', levelId, componentName: component.name }))}"
     >
       <div class="component-top">
-        <div>
-          <h3 class="component-name">${escapeHTML(component.name)}</h3>
-          <p class="helper mono">${escapeHTML(component.path)}</p>
-        </div>
+        <h3 class="component-name">${escapeHTML(component.name)}</h3>
         ${renderStatusPill(component.status || 'stable')}
       </div>
-      <div class="chip-row">
-        <span class="level-chip">${escapeHTML(component.levelLabel)}</span>
-        <span class="chip">${component.preview?.available ? 'React preview' : 'Metadata preview'}</span>
-        <span class="chip">${(component.contains || []).length ? `${component.contains.length} child assets` : 'Leaf component'}</span>
-      </div>
-      <p class="section-copy">${escapeHTML(component.description || 'No description provided.')}</p>
+      <p class="helper">${escapeHTML(component.description || 'No description provided.')}</p>
       ${(component.variants || []).length ? `
         <div class="chip-row">
           ${(component.variants || []).slice(0, 4).map((variant) => `<span class="chip">${escapeHTML(variant)}</span>`).join('')}
@@ -287,18 +302,14 @@ export function renderComponentPreviewPanel(component, previewSummary) {
   ].filter(Boolean);
 
   const scenarioCount = Array.isArray(preview.previewScenarios) ? preview.previewScenarios.length : 0;
-  const slotCount = Array.isArray(preview.previewSlots) ? preview.previewSlots.length : 0;
 
   return `
     <article class="group-card preview-panel">
       <div class="group-head">
-        <div>
-          <h3 class="group-title">Preview</h3>
-          <p class="helper">Live React rendering is isolated in an iframe so app providers and styles do not leak into the DSM shell.</p>
-        </div>
-        <span class="status-pill" data-status="${escapeHTML(preview.mode === 'react' ? 'ready' : 'metadata')}">
+        <h3 class="group-title">Preview</h3>
+        <span class="status-pill" data-status="${escapeHTML(preview.mode === 'react' ? 'stable' : 'beta')}">
           <span class="status-dot"></span>
-          ${escapeHTML(preview.mode === 'react' ? 'React preview' : 'Metadata fallback')}
+          ${escapeHTML(preview.mode === 'react' ? 'React' : 'Metadata')}
         </span>
       </div>
       ${preview.mode === 'react'
@@ -312,14 +323,10 @@ export function renderComponentPreviewPanel(component, previewSummary) {
         `
         : `
           <div class="preview-fallback">
-            <p class="helper">${escapeHTML(preview.reason || 'Preview adapter is not available for this component.')}</p>
+            <p class="helper">${escapeHTML(preview.reason || 'No preview adapter available for this component.')}</p>
           </div>
         `}
-      <div class="chip-row">
-        <span class="chip">${escapeHTML(previewSummary.mode === 'react' ? 'Adapter detected' : 'No adapter configured')}</span>
-        <span class="chip">${scenarioCount ? `${scenarioCount} scenario${scenarioCount === 1 ? '' : 's'}` : 'Default props only'}</span>
-        <span class="chip">${slotCount ? `${slotCount} slot${slotCount === 1 ? '' : 's'}` : 'No slot metadata'}</span>
-      </div>
+      ${scenarioCount ? `<div class="chip-row"><span class="chip">${scenarioCount} scenario${scenarioCount === 1 ? '' : 's'}</span></div>` : ''}
       ${notes.length ? `
         <div class="preview-notes">
           ${notes.map((note) => `<p class="helper">${escapeHTML(note)}</p>`).join('')}
@@ -327,7 +334,7 @@ export function renderComponentPreviewPanel(component, previewSummary) {
       ` : ''}
       ${diagnostics.length ? `
         <div class="preview-diagnostics">
-          <p class="helper preview-diagnostics-title">Diagnostics</p>
+          <p class="preview-diagnostics-title">Diagnostics</p>
           <ul class="preview-diagnostics-list">
             ${diagnostics.map((message) => `<li>${escapeHTML(message)}</li>`).join('')}
           </ul>
@@ -350,8 +357,8 @@ export function renderTokenDetailPreview(groupId, entry) {
 
   return `
     <div class="token-detail-preview ${normalize(value) === 'transparent' ? 'transparent' : ''}" style="${previewStyle}">
-      <strong>${escapeHTML(path)}</strong>
-      <span>${escapeHTML(value)}</span>
+      <strong>${escapeHTML(path.split('.').pop())}</strong>
+      <span class="token-full-path" style="text-align:center">${escapeHTML(value)}</span>
     </div>
   `;
 }
