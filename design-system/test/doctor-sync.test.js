@@ -244,3 +244,54 @@ test('sync plan reports metadata drift when inferred props or variants change', 
     },
   ]);
 });
+
+test('sync plan merge mode transfers renamed registry metadata onto discovered components', () => {
+  const registry = {
+    components: [
+      {
+        name: 'QUICK_QUESTIONS',
+        path: 'src/components/chatbot/ChatbotMessageList.tsx',
+        description: 'Old scaffold entry',
+        tokens: ['component.chatbot.questions.*'],
+        status: 'beta',
+      },
+    ],
+  };
+  const discoveredComponents = [
+    {
+      name: 'ChatbotMessageList',
+      path: 'src/components/chatbot/ChatbotMessageList.tsx',
+      props: {},
+      variants: [],
+      sizes: [],
+    },
+  ];
+
+  const plan = buildSyncPlan(registry, discoveredComponents, { merge: true });
+
+  assert.deepEqual(plan.renamedCandidates, [
+    {
+      from: 'QUICK_QUESTIONS',
+      to: 'ChatbotMessageList',
+      path: 'src/components/chatbot/ChatbotMessageList.tsx',
+    },
+  ]);
+  assert.deepEqual(plan.registryOnly, [
+    {
+      name: 'QUICK_QUESTIONS',
+      path: 'src/components/chatbot/ChatbotMessageList.tsx',
+      description: 'Old scaffold entry',
+      tokens: ['component.chatbot.questions.*'],
+      status: 'beta',
+    },
+  ]);
+  assert.deepEqual(plan.nextRegistry.components, [
+    {
+      name: 'ChatbotMessageList',
+      path: 'src/components/chatbot/ChatbotMessageList.tsx',
+      description: 'Old scaffold entry',
+      tokens: ['component.chatbot.questions.*'],
+      status: 'beta',
+    },
+  ]);
+});

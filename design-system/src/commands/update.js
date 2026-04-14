@@ -5,6 +5,7 @@ import { buildCommand } from './build.js';
 import { generateContextCommand } from './generate-context.js';
 import {
   createLocalCliWrapper,
+  ensureLocalBinShim,
   wireMcpServer,
   wirePackageScripts,
 } from '../utils/project-install.js';
@@ -23,11 +24,13 @@ export async function updateCommand(options = {}) {
   console.log(chalk.dim(`   Target: ${targetRoot}\n`));
 
   createLocalCliWrapper(targetRoot, resolve(PACKAGE_SOURCE_ROOT, 'src/cli.js'));
+  ensureLocalBinShim(targetRoot);
   console.log(`  ${chalk.green('✓')}  ${chalk.white('design-system/bin/dsm.js')}  ${chalk.dim('updated')}`);
 
   console.log(chalk.cyan('\n📦 Refreshing DSM package...\n'));
   try {
     const updateResult = await refreshInstalledDsm(targetRoot, PACKAGE_SOURCE_ROOT, {
+      expectedVersion: getDsmVersion(),
       logger(step, status, details) {
         const icon = status === 'done' ? chalk.green('✓') : chalk.cyan('…');
         console.log(`  ${icon}  ${chalk.white(step)}${details ? `  ${chalk.dim(details)}` : ''}`);

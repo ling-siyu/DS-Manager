@@ -8,6 +8,7 @@ import {
   buildManualInstallMessage,
   cleanupLegacyProjectCache,
   createLocalCliWrapper,
+  ensureLocalBinShim,
   installPackageIntoProject,
   runStreamingCommand,
   verifyInstalledCli,
@@ -185,23 +186,30 @@ test('createLocalCliWrapper prefers installed DSM and falls back to the source c
   createLocalCliWrapper(targetRoot, '/tmp/source-dsm/src/cli.js');
   const wrapperSource = readFileSync(resolve(targetRoot, 'design-system/bin/dsm.js'), 'utf8');
 
-  assert.match(wrapperSource, /node_modules\/dsm\/src\/cli\.js/);
+  assert.match(wrapperSource, /node_modules\/dsm\/bin\/dsm\.js/);
   assert.match(wrapperSource, /\/tmp\/source-dsm\/src\/cli\.js/);
 });
 
-test('verifyInstalledCli requires all supported entrypoints to succeed', async () => {
+test('verifyInstalledCli requires modern commands to succeed across all supported entrypoints', async () => {
   const targetRoot = createTempProject();
   mkdirSync(resolve(targetRoot, 'node_modules/.bin'), { recursive: true });
   mkdirSync(resolve(targetRoot, 'node_modules/dsm/src'), { recursive: true });
 
-  writeFileSync(resolve(targetRoot, 'node_modules/.bin/dsm'), '#!/bin/sh\nexit 0\n');
+  writeFileSync(resolve(targetRoot, 'node_modules/.bin/dsm'), '#!/bin/sh\necho "0.1.0"\n');
   chmodSync(resolve(targetRoot, 'node_modules/.bin/dsm'), 0o755);
-  writeFileSync(resolve(targetRoot, 'node_modules/dsm/src/cli.js'), '#!/usr/bin/env node\nconsole.log("0.1.0")\n');
+  writeFileSync(resolve(targetRoot, 'node_modules/dsm/src/cli.js'), `#!/usr/bin/env node
+if (process.argv.includes('--version')) {
+  console.log('0.1.0');
+  process.exit(0);
+}
+console.error("error: unknown command 'doctor'");
+process.exit(1);
+`);
 
   const verification = await verifyInstalledCli(targetRoot, { expectedVersion: '0.1.0' });
 
   assert.equal(verification.ok, false);
-  assert.match(verification.message, /(produced no output|exited with code)/);
+  assert.match(verification.message, /doctor --json/);
 });
 
 test('collectScanResults ignores common generated artifact directories', async () => {
@@ -242,4 +250,13 @@ test('cleanupLegacyProjectCache removes repo-local npm cache directories', () =>
   cleanupLegacyProjectCache(targetRoot);
 
   assert.equal(existsSync(resolve(targetRoot, 'design-system/.npm-cache')), false);
+});
+
+test('ensureLocalBinShim creates a consumer-facing dsm entrypoint that delegates to the project wrapper', () => {
+  const targetRoot = createTempProject();
+
+  ensureLocalBinShim(targetRoot);
+
+  const shimSource = readFileSync(resolve(targetRoot, 'node_modules/.bin/dsm'), 'utf8');
+  assert.match(shimSource, /\.\.\/\.\.\/design-system\/bin\/dsm\.js/);
 });

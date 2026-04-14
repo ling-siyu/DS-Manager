@@ -10,7 +10,6 @@ import {
   writeFileSync,
 } from 'fs';
 import { spawn } from 'child_process';
-import { pathToFileURL } from 'url';
 import { tmpdir } from 'os';
 import { resolve, relative } from 'path';
 
@@ -46,34 +45,101 @@ export function createLocalCliWrapper(targetRoot, cliPath) {
 
   if (!existsSync(binDir)) mkdirSync(binDir, { recursive: true });
 
-  const packageCliHref = './../../node_modules/dsm/src/cli.js';
-  const sourceCliHref = pathToFileURL(cliPath).href;
+  const packageCliPath = './../../node_modules/dsm/bin/dsm.js';
+  const sourceCliPath = cliPath;
   const wrapperSource = `#!/usr/bin/env node
+import { spawn } from 'child_process';
+
 const candidates = [
-  ${JSON.stringify(packageCliHref)},
-  ${JSON.stringify(sourceCliHref)},
+  ${JSON.stringify(packageCliPath)},
+  ${JSON.stringify(sourceCliPath)},
 ];
 
-let lastError = null;
-for (const candidate of candidates) {
-  try {
-    const moduleValue = await import(candidate);
-    if (typeof moduleValue?.main !== 'function') {
-      throw new Error(\`No main() export found in \${candidate}\`);
-    }
-    await moduleValue.main(process.argv.slice(2));
-    process.exit(0);
-  } catch (error) {
-    lastError = error;
-  }
+async function runCandidate(candidate) {
+  return await new Promise((resolveRun) => {
+    const child = spawn(process.execPath, [candidate, ...process.argv.slice(2)], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout?.on('data', (chunk) => {
+      stdout += chunk;
+    });
+
+    child.stderr?.on('data', (chunk) => {
+      stderr += chunk;
+    });
+
+    child.once('error', (error) => {
+      resolveRun({
+        ok: false,
+        candidate,
+        code: 1,
+        stdout,
+        stderr: error.stack || String(error),
+      });
+    });
+
+    child.once('close', (code) => {
+      resolveRun({
+        ok: code === 0,
+        candidate,
+        code: code ?? 1,
+        stdout,
+        stderr,
+      });
+    });
+  });
 }
 
-console.error(lastError?.stack || String(lastError || 'Could not locate a working DSM CLI.'));
-process.exit(1);
+let lastResult = null;
+for (const candidate of candidates) {
+  const result = await runCandidate(candidate);
+  if (result.ok) {
+    if (result.stdout) process.stdout.write(result.stdout);
+    if (result.stderr) process.stderr.write(result.stderr);
+    process.exit(0);
+  }
+
+  lastResult = result;
+}
+
+if (lastResult?.stdout) process.stdout.write(lastResult.stdout);
+if (lastResult?.stderr) process.stderr.write(lastResult.stderr);
+if (!lastResult) process.stderr.write('Could not locate a working DSM CLI.\\n');
+process.exit(lastResult?.code ?? 1);
 `;
 
   writeFileSync(wrapperPath, wrapperSource, 'utf8');
   chmodSync(wrapperPath, 0o755);
+}
+
+export function ensureLocalBinShim(targetRoot) {
+  const binDir = resolve(targetRoot, 'node_modules/.bin');
+  const binPath = resolve(binDir, 'dsm');
+
+  if (!existsSync(binDir)) mkdirSync(binDir, { recursive: true });
+
+  const shimSource = `#!/usr/bin/env node
+import { spawn } from 'child_process';
+
+const child = spawn(process.execPath, ['../../design-system/bin/dsm.js', ...process.argv.slice(2)], {
+  stdio: 'inherit',
+});
+
+child.once('close', (code, signal) => {
+  if (signal) {
+    process.kill(process.pid, signal);
+    return;
+  }
+  process.exit(code ?? 1);
+});
+`;
+
+  writeFileSync(binPath, shimSource, 'utf8');
+  chmodSync(binPath, 0o755);
 }
 
 export function wirePackageScripts(targetRoot, options = {}) {
@@ -144,7 +210,7 @@ export function detectPackageManager(targetRoot) {
     return { name: 'bun', cmd: 'bun', args: ['add', '-d'] };
   }
 
-  return { name: 'npm', cmd: 'npm', args: ['install', '-D'] };
+  return { name: 'npm', cmd: 'npm', args: ['install', '-D', '--no-audit', '--no-fund', '--ignore-scripts', '--no-package-lock'] };
 }
 
 export function verifyInstalledPackage(targetRoot) {
@@ -299,54 +365,99 @@ export async function runCommandCapturingStdout(command, args, options = {}) {
 export async function verifyInstalledCli(targetRoot, options = {}) {
   const { expectedVersion } = options;
   const candidates = [
-    { label: 'npx dsm --version', command: 'npx', args: ['--no-install', 'dsm', '--version'] },
-    { label: './node_modules/.bin/dsm --version', command: './node_modules/.bin/dsm', args: ['--version'] },
-    { label: `node ${'./node_modules/dsm/src/cli.js'} --version`, command: process.execPath, args: ['./node_modules/dsm/src/cli.js', '--version'] },
+    {
+      label: 'npx dsm',
+      checks: [
+        { label: '--version', command: 'npx', args: ['--no-install', 'dsm', '--version'], expectOutput: true },
+        { label: 'doctor --json', command: 'npx', args: ['--no-install', 'dsm', 'doctor', '--json'], expectJson: true },
+      ],
+    },
+    {
+      label: './node_modules/.bin/dsm',
+      checks: [
+        { label: '--version', command: './node_modules/.bin/dsm', args: ['--version'], expectOutput: true },
+        { label: 'doctor --json', command: './node_modules/.bin/dsm', args: ['doctor', '--json'], expectJson: true },
+      ],
+    },
+    {
+      label: 'node ./node_modules/dsm/src/cli.js',
+      checks: [
+        { label: '--version', command: process.execPath, args: ['./node_modules/dsm/src/cli.js', '--version'], expectOutput: true },
+        { label: 'doctor --json', command: process.execPath, args: ['./node_modules/dsm/src/cli.js', 'doctor', '--json'], expectJson: true },
+      ],
+    },
   ];
   const results = [];
 
   for (const candidate of candidates) {
-    try {
-      const stdout = await runCommandCapturingStdout(candidate.command, candidate.args, {
-        cwd: targetRoot,
-        env: process.env,
-        timeoutMs: 15_000,
-      });
-      const output = stdout.trim();
+    const candidateResult = {
+      label: candidate.label,
+      ok: true,
+      checks: [],
+    };
 
-      if (!output) {
-        results.push({ label: candidate.label, ok: false, message: 'produced no output' });
-        continue;
+    for (const check of candidate.checks) {
+      try {
+        const stdout = await runCommandCapturingStdout(check.command, check.args, {
+          cwd: targetRoot,
+          env: process.env,
+          timeoutMs: 15_000,
+        });
+        const output = stdout.trim();
+
+        if (check.expectOutput && !output) {
+          candidateResult.ok = false;
+          candidateResult.checks.push({ label: check.label, ok: false, message: 'produced no output' });
+          continue;
+        }
+
+        if (check.expectOutput && expectedVersion && output !== expectedVersion) {
+          candidateResult.ok = false;
+          candidateResult.checks.push({ label: check.label, ok: false, message: `returned ${output}, expected ${expectedVersion}` });
+          continue;
+        }
+
+        if (check.expectJson) {
+          try {
+            JSON.parse(output);
+          } catch {
+            candidateResult.ok = false;
+            candidateResult.checks.push({ label: check.label, ok: false, message: 'did not produce valid JSON output' });
+            continue;
+          }
+        }
+
+        candidateResult.checks.push({ label: check.label, ok: true, output });
+      } catch (error) {
+        candidateResult.ok = false;
+        candidateResult.checks.push({ label: check.label, ok: false, message: error.message });
       }
-
-      if (expectedVersion && output !== expectedVersion) {
-        results.push({ label: candidate.label, ok: false, message: `returned ${output}, expected ${expectedVersion}` });
-        continue;
-      }
-
-      results.push({
-        label: candidate.label,
-        ok: true,
-        output,
-      });
-    } catch (error) {
-      results.push({ label: candidate.label, ok: false, message: error.message });
     }
+
+    results.push(candidateResult);
   }
 
   const failed = results.filter((entry) => entry.ok !== true);
   if (failed.length === 0) {
     return {
       ok: true,
-      command: results.map((entry) => `${entry.label} -> ${entry.output}`).join(' | '),
-      output: results[0]?.output || '',
+      command: results.map((entry) => {
+        const versionCheck = entry.checks.find((check) => check.label === '--version');
+        return `${entry.label} -> ${versionCheck?.output || 'ok'}`;
+      }).join(' | '),
+      output: results[0]?.checks?.find((check) => check.label === '--version')?.output || '',
       results,
     };
   }
 
   return {
     ok: false,
-    message: failed.map((entry) => `${entry.label} ${entry.message}`).join(' | '),
+    message: failed.map((entry) => entry.checks
+      .filter((check) => check.ok !== true)
+      .map((check) => `${entry.label} ${check.label} ${check.message}`)
+      .join(' | '))
+      .filter(Boolean)
+      .join(' | '),
     results,
   };
 }
@@ -379,6 +490,7 @@ export async function installPackageIntoProject(targetRoot, packageSourceRoot, o
   }
 
   cleanupLegacyProjectCache(targetRoot);
+  ensureLocalBinShim(targetRoot);
   const vendorDir = resolve(targetRoot, 'design-system/vendor');
   const npmCacheDir = mkdtempSync(resolve(tmpdir(), 'dsm-npm-cache-'));
   if (!existsSync(vendorDir)) mkdirSync(vendorDir, { recursive: true });

@@ -68,6 +68,22 @@ function mergeComponent(existing, discovered, merge) {
   };
 }
 
+function mergeRenamedComponent(orphaned, discovered) {
+  const props = Object.keys(discovered.props || {}).length ? discovered.props : orphaned.props;
+  const variants = discovered.variants?.length ? discovered.variants : orphaned.variants;
+  const sizes = discovered.sizes?.length ? discovered.sizes : orphaned.sizes;
+
+  return {
+    ...discovered,
+    ...orphaned,
+    name: discovered.name,
+    path: discovered.path,
+    ...(props ? { props } : {}),
+    ...(variants ? { variants } : {}),
+    ...(sizes ? { sizes } : {}),
+  };
+}
+
 function getMetadataDiff(existing, discovered) {
   const differences = [];
 
@@ -116,10 +132,24 @@ export function buildSyncPlan(registry, discoveredComponents, options = {}) {
       to: candidate.name,
       path: candidate.path,
     })));
+  const renamedByTarget = new Map(renamedCandidates
+    .filter((entry) => !existingByName.has(entry.to))
+    .map((entry) => [entry.to, existingByName.get(entry.from)]));
+  const consumedRenames = new Set(renamedCandidates
+    .filter((entry) => !existingByName.has(entry.to))
+    .map((entry) => entry.from));
 
-  const mergedComponents = discoveredComponents.map((component) => mergeComponent(existingByName.get(component.name), component, merge));
+  const mergedComponents = discoveredComponents.map((component) => {
+    const existing = existingByName.get(component.name);
+    if (merge && !existing && renamedByTarget.has(component.name)) {
+      return mergeRenamedComponent(renamedByTarget.get(component.name), toBaseComponent(component));
+    }
+
+    return mergeComponent(existing, component, merge);
+  });
   if (merge) {
     for (const orphaned of registryOnly) {
+      if (consumedRenames.has(orphaned.name)) continue;
       mergedComponents.push(orphaned);
     }
   }

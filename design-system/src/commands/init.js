@@ -7,6 +7,7 @@ import { generateContextCommand } from './generate-context.js';
 import { installHookCommand } from './install-hook.js';
 import {
   createLocalCliWrapper,
+  ensureLocalBinShim,
   installPackageIntoProject,
   wireMcpServer,
   wirePackageScripts,
@@ -103,6 +104,9 @@ export async function initCommand(options = {}) {
       run: () => {
         const cliPath = resolve(TEMPLATES_DIR, 'src/cli.js');
         createLocalCliWrapper(targetRoot, cliPath);
+        if (existsSync(resolve(targetRoot, 'package.json'))) {
+          ensureLocalBinShim(targetRoot);
+        }
       },
     },
     {

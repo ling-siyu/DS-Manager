@@ -19,6 +19,7 @@ function cleanupTempDir(tempDir) {
 export async function refreshInstalledDsm(targetRoot, packageSourceRoot, options = {}) {
   const logger = options.logger ?? (() => {});
   const timeoutMs = options.installTimeoutMs ?? 120_000;
+  const expectedVersion = options.expectedVersion;
   const vendorDir = resolve(targetRoot, 'design-system/vendor');
   const npmCacheDir = mkdtempSync(resolve(tmpdir(), 'dsm-npm-cache-'));
   const npmEnv = { ...process.env, npm_config_cache: npmCacheDir };
@@ -80,7 +81,7 @@ export async function refreshInstalledDsm(targetRoot, packageSourceRoot, options
     logger('install tarball', 'done', packageManager.name);
 
     logger('verify installed package', 'in_progress');
-    const cliVerification = await verifyInstalledCli(targetRoot);
+    const cliVerification = await verifyInstalledCli(targetRoot, { expectedVersion });
     if (!cliVerification.ok) {
       throw new Error(`${cliVerification.message}. Keeping the project-local wrapper enabled for recovery.`);
     }
