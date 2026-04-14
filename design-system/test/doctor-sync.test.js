@@ -63,13 +63,13 @@ function createFixtureProject() {
 test('CLI bootstrap executes correctly through a symlinked bin shim path', () => {
   const binRoot = mkdtempSync(resolve(tmpdir(), 'dsm-bin-test-'));
   const shimPath = resolve(binRoot, 'dsm');
-  const cliPath = resolve(process.cwd(), 'src/cli.js');
+  const cliPath = resolve(process.cwd(), 'design-system/src/cli.js');
 
   symlinkSync(cliPath, shimPath);
   chmodSync(cliPath, 0o755);
 
   const result = spawnSync(shimPath, ['--version'], {
-    cwd: resolve(process.cwd(), '..'),
+    cwd: process.cwd(),
     encoding: 'utf8',
   });
 
@@ -123,6 +123,26 @@ test('discoverComponents finds exported React components and infers simple props
   assert.deepEqual(button.variants, ['primary', 'secondary']);
   assert.deepEqual(button.sizes, ['sm', 'md']);
   assert.equal(button.props.disabled.type, 'boolean');
+});
+
+test('discoverComponents ignores exported constants that are not React components', () => {
+  const root = createFixtureProject();
+
+  writeFileSync(resolve(root, 'src/components/ui/ChatbotMessageList.tsx'), `
+    export const QUICK_QUESTIONS = [
+      '现在该买入吗？',
+      '要止盈吗？',
+    ];
+
+    export function ChatbotMessageList() {
+      return <ul><li>hi</li></ul>;
+    }
+  `);
+
+  const discovery = discoverComponents(root);
+
+  assert.ok(discovery.components.some((component) => component.name === 'ChatbotMessageList'));
+  assert.ok(!discovery.components.some((component) => component.name === 'QUICK_QUESTIONS'));
 });
 
 test('sync plan preserves manual metadata in merge mode while updating discovered paths', () => {

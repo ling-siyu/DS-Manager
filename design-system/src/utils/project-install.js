@@ -10,8 +10,13 @@ import {
   writeFileSync,
 } from 'fs';
 import { spawn } from 'child_process';
+import { pathToFileURL } from 'url';
 import { tmpdir } from 'os';
 import { resolve, relative } from 'path';
+
+export function cleanupLegacyProjectCache(targetRoot) {
+  rmSync(resolve(targetRoot, 'design-system/.npm-cache'), { recursive: true, force: true });
+}
 
 export function wireMcpServer(targetRoot, command, args) {
   const settingsDir = resolve(targetRoot, '.claude');
@@ -41,14 +46,30 @@ export function createLocalCliWrapper(targetRoot, cliPath) {
 
   if (!existsSync(binDir)) mkdirSync(binDir, { recursive: true });
 
+  const packageCliHref = './../../node_modules/dsm/src/cli.js';
+  const sourceCliHref = pathToFileURL(cliPath).href;
   const wrapperSource = `#!/usr/bin/env node
-import { main } from ${JSON.stringify(cliPath)};
-try {
-  await main(process.argv.slice(2));
-} catch (err) {
-  console.error(err.stack || String(err));
-  process.exitCode = 1;
+const candidates = [
+  ${JSON.stringify(packageCliHref)},
+  ${JSON.stringify(sourceCliHref)},
+];
+
+let lastError = null;
+for (const candidate of candidates) {
+  try {
+    const moduleValue = await import(candidate);
+    if (typeof moduleValue?.main !== 'function') {
+      throw new Error(\`No main() export found in \${candidate}\`);
+    }
+    await moduleValue.main(process.argv.slice(2));
+    process.exit(0);
+  } catch (error) {
+    lastError = error;
+  }
 }
+
+console.error(lastError?.stack || String(lastError || 'Could not locate a working DSM CLI.'));
+process.exit(1);
 `;
 
   writeFileSync(wrapperPath, wrapperSource, 'utf8');
@@ -278,11 +299,11 @@ export async function runCommandCapturingStdout(command, args, options = {}) {
 export async function verifyInstalledCli(targetRoot, options = {}) {
   const { expectedVersion } = options;
   const candidates = [
-    { command: 'npx', args: ['--no-install', 'dsm', '--version'] },
-    { command: process.execPath, args: ['./node_modules/dsm/src/cli.js', '--version'] },
-    { command: process.execPath, args: ['./design-system/bin/dsm.js', '--version'] },
+    { label: 'npx dsm --version', command: 'npx', args: ['--no-install', 'dsm', '--version'] },
+    { label: './node_modules/.bin/dsm --version', command: './node_modules/.bin/dsm', args: ['--version'] },
+    { label: `node ${'./node_modules/dsm/src/cli.js'} --version`, command: process.execPath, args: ['./node_modules/dsm/src/cli.js', '--version'] },
   ];
-  const failures = [];
+  const results = [];
 
   for (const candidate of candidates) {
     try {
@@ -294,28 +315,39 @@ export async function verifyInstalledCli(targetRoot, options = {}) {
       const output = stdout.trim();
 
       if (!output) {
-        failures.push(`${candidate.command} ${candidate.args.join(' ')} produced no output`);
+        results.push({ label: candidate.label, ok: false, message: 'produced no output' });
         continue;
       }
 
       if (expectedVersion && output !== expectedVersion) {
-        failures.push(`${candidate.command} ${candidate.args.join(' ')} returned ${output}, expected ${expectedVersion}`);
+        results.push({ label: candidate.label, ok: false, message: `returned ${output}, expected ${expectedVersion}` });
         continue;
       }
 
-      return {
+      results.push({
+        label: candidate.label,
         ok: true,
-        command: `${candidate.command} ${candidate.args.join(' ')}`,
         output,
-      };
+      });
     } catch (error) {
-      failures.push(`${candidate.command} ${candidate.args.join(' ')} failed: ${error.message}`);
+      results.push({ label: candidate.label, ok: false, message: error.message });
     }
+  }
+
+  const failed = results.filter((entry) => entry.ok !== true);
+  if (failed.length === 0) {
+    return {
+      ok: true,
+      command: results.map((entry) => `${entry.label} -> ${entry.output}`).join(' | '),
+      output: results[0]?.output || '',
+      results,
+    };
   }
 
   return {
     ok: false,
-    message: failures.join(' | '),
+    message: failed.map((entry) => `${entry.label} ${entry.message}`).join(' | '),
+    results,
   };
 }
 
@@ -346,6 +378,7 @@ export async function installPackageIntoProject(targetRoot, packageSourceRoot, o
     };
   }
 
+  cleanupLegacyProjectCache(targetRoot);
   const vendorDir = resolve(targetRoot, 'design-system/vendor');
   const npmCacheDir = mkdtempSync(resolve(tmpdir(), 'dsm-npm-cache-'));
   if (!existsSync(vendorDir)) mkdirSync(vendorDir, { recursive: true });
@@ -407,5 +440,6 @@ export async function installPackageIntoProject(targetRoot, packageSourceRoot, o
     };
   } finally {
     rmSync(npmCacheDir, { recursive: true, force: true });
+    cleanupLegacyProjectCache(targetRoot);
   }
 }

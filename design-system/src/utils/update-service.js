@@ -3,6 +3,7 @@ import { tmpdir } from 'os';
 import { resolve } from 'path';
 import {
   buildManualInstallMessage,
+  cleanupLegacyProjectCache,
   detectPackageManager,
   runCommandCapturingStdout,
   runStreamingCommand,
@@ -17,13 +18,14 @@ function cleanupTempDir(tempDir) {
 
 export async function refreshInstalledDsm(targetRoot, packageSourceRoot, options = {}) {
   const logger = options.logger ?? (() => {});
-  const timeoutMs = options.installTimeoutMs ?? 45_000;
+  const timeoutMs = options.installTimeoutMs ?? 120_000;
   const vendorDir = resolve(targetRoot, 'design-system/vendor');
   const npmCacheDir = mkdtempSync(resolve(tmpdir(), 'dsm-npm-cache-'));
   const npmEnv = { ...process.env, npm_config_cache: npmCacheDir };
   const steps = [];
 
   if (!existsSync(vendorDir)) mkdirSync(vendorDir, { recursive: true });
+  cleanupLegacyProjectCache(targetRoot);
 
   try {
     logger('pack tarball', 'in_progress');
@@ -96,5 +98,6 @@ export async function refreshInstalledDsm(targetRoot, packageSourceRoot, options
     };
   } finally {
     cleanupTempDir(npmCacheDir);
+    cleanupLegacyProjectCache(targetRoot);
   }
 }

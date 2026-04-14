@@ -4,9 +4,10 @@
   "description": "Design System Manager — tokenize, build, and enforce your design system with Claude Code",
   "type": "module",
   "bin": {
-    "dsm": "./src/cli.js"
+    "dsm": "./bin/dsm.js"
   },
   "files": [
+    "bin",
     "src",
     "build",
     "templates",

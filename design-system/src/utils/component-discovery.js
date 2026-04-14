@@ -28,6 +28,10 @@ function stripComments(source) {
     .replace(/\/\/.*$/gm, '');
 }
 
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function findExportedNames(source) {
   const names = new Set();
   const cleaned = stripComments(source);
@@ -58,6 +62,18 @@ function findExportedNames(source) {
   }
 
   return [...names];
+}
+
+function isLikelyComponentDefinition(source, componentName) {
+  const escaped = escapeRegex(componentName);
+  const patterns = [
+    new RegExp(`export\\s+default\\s+function\\s+${escaped}\\s*\\(`, 'm'),
+    new RegExp(`export\\s+function\\s+${escaped}\\s*\\(`, 'm'),
+    new RegExp(`export\\s+class\\s+${escaped}\\b`, 'm'),
+    new RegExp(`(?:export\\s+)?const\\s+${escaped}\\s*(?::[^=]+)?=\\s*(?:async\\s*)?(?:\\([^)]*\\)\\s*=>|function\\b|memo\\s*\\(|forwardRef\\s*\\(|React\\.memo\\s*\\(|React\\.forwardRef\\s*\\()`, 'm'),
+  ];
+
+  return patterns.some((pattern) => pattern.test(source));
 }
 
 function extractTypeBlock(source, typeName) {
@@ -132,9 +148,6 @@ function inferPropsForComponent(source, componentName) {
 }
 
 function looksRenderableReactComponent(source, componentName, filePath) {
-  const extension = extname(filePath);
-  if (extension === '.jsx' || extension === '.tsx') return true;
-
   const markers = [
     `<${componentName}`,
     'return (',
@@ -144,7 +157,8 @@ function looksRenderableReactComponent(source, componentName, filePath) {
     'from "react"',
   ];
 
-  return markers.some((marker) => source.includes(marker));
+  return (extname(filePath) === '.jsx' || extname(filePath) === '.tsx' || extname(filePath) === '.js' || extname(filePath) === '.ts')
+    && markers.some((marker) => source.includes(marker));
 }
 
 export function discoverComponents(repoRoot, options = {}) {
@@ -170,6 +184,7 @@ export function discoverComponents(repoRoot, options = {}) {
 
     const exportedNames = findExportedNames(source);
     for (const name of exportedNames) {
+      if (!isLikelyComponentDefinition(source, name)) continue;
       if (!looksRenderableReactComponent(source, name, filePath)) continue;
 
       const inferred = inferPropsForComponent(source, name);

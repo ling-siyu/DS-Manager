@@ -56,6 +56,14 @@ const IGNORE_GLOBS = [
   '**/design-system/build/**',
   '**/.next/**',
   '**/dist/**',
+  '**/build/**',
+  '**/storybook-static/**',
+  '**/coverage/**',
+  '**/.expo/**',
+  '**/.turbo/**',
+  '**/android/**/build/**',
+  '**/android/app/src/main/assets/**',
+  '**/ios/build/**',
   '**/.git/**',
 ];
 
@@ -65,8 +73,16 @@ function shouldIgnorePath(filePath) {
     '/design-system/build/',
     '/.next/',
     '/dist/',
+    '/build/',
+    '/storybook-static/',
+    '/coverage/',
+    '/.expo/',
+    '/.turbo/',
+    '/android/app/src/main/assets/',
+    '/ios/build/',
     '/.git/',
-  ].some((segment) => filePath.includes(segment));
+  ].some((segment) => filePath.includes(segment))
+    || /\/android\/.*\/build\//.test(filePath);
 }
 
 export async function collectScanResults(scanPath = '.') {

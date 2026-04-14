@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { basename, resolve } from 'path';
 import { realpathSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { Command } from 'commander';
@@ -121,11 +122,14 @@ export async function main(argv = process.argv.slice(2)) {
 
 function isDirectInvocation(argvPath) {
   if (!argvPath) return false;
+  const modulePath = fileURLToPath(import.meta.url);
 
   try {
-    return realpathSync(argvPath) === fileURLToPath(import.meta.url);
+    return realpathSync(resolve(argvPath)) === realpathSync(modulePath);
   } catch {
-    return argvPath === fileURLToPath(import.meta.url);
+    return resolve(argvPath) === modulePath
+      || basename(argvPath) === 'dsm'
+      || basename(argvPath) === 'dsm.cmd';
   }
 }
 

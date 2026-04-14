@@ -1,17 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { resolve } from 'path';
 
 import {
   buildManualInstallMessage,
+  cleanupLegacyProjectCache,
+  createLocalCliWrapper,
   installPackageIntoProject,
   runStreamingCommand,
+  verifyInstalledCli,
   wirePackageScripts,
 } from '../src/utils/project-install.js';
 import { createBindErrorMessage, findAvailablePort } from '../src/commands/ui.js';
 import { getDsmVersion } from '../src/utils/metadata.js';
+import { collectScanResults } from '../src/commands/scan.js';
+import { loadPreviewFrameStyles } from '../src/utils/preview.js';
 
 function createTempProject() {
   const root = mkdtempSync(resolve(tmpdir(), 'dsm-init-test-'));
@@ -173,4 +178,68 @@ test('wirePackageScripts keeps dsm:update pinned to the wrapper even when other 
   assert.equal(status, 'updated');
   assert.equal(pkg.scripts.dsm, 'dsm');
   assert.equal(pkg.scripts['dsm:update'], 'node design-system/bin/dsm.js update');
+});
+
+test('createLocalCliWrapper prefers installed DSM and falls back to the source checkout', () => {
+  const targetRoot = createTempProject();
+  createLocalCliWrapper(targetRoot, '/tmp/source-dsm/src/cli.js');
+  const wrapperSource = readFileSync(resolve(targetRoot, 'design-system/bin/dsm.js'), 'utf8');
+
+  assert.match(wrapperSource, /node_modules\/dsm\/src\/cli\.js/);
+  assert.match(wrapperSource, /\/tmp\/source-dsm\/src\/cli\.js/);
+});
+
+test('verifyInstalledCli requires all supported entrypoints to succeed', async () => {
+  const targetRoot = createTempProject();
+  mkdirSync(resolve(targetRoot, 'node_modules/.bin'), { recursive: true });
+  mkdirSync(resolve(targetRoot, 'node_modules/dsm/src'), { recursive: true });
+
+  writeFileSync(resolve(targetRoot, 'node_modules/.bin/dsm'), '#!/bin/sh\nexit 0\n');
+  chmodSync(resolve(targetRoot, 'node_modules/.bin/dsm'), 0o755);
+  writeFileSync(resolve(targetRoot, 'node_modules/dsm/src/cli.js'), '#!/usr/bin/env node\nconsole.log("0.1.0")\n');
+
+  const verification = await verifyInstalledCli(targetRoot, { expectedVersion: '0.1.0' });
+
+  assert.equal(verification.ok, false);
+  assert.match(verification.message, /(produced no output|exited with code)/);
+});
+
+test('collectScanResults ignores common generated artifact directories', async () => {
+  const targetRoot = mkdtempSync(resolve(tmpdir(), 'dsm-scan-ignore-'));
+  mkdirSync(resolve(targetRoot, 'storybook-static'), { recursive: true });
+  mkdirSync(resolve(targetRoot, 'android/app/build/generated'), { recursive: true });
+  mkdirSync(resolve(targetRoot, 'src/components'), { recursive: true });
+
+  writeFileSync(resolve(targetRoot, 'storybook-static/app.js'), 'const color = "#ff0000";\n');
+  writeFileSync(resolve(targetRoot, 'android/app/build/generated/index.js'), 'const color = "#00ff00";\n');
+  writeFileSync(resolve(targetRoot, 'src/components/Button.tsx'), 'export function Button() { return <div style={{ color: "#0000ff" }} />; }\n');
+
+  const originalCwd = process.cwd();
+  process.chdir(targetRoot);
+
+  try {
+    const results = await collectScanResults('.');
+    assert.equal(results.results.length, 1);
+    assert.equal(results.results[0].file, 'src/components/Button.tsx');
+  } finally {
+    process.chdir(originalCwd);
+  }
+});
+
+test('loadPreviewFrameStyles uses packaged UI assets rather than project-local ui-react files', () => {
+  const styles = loadPreviewFrameStyles({
+    dsRoot: '/tmp/nonexistent-design-system',
+  });
+
+  assert.ok(styles.length > 0);
+});
+
+test('cleanupLegacyProjectCache removes repo-local npm cache directories', () => {
+  const targetRoot = createTempProject();
+  mkdirSync(resolve(targetRoot, 'design-system/.npm-cache/_logs'), { recursive: true });
+  writeFileSync(resolve(targetRoot, 'design-system/.npm-cache/_logs/debug.log'), 'hello');
+
+  cleanupLegacyProjectCache(targetRoot);
+
+  assert.equal(existsSync(resolve(targetRoot, 'design-system/.npm-cache')), false);
 });

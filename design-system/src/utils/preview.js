@@ -1,7 +1,12 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
-import { basename, extname, join, resolve } from 'path';
-import { pathToFileURL } from 'url';
+import { basename, dirname, extname, join, resolve } from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
+
+const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const PACKAGE_UI_REACT_APP_PATH = resolve(PACKAGE_ROOT, 'src/ui-react/PreviewApp.jsx');
+const PACKAGE_UI_REACT_FRAME_CSS_PATH = resolve(PACKAGE_ROOT, 'src/ui-react/frame.css');
+const PACKAGE_NODE_MODULES = resolve(PACKAGE_ROOT, 'node_modules');
 
 const PREVIEW_CONFIG_FILES = [
   'preview.config.js',
@@ -309,7 +314,7 @@ export async function buildPreviewBundle(paths, summary) {
   writeFileSync(entryPath, `
     import React from 'react';
     import { createRoot } from 'react-dom/client';
-    import PreviewApp from ${JSON.stringify(resolve(paths.dsRoot, 'src/ui-react/PreviewApp.jsx'))};
+    import PreviewApp from ${JSON.stringify(PACKAGE_UI_REACT_APP_PATH)};
     import adapter from ${JSON.stringify(summary.configPath)};
 
     const root = createRoot(document.getElementById('root'));
@@ -321,7 +326,7 @@ export async function buildPreviewBundle(paths, summary) {
 
   try {
     const result = await esbuild({
-      absWorkingDir: paths.repoRoot,
+      absWorkingDir: PACKAGE_ROOT,
       assetNames: 'assets/[name]-[hash]',
       bundle: true,
       chunkNames: 'chunks/[name]-[hash]',
@@ -333,6 +338,10 @@ export async function buildPreviewBundle(paths, summary) {
         '.js': 'jsx',
         '.mjs': 'jsx',
       },
+      nodePaths: [
+        PACKAGE_NODE_MODULES,
+        resolve(paths.repoRoot, 'node_modules'),
+      ],
       outdir: 'out',
       platform: 'browser',
       splitting: true,
@@ -442,6 +451,6 @@ export function renderPreviewFrameHTML({ component, previewSummary, tokenStyles,
 }
 
 export function loadPreviewFrameStyles(paths) {
-  const stylePath = resolve(paths.dsRoot, 'src/ui-react/frame.css');
+  const stylePath = PACKAGE_UI_REACT_FRAME_CSS_PATH;
   return existsSync(stylePath) ? readFileSync(stylePath, 'utf8') : '';
 }
