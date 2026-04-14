@@ -71,11 +71,16 @@ export function createAppState(data) {
   const tokenEntries = Object.entries(data.tokens || {});
   const components = enrichComponents(data.components || []);
   const usedIcons = data.usedIcons || [];
+  const health = data.health || {
+    summary: { fatal: 0, warning: 0, info: 0 },
+    diagnosticsByName: {},
+  };
   const preview = data.preview || {
     framework: null,
-    mode: 'metadata',
+    mode: 'metadata-only',
     status: 'disabled',
     reason: 'Metadata preview only.',
+    modeLabel: 'Metadata only',
     availableComponents: [],
     errors: [],
     warnings: [],
@@ -170,6 +175,7 @@ export function createAppState(data) {
   return {
     tokenEntries,
     components,
+    health,
     preview,
     tokenGroupModels,
     getLevelModels,
@@ -184,6 +190,24 @@ export function createAppState(data) {
     },
     getTokenByPath(path) {
       return tokenEntries.find(([tokenPath]) => tokenPath === path) || null;
+    },
+    getHealthBannerLines() {
+      const sourceBackedCount = components.filter((component) => component.preview?.sourceExists).length;
+      const missingPathCount = components.filter((component) => !component.preview?.sourceExists).length;
+      const lines = [];
+
+      lines.push(`Registry contains ${sourceBackedCount} source-backed component${sourceBackedCount === 1 ? '' : 's'}.`);
+      if (missingPathCount > 0) {
+        lines.push(`${missingPathCount} registry path${missingPathCount === 1 ? ' is' : 's are'} missing.`);
+      }
+      if (preview.mode !== 'live-render') {
+        lines.push(`Preview is running in ${preview.modeLabel?.toLowerCase() || 'metadata-only'} mode.`);
+      }
+      if ((health.summary?.fatal || 0) > 0 || (health.summary?.warning || 0) > 0) {
+        lines.push('Run `dsm doctor` to inspect configuration issues.');
+      }
+
+      return lines;
     },
   };
 }

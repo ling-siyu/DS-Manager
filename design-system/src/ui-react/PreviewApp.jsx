@@ -29,7 +29,7 @@ export default function PreviewApp({ adapter, boot }) {
   const component = boot?.component || {};
   const summary = boot?.summary || {};
   const [componentModule, setComponentModule] = useState(null);
-  const [status, setStatus] = useState(component?.preview?.mode === 'react' ? 'loading' : 'fallback');
+  const [status, setStatus] = useState(component?.preview?.mode === 'live-render' ? 'loading' : 'fallback');
   const [error, setError] = useState('');
   const [scenarioId, setScenarioId] = useState('__default__');
 
@@ -37,7 +37,7 @@ export default function PreviewApp({ adapter, boot }) {
     let cancelled = false;
 
     async function load() {
-      if (component?.preview?.mode !== 'react') {
+      if (component?.preview?.mode !== 'live-render') {
         setStatus('fallback');
         return;
       }
@@ -84,7 +84,9 @@ export default function PreviewApp({ adapter, boot }) {
   let content = (
     <section className="preview-card">
       <p className="preview-eyebrow">Fallback</p>
-      <h2 className="preview-title">Metadata preview only</h2>
+      <h2 className="preview-title">
+        {component?.preview?.mode === 'source-backed-metadata' ? 'Source-backed metadata preview' : 'Metadata preview only'}
+      </h2>
       <p className="preview-copy">{component?.preview?.reason || summary.reason}</p>
     </section>
   );

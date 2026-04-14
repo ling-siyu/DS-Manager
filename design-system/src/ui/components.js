@@ -409,6 +409,10 @@ export function renderTokenCard(path, token, groupId) {
 }
 
 export function renderComponentCard(component, levelId) {
+  const previewBadges = Array.isArray(component.preview?.statusBadges)
+    ? component.preview.statusBadges
+    : [];
+
   return `
     <button
       class="component-card"
@@ -421,6 +425,11 @@ export function renderComponentCard(component, levelId) {
         ${renderStatusPill(component.status || 'stable')}
       </div>
       <p class="helper">${escapeHTML(component.description || 'No description provided.')}</p>
+      ${previewBadges.length ? `
+        <div class="chip-row">
+          ${previewBadges.slice(0, 3).map((badge) => `<span class="chip">${escapeHTML(badge)}</span>`).join('')}
+        </div>
+      ` : ''}
       ${(component.variants || []).length ? `
         <div class="chip-row">
           ${(component.variants || []).slice(0, 4).map((variant) => `<span class="chip">${escapeHTML(variant)}</span>`).join('')}
@@ -448,12 +457,12 @@ export function renderComponentPreviewPanel(component, previewSummary) {
     <article class="group-card preview-panel">
       <div class="group-head">
         <h3 class="group-title">Preview</h3>
-        <span class="status-pill" data-status="${escapeHTML(preview.mode === 'react' ? 'stable' : 'beta')}">
+        <span class="status-pill" data-status="${escapeHTML(preview.mode === 'live-render' ? 'stable' : 'beta')}">
           <span class="status-dot"></span>
-          ${escapeHTML(preview.mode === 'react' ? 'React' : 'Metadata')}
+          ${escapeHTML(preview.mode === 'live-render' ? 'Live render' : preview.mode === 'source-backed-metadata' ? 'Source-backed metadata' : 'Metadata only')}
         </span>
       </div>
-      ${preview.mode === 'react'
+      ${preview.mode === 'live-render'
         ? `
           <iframe
             class="preview-frame"
@@ -468,6 +477,11 @@ export function renderComponentPreviewPanel(component, previewSummary) {
           </div>
         `}
       ${scenarioCount ? `<div class="chip-row"><span class="chip">${scenarioCount} scenario${scenarioCount === 1 ? '' : 's'}</span></div>` : ''}
+      ${preview.statusBadges?.length ? `
+        <div class="chip-row">
+          ${preview.statusBadges.map((badge) => `<span class="chip">${escapeHTML(badge)}</span>`).join('')}
+        </div>
+      ` : ''}
       ${notes.length ? `
         <div class="preview-notes">
           ${notes.map((note) => `<p class="helper">${escapeHTML(note)}</p>`).join('')}
@@ -481,6 +495,21 @@ export function renderComponentPreviewPanel(component, previewSummary) {
           </ul>
         </div>
       ` : ''}
+    </article>
+  `;
+}
+
+export function renderHealthBanner(lines) {
+  if (!lines.length) return '';
+
+  return `
+    <article class="group-card preview-diagnostics">
+      <div class="group-head">
+        <h3 class="group-title">Project Health</h3>
+      </div>
+      <ul class="preview-diagnostics-list">
+        ${lines.map((line) => `<li>${escapeHTML(line)}</li>`).join('')}
+      </ul>
     </article>
   `;
 }

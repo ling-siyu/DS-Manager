@@ -3,6 +3,27 @@ import chalk from 'chalk';
 import { resolveProjectPaths } from '../utils/paths.js';
 import { discoverComponents } from '../utils/component-discovery.js';
 
+function normalizeValue(value) {
+  if (Array.isArray(value)) {
+    return value.map(normalizeValue);
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.keys(value)
+      .sort()
+      .reduce((result, key) => {
+        result[key] = normalizeValue(value[key]);
+        return result;
+      }, {});
+  }
+
+  return value;
+}
+
+function valuesEqual(left, right) {
+  return JSON.stringify(normalizeValue(left)) === JSON.stringify(normalizeValue(right));
+}
+
 function loadRegistry(paths) {
   if (!existsSync(paths.componentsPath)) {
     return {
@@ -47,7 +68,25 @@ function mergeComponent(existing, discovered, merge) {
   };
 }
 
-function buildSyncPlan(registry, discoveredComponents, options = {}) {
+function getMetadataDiff(existing, discovered) {
+  const differences = [];
+
+  if (!valuesEqual(existing?.props || {}, discovered?.props || {})) {
+    differences.push('props');
+  }
+
+  if (!valuesEqual(existing?.variants || [], discovered?.variants || [])) {
+    differences.push('variants');
+  }
+
+  if (!valuesEqual(existing?.sizes || [], discovered?.sizes || [])) {
+    differences.push('sizes');
+  }
+
+  return differences;
+}
+
+export function buildSyncPlan(registry, discoveredComponents, options = {}) {
   const merge = options.merge === true;
   const existingComponents = Array.isArray(registry.components) ? registry.components : [];
   const existingByName = new Map(existingComponents.map((component) => [component.name, component]));
@@ -61,6 +100,14 @@ function buildSyncPlan(registry, discoveredComponents, options = {}) {
       registryPath: component.path,
       discoveredPath: discoveredByName.get(component.name).path,
     }));
+  const metadataDrift = existingComponents
+    .filter((component) => discoveredByName.has(component.name))
+    .map((component) => ({
+      name: component.name,
+      path: component.path,
+      fields: getMetadataDiff(component, discoveredByName.get(component.name)),
+    }))
+    .filter((entry) => entry.fields.length > 0);
   const registryOnly = existingComponents.filter((component) => !discoveredByName.has(component.name));
   const renamedCandidates = registryOnly.flatMap((component) => discoveredComponents
     .filter((candidate) => candidate.path === component.path)
@@ -79,12 +126,16 @@ function buildSyncPlan(registry, discoveredComponents, options = {}) {
 
   mergedComponents.sort((left, right) => left.name.localeCompare(right.name));
 
-  const changed = missingFromRegistry.length > 0 || stalePaths.length > 0 || registryOnly.length > 0;
+  const changed = missingFromRegistry.length > 0
+    || stalePaths.length > 0
+    || metadataDrift.length > 0
+    || registryOnly.length > 0;
 
   return {
     changed,
     missingFromRegistry,
     stalePaths,
+    metadataDrift,
     registryOnly,
     renamedCandidates,
     nextRegistry: {
@@ -121,6 +172,7 @@ export async function syncComponentsCommand(options = {}) {
     } else {
       renderList('Missing from registry', plan.missingFromRegistry, (component) => `${component.name} (${component.path})`);
       renderList('Stale registry paths', plan.stalePaths, (entry) => `${entry.name}: ${entry.registryPath} -> ${entry.discoveredPath}`);
+      renderList('Metadata drift', plan.metadataDrift, (entry) => `${entry.name}: ${entry.fields.join(', ')}`);
       renderList('Registry-only components', plan.registryOnly, (component) => `${component.name} (${component.path || 'no path'})`);
       renderList('Renamed candidates', plan.renamedCandidates, (entry) => `${entry.from} -> ${entry.to} (${entry.path})`);
     }

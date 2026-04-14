@@ -7,6 +7,7 @@ import { execSync } from 'child_process';
 import chokidar from 'chokidar';
 import chalk from 'chalk';
 import { buildCommand } from './build.js';
+import { collectConfigHealth } from '../utils/config-health.js';
 import { resolveProjectPaths } from '../utils/paths.js';
 import { loadTokens } from '../utils/tokens.js';
 import {
@@ -123,7 +124,7 @@ function openBrowser(url) {
   }
 }
 
-function getData(paths, previewSummary) {
+function getData(paths, previewSummary, configHealth) {
   const tokens = loadTokens(paths.tokensPath);
   const components = existsSync(paths.componentsPath)
     ? (getComponents(paths.componentsPath) ?? [])
@@ -141,16 +142,17 @@ function getData(paths, previewSummary) {
 
   return {
     tokens,
-    components: decorateComponentsWithPreview(components, previewSummary),
+    components: decorateComponentsWithPreview(components, previewSummary, configHealth?.diagnosticsByName),
     preview: previewSummary,
+    health: configHealth,
     usedIcons,
   };
 }
 
-function buildHTML(paths, previewSummary) {
+function buildHTML(paths, previewSummary, configHealth) {
   const template = readFileSync(HTML_PATH, 'utf8');
   const tokenStyles = loadTokenStyles(paths);
-  const data = JSON.stringify(getData(paths, previewSummary))
+  const data = JSON.stringify(getData(paths, previewSummary, configHealth))
     .replace(/</g, '\\u003c')
     .replace(/>/g, '\\u003e');
 
@@ -188,6 +190,7 @@ export async function uiCommand(options = {}) {
   await buildCommand();
 
   let previewRuntime = await loadPreviewRuntime(paths, getComponents(paths.componentsPath) ?? []);
+  let configHealth = await collectConfigHealth(paths, { allowRebuildGenerated: false });
   const previewFrameStyles = loadPreviewFrameStyles(paths);
 
   const host = '127.0.0.1';
@@ -203,7 +206,7 @@ export async function uiCommand(options = {}) {
           'Content-Type': 'text/html; charset=utf-8',
           'Cache-Control': 'no-store',
         });
-        res.end(buildHTML(paths, previewRuntime.summary));
+        res.end(buildHTML(paths, previewRuntime.summary, configHealth));
         return;
       }
 
@@ -238,7 +241,7 @@ export async function uiCommand(options = {}) {
 
       if (url.startsWith('/preview/component/')) {
         const componentName = decodeURIComponent(url.slice('/preview/component/'.length));
-        const component = (getData(paths, previewRuntime.summary).components || [])
+        const component = (getData(paths, previewRuntime.summary, configHealth).components || [])
           .find((entry) => entry.name === componentName);
 
         if (!component) {
@@ -260,7 +263,7 @@ export async function uiCommand(options = {}) {
       }
 
       if (url === '/api/data') {
-        sendJSON(res, 200, getData(paths, previewRuntime.summary));
+        sendJSON(res, 200, getData(paths, previewRuntime.summary, configHealth));
         return;
       }
 
@@ -309,6 +312,7 @@ export async function uiCommand(options = {}) {
       }
 
       previewRuntime = await loadPreviewRuntime(paths, getComponents(paths.componentsPath) ?? []);
+      configHealth = await collectConfigHealth(paths, { allowRebuildGenerated: false });
 
       for (const client of clients) {
         client.write('data: reload\n\n');
@@ -333,7 +337,7 @@ export async function uiCommand(options = {}) {
 
   console.log(chalk.cyan('\nDesign system preview is running.\n'));
   console.log(`  ${chalk.bold('URL:')} ${chalk.underline(url)}`);
-  console.log(`  ${chalk.bold('Preview mode:')} ${previewRuntime.summary.mode === 'react' ? 'React adapter' : 'Metadata fallback'}`);
+  console.log(`  ${chalk.bold('Preview mode:')} ${previewRuntime.summary.modeLabel || 'Metadata only'}`);
   if (port !== requestedPort) {
     console.log(chalk.dim(`  Requested port ${requestedPort} was busy, using ${port} instead.`));
   }

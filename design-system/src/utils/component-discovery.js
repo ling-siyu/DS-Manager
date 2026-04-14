@@ -61,10 +61,10 @@ function findExportedNames(source) {
 }
 
 function extractTypeBlock(source, typeName) {
-  const interfaceMatch = source.match(new RegExp(`interface\\s+${typeName}\\s*\\{([\\s\\S]*?)\\n\\}`, 'm'));
+  const interfaceMatch = source.match(new RegExp(`(?:export\\s+)?interface\\s+${typeName}\\s*\\{([\\s\\S]*?)\\}`, 'm'));
   if (interfaceMatch) return interfaceMatch[1];
 
-  const typeMatch = source.match(new RegExp(`type\\s+${typeName}\\s*=\\s*\\{([\\s\\S]*?)\\n\\}`, 'm'));
+  const typeMatch = source.match(new RegExp(`(?:export\\s+)?type\\s+${typeName}\\s*=\\s*\\{([\\s\\S]*?)\\}`, 'm'));
   if (typeMatch) return typeMatch[1];
 
   return '';

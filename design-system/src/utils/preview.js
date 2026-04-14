@@ -76,7 +76,7 @@ function sanitizeDefaults(defaults, knownNames, errors) {
   }, {});
 }
 
-function buildComponentPreviewMetadata(component, summary) {
+function buildComponentPreviewMetadata(component, summary, componentHealth = {}) {
   const errors = [];
   const previewProps = isPlainObject(component.previewProps) && isSerializable(component.previewProps)
     ? JSON.parse(JSON.stringify(component.previewProps))
@@ -88,22 +88,59 @@ function buildComponentPreviewMetadata(component, summary) {
 
   const previewScenarios = normalizeScenarioList(component.previewScenarios, component.name, errors);
   const hasAdapterMapping = summary.availableComponents.includes(component.name);
-  const previewMode = summary.status === 'ready' && hasAdapterMapping ? 'react' : 'metadata';
+  const sourceExists = componentHealth.sourceExists === true;
+  const exportDetected = componentHealth.exportDetected === true;
+  const missingDependencies = componentHealth.missingDependencies || [];
+  const hasPreviewData = Object.keys(previewProps).length > 0 || previewScenarios.length > 0;
+  const renderable = summary.status === 'ready' && hasAdapterMapping && sourceExists;
+
+  let previewMode = 'metadata-only';
+  let reason = 'No React preview mapping was found for this component.';
+
+  if (sourceExists) {
+    previewMode = 'source-backed-metadata';
+    reason = exportDetected
+      ? 'DSM found the source file, but this component is still being shown from metadata.'
+      : 'DSM found the source file, but could not confidently detect a renderable component export.';
+  }
+
+  if (renderable) {
+    previewMode = 'live-render';
+    reason = 'Rendering the registered React component through the preview adapter.';
+  } else if (!sourceExists) {
+    reason = 'The registry path does not currently resolve to a source file in this repo.';
+  } else if (summary.status !== 'ready' && hasAdapterMapping) {
+    reason = summary.reason;
+  } else if (hasAdapterMapping && !hasPreviewData) {
+    reason = 'A source-backed component was found, but no preview props or scenarios were registered.';
+  }
+
+  if (!hasPreviewData) {
+    errors.push(`${component.name}: no previewProps or previewScenarios are registered.`);
+  }
+
+  const statusBadges = [
+    !sourceExists ? 'Missing source path' : 'Source file found',
+    renderable ? 'Preview renderable' : (sourceExists ? 'Metadata only' : 'Metadata only'),
+    ...(missingDependencies.length ? ['Contains unresolved dependencies'] : []),
+  ];
 
   return {
     mode: previewMode,
     available: hasAdapterMapping,
-    iframePath: hasAdapterMapping ? `/preview/component/${encodeURIComponent(component.name)}` : null,
+    iframePath: renderable ? `/preview/component/${encodeURIComponent(component.name)}` : null,
     adapterDefaults: summary.defaults?.[component.name] || {},
     previewProps,
     previewScenarios,
     previewSlots: Array.isArray(component.previewSlots) ? component.previewSlots : [],
     previewNotes: typeof component.previewNotes === 'string' ? component.previewNotes : '',
-    reason: hasAdapterMapping
-      ? (summary.status === 'ready'
-        ? 'Rendering the registered React component through the preview adapter.'
-        : summary.reason)
-      : 'No React preview mapping was found for this component.',
+    reason,
+    renderable,
+    sourceExists,
+    exportDetected,
+    metadataOnly: !renderable,
+    missingDependencies,
+    statusBadges,
     errors,
   };
 }
@@ -123,9 +160,10 @@ export async function loadPreviewSummary(paths, components) {
   if (!configPath) {
     return {
       framework: null,
-      mode: 'metadata',
+      mode: 'metadata-only',
       status: 'disabled',
       reason: 'Add design-system/preview.config.js to enable live React previews.',
+      modeLabel: 'Metadata only',
       configPath: null,
       availableComponents: [],
       defaults: {},
@@ -142,9 +180,10 @@ export async function loadPreviewSummary(paths, components) {
   } catch (error) {
     return {
       framework: null,
-      mode: 'metadata',
+      mode: 'metadata-only',
       status: 'error',
       reason: 'DSM found a preview adapter, but it could not be loaded.',
+      modeLabel: 'Metadata only',
       configPath,
       availableComponents: [],
       defaults: {},
@@ -159,9 +198,10 @@ export async function loadPreviewSummary(paths, components) {
   if (!isPlainObject(adapter)) {
     return {
       framework: null,
-      mode: 'metadata',
+      mode: 'metadata-only',
       status: 'error',
       reason: 'Preview adapter must export a default object.',
+      modeLabel: 'Metadata only',
       configPath,
       availableComponents: [],
       defaults: {},
@@ -178,9 +218,10 @@ export async function loadPreviewSummary(paths, components) {
   if (adapter.framework !== 'react') {
     return {
       framework: String(adapter.framework || ''),
-      mode: 'metadata',
+      mode: 'metadata-only',
       status: 'error',
       reason: `Preview framework "${String(adapter.framework || 'unknown')}" is not supported yet.`,
+      modeLabel: 'Metadata only',
       configPath,
       availableComponents: [],
       defaults: {},
@@ -214,11 +255,12 @@ export async function loadPreviewSummary(paths, components) {
 
   return {
     framework: 'react',
-    mode: 'react',
+    mode: errors.length ? 'source-backed-metadata' : 'source-backed-metadata',
     status: errors.length ? 'error' : 'configured',
     reason: errors.length
       ? 'React preview adapter is present, but DSM found configuration issues.'
       : 'React preview adapter detected.',
+    modeLabel: errors.length ? 'Source-backed metadata' : 'Source-backed metadata',
     configPath,
     availableComponents: mappedComponents.sort((left, right) => left.localeCompare(right)),
     defaults,
@@ -230,7 +272,7 @@ export async function loadPreviewSummary(paths, components) {
 }
 
 export async function buildPreviewBundle(paths, summary) {
-  if (summary.mode !== 'react' || summary.status === 'disabled') {
+  if (summary.framework !== 'react' || summary.status === 'disabled') {
     return {
       status: summary.status,
       reason: summary.reason,
@@ -344,6 +386,10 @@ export async function loadPreviewRuntime(paths, components) {
   const resolvedSummary = {
     ...summary,
     status: bundle.status === 'ready' ? 'ready' : summary.status === 'disabled' ? 'disabled' : bundle.status,
+    mode: bundle.status === 'ready' ? 'live-render' : summary.mode,
+    modeLabel: bundle.status === 'ready'
+      ? 'Live render available'
+      : summary.modeLabel || 'Metadata only',
     reason: bundle.reason || summary.reason,
     errors: [...summary.errors, ...bundle.errors],
   };
@@ -354,10 +400,10 @@ export async function loadPreviewRuntime(paths, components) {
   };
 }
 
-export function decorateComponentsWithPreview(components, previewSummary) {
+export function decorateComponentsWithPreview(components, previewSummary, diagnosticsByName = {}) {
   return (components || []).map((component) => ({
     ...component,
-    preview: buildComponentPreviewMetadata(component, previewSummary),
+    preview: buildComponentPreviewMetadata(component, previewSummary, diagnosticsByName[component.name] || {}),
   }));
 }
 
@@ -388,7 +434,7 @@ export function renderPreviewFrameHTML({ component, previewSummary, tokenStyles,
 </head>
 <body>
   <div id="root"></div>
-  ${component.preview.mode === 'react' && previewSummary.status === 'ready'
+  ${component.preview.mode === 'live-render' && previewSummary.status === 'ready'
     ? '<script type="module" src="/preview-assets/main.js"></script>'
     : ''}
 </body>

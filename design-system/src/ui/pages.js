@@ -5,6 +5,7 @@ import {
   renderComponentPreviewPanel,
   renderDetailCard,
   renderEmpty,
+  renderHealthBanner,
   renderIconCompositeRow,
   renderIconSizeCard,
   renderIconStrokeCard,
@@ -200,6 +201,7 @@ export function renderHomePage(state) {
   return `
     <section class="panel is-active" data-panel="home" data-panel-label="Levels overview">
       <div class="section-card page-stack">
+        ${renderHealthBanner(state.getHealthBannerLines())}
         ${renderBreadcrumbs([{ label: 'Levels' }])}
         <h2 class="section-title">Design Token Foundation</h2>
         <div class="level-overview-grid">
@@ -216,6 +218,7 @@ export function renderLevelPage(state, levelId) {
   return `
     <section class="panel is-active" data-panel="${escapeHTML(level.id)}" data-panel-label="${escapeHTML(level.title)}">
       <div class="section-card page-stack">
+        ${renderHealthBanner(state.getHealthBannerLines())}
         ${renderBreadcrumbs([
           { label: 'Levels', route: { name: 'home' } },
           { label: level.label },
@@ -238,6 +241,7 @@ export function renderTokenGroupPage(state, groupId) {
   return `
     <section class="panel is-active" data-panel="${escapeHTML(group.id)}" data-panel-label="${escapeHTML(group.title)}">
       <div class="section-card page-stack">
+        ${renderHealthBanner(state.getHealthBannerLines())}
         ${renderBreadcrumbs([
           { label: 'Levels', route: { name: 'home' } },
           { label: state.getLevel('lv0').label, route: { name: 'level', levelId: 'lv0' } },
@@ -261,6 +265,7 @@ export function renderTokenDetailPage(state, groupId, tokenPath) {
   return `
     <section class="panel is-active" data-panel="token-detail" data-panel-label="${escapeHTML(path)}">
       <div class="section-card page-stack">
+        ${renderHealthBanner(state.getHealthBannerLines())}
         ${renderBreadcrumbs([
           { label: 'Levels', route: { name: 'home' } },
           { label: state.getLevel('lv0').label, route: { name: 'level', levelId: 'lv0' } },
@@ -339,6 +344,7 @@ export function renderComponentDetailPage(state, levelId, componentName) {
   return `
     <section class="panel is-active" data-panel="component-detail" data-panel-label="${escapeHTML(component.name)}">
       <div class="section-card page-stack">
+        ${renderHealthBanner(state.getHealthBannerLines())}
         ${renderBreadcrumbs([
           { label: 'Levels', route: { name: 'home' } },
           { label: level.label, route: { name: 'level', levelId } },

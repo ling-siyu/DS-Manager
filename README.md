@@ -130,10 +130,21 @@ dsm scan . --json
 
 ### `dsm validate [path]`
 
-Same as `scan`, but exits with code `1` if violations are found. Used by the pre-commit hook.
+Same as `scan`, but exits with code `1` if violations are found. It can also validate DSM configuration and project wiring.
 
 ```bash
 dsm validate src/
+dsm validate --config
+dsm validate --all
+```
+
+### `dsm doctor`
+
+Checks DSM configuration health: token and component registry parsing, source paths, registry references, generated files, MCP wiring, and package scripts.
+
+```bash
+dsm doctor
+dsm doctor --json
 ```
 
 ### `dsm install-hook`
@@ -154,6 +165,15 @@ Refreshes a pilot project from the DSM checkout you are currently running. This 
 ```bash
 dsm update
 dsm update --skip-build
+```
+
+### `dsm sync-components`
+
+Scans the codebase for exported React components and compares them against `design-system/components.json`.
+
+```bash
+dsm sync-components --check
+dsm sync-components --write --merge
 ```
 
 ### `dsm serve`
