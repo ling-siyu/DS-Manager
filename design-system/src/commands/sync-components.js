@@ -84,6 +84,29 @@ function mergeRenamedComponent(orphaned, discovered) {
   };
 }
 
+function mergeExistingWithRename(existing, orphaned, discovered) {
+  const props = Object.keys(discovered.props || {}).length
+    ? discovered.props
+    : existing?.props ?? orphaned?.props;
+  const variants = discovered.variants?.length
+    ? discovered.variants
+    : existing?.variants ?? orphaned?.variants;
+  const sizes = discovered.sizes?.length
+    ? discovered.sizes
+    : existing?.sizes ?? orphaned?.sizes;
+
+  return {
+    ...discovered,
+    ...(orphaned || {}),
+    ...(existing || {}),
+    name: discovered.name,
+    path: discovered.path,
+    ...(props ? { props } : {}),
+    ...(variants ? { variants } : {}),
+    ...(sizes ? { sizes } : {}),
+  };
+}
+
 function getMetadataDiff(existing, discovered) {
   const differences = [];
 
@@ -133,16 +156,19 @@ export function buildSyncPlan(registry, discoveredComponents, options = {}) {
       path: candidate.path,
     })));
   const renamedByTarget = new Map(renamedCandidates
-    .filter((entry) => !existingByName.has(entry.to))
     .map((entry) => [entry.to, existingByName.get(entry.from)]));
-  const consumedRenames = new Set(renamedCandidates
-    .filter((entry) => !existingByName.has(entry.to))
-    .map((entry) => entry.from));
+  const consumedRenames = new Set(renamedCandidates.map((entry) => entry.from));
 
   const mergedComponents = discoveredComponents.map((component) => {
     const existing = existingByName.get(component.name);
-    if (merge && !existing && renamedByTarget.has(component.name)) {
-      return mergeRenamedComponent(renamedByTarget.get(component.name), toBaseComponent(component));
+    const renamed = renamedByTarget.get(component.name);
+
+    if (merge && renamed && existing) {
+      return mergeExistingWithRename(existing, renamed, toBaseComponent(component));
+    }
+
+    if (merge && renamed && !existing) {
+      return mergeRenamedComponent(renamed, toBaseComponent(component));
     }
 
     return mergeComponent(existing, component, merge);

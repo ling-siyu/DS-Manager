@@ -9,6 +9,7 @@ import {
   cleanupLegacyProjectCache,
   createLocalCliWrapper,
   ensureLocalBinShim,
+  getFastUpdatePackageManager,
   installPackageIntoProject,
   runStreamingCommand,
   verifyInstalledCli,
@@ -258,5 +259,22 @@ test('ensureLocalBinShim creates a consumer-facing dsm entrypoint that delegates
   ensureLocalBinShim(targetRoot);
 
   const shimSource = readFileSync(resolve(targetRoot, 'node_modules/.bin/dsm'), 'utf8');
-  assert.match(shimSource, /\.\.\/\.\.\/design-system\/bin\/dsm\.js/);
+  assert.match(shimSource, /new URL\('\.\.\/\.\.\/design-system\/bin\/dsm\.js', import\.meta\.url\)/);
+});
+
+test('getFastUpdatePackageManager uses a lighter no-save npm install path for updates', () => {
+  const targetRoot = createTempProject();
+
+  const packageManager = getFastUpdatePackageManager(targetRoot);
+
+  assert.equal(packageManager.name, 'npm');
+  assert.deepEqual(packageManager.args, [
+    'install',
+    '--no-save',
+    '--prefer-offline',
+    '--no-audit',
+    '--no-fund',
+    '--ignore-scripts',
+    '--no-package-lock',
+  ]);
 });

@@ -295,3 +295,42 @@ test('sync plan merge mode transfers renamed registry metadata onto discovered c
     },
   ]);
 });
+
+test('sync plan merge mode drops stale renamed registry entries even when the discovered target already exists', () => {
+  const registry = {
+    components: [
+      {
+        name: 'QUICK_QUESTIONS',
+        path: 'src/components/chatbot/ChatbotMessageList.tsx',
+        description: 'Old scaffold entry',
+        tokens: ['component.chatbot.questions.*'],
+      },
+      {
+        name: 'ChatbotMessageList',
+        path: 'src/components/chatbot/ChatbotMessageList.tsx',
+        status: 'stable',
+      },
+    ],
+  };
+  const discoveredComponents = [
+    {
+      name: 'ChatbotMessageList',
+      path: 'src/components/chatbot/ChatbotMessageList.tsx',
+      props: {},
+      variants: [],
+      sizes: [],
+    },
+  ];
+
+  const plan = buildSyncPlan(registry, discoveredComponents, { merge: true });
+
+  assert.deepEqual(plan.nextRegistry.components, [
+    {
+      name: 'ChatbotMessageList',
+      path: 'src/components/chatbot/ChatbotMessageList.tsx',
+      description: 'Old scaffold entry',
+      tokens: ['component.chatbot.questions.*'],
+      status: 'stable',
+    },
+  ]);
+});

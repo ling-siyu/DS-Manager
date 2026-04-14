@@ -4,7 +4,7 @@ import { resolve } from 'path';
 import {
   buildManualInstallMessage,
   cleanupLegacyProjectCache,
-  detectPackageManager,
+  getFastUpdatePackageManager,
   runCommandCapturingStdout,
   runStreamingCommand,
   verifyInstalledCli,
@@ -51,7 +51,7 @@ export async function refreshInstalledDsm(targetRoot, packageSourceRoot, options
     steps.push({ name: 'pack tarball', status: 'done', tarballPath });
     logger('pack tarball', 'done', tarballPath);
 
-    const packageManager = detectPackageManager(targetRoot);
+    const packageManager = getFastUpdatePackageManager(targetRoot);
     const packageSpec = `./design-system/vendor/${packedFilename}`;
 
     logger('install tarball', 'in_progress');

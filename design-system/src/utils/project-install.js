@@ -124,8 +124,10 @@ export function ensureLocalBinShim(targetRoot) {
 
   const shimSource = `#!/usr/bin/env node
 import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
 
-const child = spawn(process.execPath, ['../../design-system/bin/dsm.js', ...process.argv.slice(2)], {
+const wrapperPath = fileURLToPath(new URL('../../design-system/bin/dsm.js', import.meta.url));
+const child = spawn(process.execPath, [wrapperPath, ...process.argv.slice(2)], {
   stdio: 'inherit',
 });
 
@@ -211,6 +213,19 @@ export function detectPackageManager(targetRoot) {
   }
 
   return { name: 'npm', cmd: 'npm', args: ['install', '-D', '--no-audit', '--no-fund', '--ignore-scripts', '--no-package-lock'] };
+}
+
+export function getFastUpdatePackageManager(targetRoot) {
+  const packageManager = detectPackageManager(targetRoot);
+
+  if (packageManager.name === 'npm') {
+    return {
+      ...packageManager,
+      args: ['install', '--no-save', '--prefer-offline', '--no-audit', '--no-fund', '--ignore-scripts', '--no-package-lock'],
+    };
+  }
+
+  return packageManager;
 }
 
 export function verifyInstalledPackage(targetRoot) {
