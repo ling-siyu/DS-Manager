@@ -4,36 +4,49 @@ A CLI tool to tokenize, build, and enforce your design system across any codebas
 
 ---
 
-## Installation
+## Use In A Project
+
+From this repo, install DSM’s own dependencies once:
 
 ```bash
 cd design-system
 npm install
-npm link   # makes `dsm` available globally
 ```
 
-Or run commands directly without linking:
+Then bootstrap an existing app from that app’s root:
+
+```bash
+node /absolute/path/to/DS-Manager/design-system/src/cli.js init
+```
+
+This scaffolds `tokens.json`, `components.json`, the Style Dictionary config, Claude Code settings, installs `dsm` into the target project as a dev dependency when `package.json` is present, and installs the pre-commit validation hook. After that, use DSM from inside the target project with:
+
+```bash
+npx dsm build
+npm run dsm:validate
+```
+
+If the target project does not have a `package.json`, or if you want scaffold-only mode, use:
+
+```bash
+node /absolute/path/to/DS-Manager/design-system/src/cli.js init --skip-install
+```
+
+---
+
+## Develop DSM
+
+If you are working on DSM itself, run commands from this repo with:
 
 ```bash
 node design-system/src/cli.js <command>
 ```
 
----
-
-## Quick Start
-
-Bootstrap a new project from scratch:
+If you want a global shortcut while developing locally:
 
 ```bash
-dsm init
-```
-
-This scaffolds `tokens.json`, `components.json`, the Style Dictionary config, Claude Code settings, installs `dsm` into the target project as a dev dependency when `package.json` is present, and installs the pre-commit validation hook.
-
-Then build your tokens:
-
-```bash
-dsm build
+cd design-system
+npm link
 ```
 
 ---
@@ -48,6 +61,11 @@ One-command project bootstrap. Scaffolds all required config files in the curren
 dsm init
 dsm init --skip-install   # scaffold only, keep using the local wrapper
 ```
+
+After a successful install, the target project gets:
+- `devDependencies.dsm` pointing at `design-system/vendor/*.tgz`
+- npm scripts like `npm run dsm:validate`
+- `.claude/settings.json` wired to the project-local DSM install
 
 ### `dsm build`
 
