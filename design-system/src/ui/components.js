@@ -101,18 +101,59 @@ export function renderPropsTable(props) {
   `;
 }
 
-export function renderLevelNav(levels, activeLevelId) {
-  return levels.map((level) => `
-    <button
-      class="level-link ${level.id === activeLevelId ? 'is-active' : ''}"
-      type="button"
-      data-route="${escapeHTML(JSON.stringify({ name: 'level', levelId: level.id }))}"
-      aria-current="${level.id === activeLevelId ? 'page' : 'false'}"
-    >
-      <span class="level-label">${escapeHTML(level.label)}</span>
-      <span class="level-name">${escapeHTML(level.title)}</span>
-    </button>
-  `).join('');
+export function renderLevelNav(levels, activeLevelId, tokenGroupModels, components, openLevelIds, activeChildId) {
+  return levels.map((level) => {
+    const isActive = level.id === activeLevelId;
+    const isOpen = openLevelIds.has(level.id);
+
+    let childItems = '';
+    if (level.numericLevel === 0) {
+      childItems = (tokenGroupModels || []).map((group) => {
+        const childActive = group.id === activeChildId;
+        return `
+          <button class="nav-child-link${childActive ? ' is-active' : ''}" type="button"
+            data-route="${escapeHTML(JSON.stringify({ name: 'token-group', groupId: group.id }))}">
+            ${escapeHTML(group.title)}
+          </button>
+        `;
+      }).join('');
+    } else {
+      const levelComponents = (components || []).filter((c) => c.level === level.numericLevel);
+      childItems = levelComponents.map((component) => {
+        const childActive = component.name === activeChildId;
+        return `
+          <button class="nav-child-link${childActive ? ' is-active' : ''}" type="button"
+            data-route="${escapeHTML(JSON.stringify({ name: 'component', levelId: level.id, componentName: component.name }))}">
+            ${escapeHTML(component.name)}
+          </button>
+        `;
+      }).join('');
+    }
+
+    return `
+      <div class="nav-group${isActive ? ' is-active' : ''}${isOpen ? ' is-open' : ''}">
+        <div class="nav-group-head">
+          <button
+            class="level-link"
+            type="button"
+            data-route="${escapeHTML(JSON.stringify({ name: 'level', levelId: level.id }))}"
+            aria-current="${isActive ? 'page' : 'false'}"
+          >
+            <span class="level-label">${escapeHTML(level.label)}</span>
+            <span class="level-name">${escapeHTML(level.title)}</span>
+          </button>
+          <button class="nav-toggle" type="button" data-toggle-level="${escapeHTML(level.id)}" aria-expanded="${isOpen ? 'true' : 'false'}" aria-label="Toggle ${escapeHTML(level.title)}">
+            <i data-lucide="chevron-right" class="nav-toggle-icon"></i>
+          </button>
+        </div>
+        <div class="nav-children" aria-hidden="${isOpen ? 'false' : 'true'}">
+          <div class="nav-children-inner">
+            ${childItems}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 export function renderLevelOverviewCard(level) {
@@ -164,6 +205,44 @@ function renderGroupPreview(group) {
     return `<div class="group-preview"><div class="mini-shadow-box"></div></div>`;
   }
 
+  if (group.id === 'border-width') {
+    return `
+      <div class="group-preview">
+        <div class="mini-bw-lines">
+          <span class="mini-bw-line" style="border-top-width:1px"></span>
+          <span class="mini-bw-line" style="border-top-width:2px"></span>
+          <span class="mini-bw-line" style="border-top-width:4px"></span>
+        </div>
+      </div>
+    `;
+  }
+
+  if (group.id === 'radius') {
+    return `
+      <div class="group-preview">
+        <div class="mini-radius-row">
+          <span class="mini-radius-box" style="border-radius:2px"></span>
+          <span class="mini-radius-box" style="border-radius:8px"></span>
+          <span class="mini-radius-box" style="border-radius:16px"></span>
+          <span class="mini-radius-box" style="border-radius:9999px;width:32px"></span>
+        </div>
+      </div>
+    `;
+  }
+
+  if (group.id === 'motion') {
+    return `
+      <div class="group-preview">
+        <div class="mini-motion-bars">
+          <span class="mini-motion-bar" style="width:25%"></span>
+          <span class="mini-motion-bar" style="width:45%"></span>
+          <span class="mini-motion-bar" style="width:65%"></span>
+          <span class="mini-motion-bar" style="width:90%"></span>
+        </div>
+      </div>
+    `;
+  }
+
   if (group.id === 'icons') {
     return `
       <div class="group-preview group-preview--icons">
@@ -174,7 +253,7 @@ function renderGroupPreview(group) {
     `;
   }
 
-  // 'all' or fallback — mixed dot grid using brand color shades
+  // fallback — mixed dot grid using brand color shades
   const dotColors = [
     'var(--ds-primitive-color-brand-300)',
     'var(--ds-primitive-color-brand-500)',
@@ -230,13 +309,65 @@ export function renderTokenCard(path, token, groupId) {
 
   if (groupId === 'spacing') {
     return `
-      <button class="spacing-row" type="button" ${tokenButtonAttributes(path, token)} data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
+      <button class="token-list-row" type="button" ${tokenButtonAttributes(path, token)} data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
         <div class="spacing-row-bar-wrap" aria-hidden="true">
           <div class="spacing-row-bar" style="width:min(${escapeHTML(value)}, 100%)"></div>
         </div>
-        <span class="spacing-row-name">${escapeHTML(shortName)}</span>
-        <span class="spacing-row-path mono">${escapeHTML(path)}</span>
-        <span class="spacing-row-value mono">${escapeHTML(value)}</span>
+        <span class="token-row-name">${escapeHTML(shortName)}</span>
+        <span class="token-row-path">${escapeHTML(path)}</span>
+        <span class="token-row-value">${escapeHTML(value)}</span>
+      </button>
+    `;
+  }
+
+  if (groupId === 'border-width') {
+    return `
+      <button class="token-list-row" type="button" ${tokenButtonAttributes(path, token)} data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
+        <div class="bw-row-preview" aria-hidden="true">
+          <div class="bw-row-line" style="border-top-width:${escapeHTML(value)}"></div>
+        </div>
+        <span class="token-row-name">${escapeHTML(shortName)}</span>
+        <span class="token-row-path">${escapeHTML(path)}</span>
+        <span class="token-row-value">${escapeHTML(value)}</span>
+      </button>
+    `;
+  }
+
+  if (groupId === 'radius') {
+    return `
+      <button class="radius-card" type="button" ${tokenButtonAttributes(path, token)} data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
+        <div class="radius-preview" style="border-radius:${escapeHTML(value)}"></div>
+        <p class="token-short-name">${escapeHTML(shortName)}</p>
+        <p class="token-full-path">${escapeHTML(path)}</p>
+        <p class="token-value">${escapeHTML(value)}</p>
+      </button>
+    `;
+  }
+
+  if (groupId === 'motion') {
+    const isDuration = token.$type === 'duration' || /(?:^|\.)duration(?:\.|$)/.test(path);
+    if (isDuration) {
+      const ms = parseFloat(value) || 0;
+      const pct = Math.min(ms / 10, 100);
+      return `
+        <button class="token-list-row" type="button" ${tokenButtonAttributes(path, token)} data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
+          <div class="motion-duration-track" aria-hidden="true">
+            <div class="motion-duration-bar" style="width:${escapeHTML(String(pct))}%"></div>
+          </div>
+          <span class="token-row-name">${escapeHTML(shortName)}</span>
+          <span class="token-row-path">${escapeHTML(path)}</span>
+          <span class="token-row-value">${escapeHTML(value)}</span>
+        </button>
+      `;
+    }
+    return `
+      <button class="token-list-row" type="button" ${tokenButtonAttributes(path, token)} data-route="${escapeHTML(JSON.stringify(tokenRoute))}">
+        <div class="motion-easing-track" aria-hidden="true">
+          <div class="motion-easing-dot" style="--_easing:${escapeHTML(value)}"></div>
+        </div>
+        <span class="token-row-name">${escapeHTML(shortName)}</span>
+        <span class="token-row-path">${escapeHTML(path)}</span>
+        <span class="token-row-value">${escapeHTML(value)}</span>
       </button>
     `;
   }

@@ -131,12 +131,6 @@ export function createAppState(data) {
       description: 'Elevation and depth tokens used across cards, overlays, and surfaces.',
       entries: tokenEntries.filter(isShadowToken),
     },
-    {
-      id: 'all',
-      title: 'All Tokens',
-      description: 'The full token index for direct lookup when you already know the asset you need.',
-      entries: tokenEntries,
-    },
   ];
 
   function getLevelModels() {

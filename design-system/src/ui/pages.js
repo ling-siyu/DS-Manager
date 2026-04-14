@@ -25,20 +25,24 @@ function colorFamilyLabel(parentPath) {
   return meaningful.length === 0 ? 'base' : meaningful.join(' / ');
 }
 
-function renderColorGroupList(group) {
-  if (group.entries.length === 0) return renderEmpty('No colors found.');
+function splitByLayer(entries) {
+  return {
+    primitive: entries.filter(([p]) => p.startsWith('primitive.')),
+    semantic:  entries.filter(([p]) => p.startsWith('semantic.')),
+    component: entries.filter(([p]) => p.startsWith('component.')),
+  };
+}
 
+function renderColorFamilies(entries, groupId) {
   const families = new Map();
-  for (const [path, token] of group.entries) {
-    const segs = path.split('.');
-    const parentKey = segs.slice(0, -1).join('.');
+  for (const [path, token] of entries) {
+    const parentKey = path.split('.').slice(0, -1).join('.');
     if (!families.has(parentKey)) families.set(parentKey, []);
     families.get(parentKey).push([path, token]);
   }
-
-  const rows = [...families.entries()].map(([parentKey, entries]) => {
+  const rows = [...families.entries()].map(([parentKey, items]) => {
     const label = colorFamilyLabel(parentKey);
-    const swatches = entries.map(([p, t]) => renderCompactSwatch(p, t, group.id)).join('');
+    const swatches = items.map(([p, t]) => renderCompactSwatch(p, t, groupId)).join('');
     return `
       <div class="color-family-row">
         <span class="color-family-label">${escapeHTML(label)}</span>
@@ -46,17 +50,40 @@ function renderColorGroupList(group) {
       </div>
     `;
   }).join('');
-
   return `<div class="color-families">${rows}</div>`;
+}
+
+function renderColorGroupList(group) {
+  if (group.entries.length === 0) return renderEmpty('No colors found.');
+  const { primitive, semantic, component } = splitByLayer(group.entries);
+  const layers = [['Primitive', primitive], ['Semantic', semantic], ['Component', component]].filter(([, e]) => e.length);
+  if (layers.length <= 1) return renderColorFamilies(group.entries, group.id);
+  return layers.map(([label, entries]) => `
+    <div class="layer-section">
+      <h3 class="layer-section-title">${label}</h3>
+      ${renderColorFamilies(entries, group.id)}
+    </div>
+  `).join('');
 }
 
 function renderTypographyList(group) {
   if (group.entries.length === 0) return renderEmpty('No typography tokens found.');
   const composites = group.entries.filter(([, t]) => t.$type === 'typography');
   const primitives = group.entries.filter(([, t]) => t.$type !== 'typography');
+  const hasMultiple = composites.length && primitives.length;
   return `
-    ${composites.length ? `<div class="type-list">${composites.map(([path, token]) => renderTypographyRow(path, token, group.id)).join('')}</div>` : ''}
-    ${primitives.length ? `<div class="token-grid" style="margin-top:var(--ui-space-4)">${primitives.map(([path, token]) => renderTokenCard(path, token, group.id)).join('')}</div>` : ''}
+    ${composites.length ? `
+      <div class="${hasMultiple ? 'layer-section' : ''}">
+        ${hasMultiple ? '<h3 class="layer-section-title">Semantic</h3>' : ''}
+        <div class="type-list">${composites.map(([path, token]) => renderTypographyRow(path, token, group.id)).join('')}</div>
+      </div>
+    ` : ''}
+    ${primitives.length ? `
+      <div class="${hasMultiple ? 'layer-section' : ''}">
+        ${hasMultiple ? '<h3 class="layer-section-title">Primitive</h3>' : ''}
+        <div class="token-grid">${primitives.map(([path, token]) => renderTokenCard(path, token, group.id)).join('')}</div>
+      </div>
+    ` : ''}
   `;
 }
 
@@ -104,15 +131,61 @@ function renderIconList(group) {
   `;
 }
 
+function renderMotionList(group) {
+  if (group.entries.length === 0) return renderEmpty('No motion tokens found.');
+
+  const durationEntries = group.entries.filter(([path, t]) => t.$type === 'duration' || /(?:^|\.)duration(?:\.|$)/.test(path));
+  const easingEntries = group.entries.filter(([path, t]) => t.$type === 'cubicBezier' || t.$type === 'transition' || /(?:^|\.)cubicBezier(?:\.|$)/.test(path));
+  const durationPaths = new Set(durationEntries.map(([p]) => p));
+  const easingPaths = new Set(easingEntries.map(([p]) => p));
+  const remainingEntries = group.entries.filter(([p]) => !durationPaths.has(p) && !easingPaths.has(p));
+
+  return `
+    ${durationEntries.length ? `
+      <div class="motion-section">
+        <p class="motion-section-title">Duration</p>
+        <div class="token-list">${durationEntries.map(([path, token]) => renderTokenCard(path, token, group.id)).join('')}</div>
+      </div>
+    ` : ''}
+    ${easingEntries.length ? `
+      <div class="motion-section">
+        <p class="motion-section-title">Easing</p>
+        <div class="token-list">${easingEntries.map(([path, token]) => renderTokenCard(path, token, group.id)).join('')}</div>
+      </div>
+    ` : ''}
+    ${remainingEntries.length ? `
+      <div class="motion-section">
+        <p class="motion-section-title">Other</p>
+        <div class="token-list">${remainingEntries.map(([path, token]) => renderTokenCard(path, token, group.id)).join('')}</div>
+      </div>
+    ` : ''}
+  `;
+}
+
+function renderLayeredList(group, containerClass) {
+  const { primitive, semantic, component } = splitByLayer(group.entries);
+  const layers = [['Primitive', primitive], ['Semantic', semantic], ['Component', component]].filter(([, e]) => e.length);
+  if (layers.length <= 1) {
+    return `<div class="${containerClass}">${group.entries.map(([path, token]) => renderTokenCard(path, token, group.id)).join('')}</div>`;
+  }
+  return layers.map(([label, entries]) => `
+    <div class="layer-section">
+      <h3 class="layer-section-title">${label}</h3>
+      <div class="${containerClass}">${entries.map(([path, token]) => renderTokenCard(path, token, group.id)).join('')}</div>
+    </div>
+  `).join('');
+}
+
 function renderTokenGroupList(group) {
   if (group.entries.length === 0) return renderEmpty(`No ${group.title.toLowerCase()} found.`);
   if (group.id === 'colors') return renderColorGroupList(group);
-  if (group.id === 'spacing') {
-    return `<div class="spacing-list">${group.entries.map(([path, token]) => renderTokenCard(path, token, group.id)).join('')}</div>`;
-  }
+  if (group.id === 'spacing') return renderLayeredList(group, 'token-list');
+  if (group.id === 'border-width') return renderLayeredList(group, 'token-list');
+  if (group.id === 'radius') return renderLayeredList(group, 'token-grid');
+  if (group.id === 'motion') return renderMotionList(group);
   if (group.id === 'typography') return renderTypographyList(group);
   if (group.id === 'icons') return renderIconList(group);
-  return `<div class="token-grid">${group.entries.map(([path, token]) => renderTokenCard(path, token, group.id)).join('')}</div>`;
+  return renderLayeredList(group, 'token-grid');
 }
 
 function renderComponentList(state, level) {
