@@ -1,11 +1,12 @@
 import { existsSync } from 'fs';
 import { basename, resolve } from 'path';
 
-export function resolveProjectPaths(cwd = process.cwd()) {
+export function resolveProjectPaths(cwd = process.cwd(), options = {}) {
+  const { allowMissingTokens = false } = options;
   const fromRepoRoot = resolve(cwd, 'design-system');
   const dsRoot = basename(cwd) === 'design-system' ? cwd : fromRepoRoot;
 
-  if (!existsSync(resolve(dsRoot, 'tokens.json'))) {
+  if (!allowMissingTokens && !existsSync(resolve(dsRoot, 'tokens.json'))) {
     throw new Error(
       'Could not locate design-system/tokens.json from the current working directory. ' +
       'Run this command from your project root or from the design-system directory.'

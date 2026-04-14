@@ -5,11 +5,11 @@ import { buildCommand } from './build.js';
 import { generateContextCommand } from './generate-context.js';
 import {
   createLocalCliWrapper,
-  installPackageIntoProject,
   wireMcpServer,
   wirePackageScripts,
 } from '../utils/project-install.js';
 import { getDsmVersion } from '../utils/metadata.js';
+import { refreshInstalledDsm } from '../utils/update-service.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_SOURCE_ROOT = resolve(__dirname, '../../');
@@ -17,6 +17,7 @@ const PACKAGE_SOURCE_ROOT = resolve(__dirname, '../../');
 export async function updateCommand(options = {}) {
   const targetRoot = process.cwd();
   let installedPackage = false;
+  let verificationMessage = null;
 
   console.log(chalk.cyan(`\n🔄 Updating Design System Manager v${getDsmVersion()}\n`));
   console.log(chalk.dim(`   Target: ${targetRoot}\n`));
@@ -26,22 +27,30 @@ export async function updateCommand(options = {}) {
 
   console.log(chalk.cyan('\n📦 Refreshing DSM package...\n'));
   try {
-    const { status, tarballPath, installed } = await installPackageIntoProject(targetRoot, PACKAGE_SOURCE_ROOT);
-    installedPackage = installed === true;
-    const icon = installedPackage ? chalk.green('✓') : chalk.dim('–');
-    console.log(`  ${icon}  ${chalk.white('dev dependency')}  ${chalk.dim(status)}`);
-    if (tarballPath) {
-      console.log(`  ${chalk.green('✓')}  ${chalk.white('vendor tarball')}  ${chalk.dim(tarballPath)}`);
-    }
+    const updateResult = await refreshInstalledDsm(targetRoot, PACKAGE_SOURCE_ROOT, {
+      logger(step, status, details) {
+        const icon = status === 'done' ? chalk.green('✓') : chalk.cyan('…');
+        console.log(`  ${icon}  ${chalk.white(step)}${details ? `  ${chalk.dim(details)}` : ''}`);
+      },
+    });
+
+    installedPackage = updateResult.ok;
+    verificationMessage = updateResult.verification?.command
+      ? `${updateResult.verification.command} -> ${updateResult.verification.output}`
+      : null;
   } catch (err) {
-    console.log(`  ${chalk.yellow('⚠')}  ${chalk.white('dev dependency')}  ${chalk.dim(`update failed: ${err.message}`)}`);
+    console.log(`  ${chalk.red('✗')}  ${chalk.white('install verification')}  ${chalk.dim(err.message)}`);
     console.log(chalk.dim('     Keeping the project-local wrapper so DSM commands still work.\n'));
   }
 
+  console.log(`  ${(installedPackage ? chalk.green('✓') : chalk.dim('–'))}  ${chalk.white('verify installed CLI')}  ${chalk.dim(verificationMessage || 'wrapper fallback remains active')}`);
+
+  console.log(`  ${chalk.cyan('…')}  ${chalk.white('update scripts')}`);
   const scriptStatus = wirePackageScripts(targetRoot, { preferInstalledBinary: installedPackage });
   const scriptIcon = scriptStatus?.startsWith('failed') ? chalk.red('✗') : scriptStatus === 'updated' ? chalk.green('✓') : chalk.dim('–');
   console.log(`  ${scriptIcon}  ${chalk.white('package.json scripts')}  ${chalk.dim(scriptStatus)}`);
 
+  console.log(`  ${chalk.cyan('…')}  ${chalk.white('update MCP wiring')}`);
   const mcpStatus = installedPackage
     ? wireMcpServer(targetRoot, 'node', ['./node_modules/dsm/src/cli.js', 'serve'])
     : wireMcpServer(targetRoot, 'node', ['./design-system/bin/dsm.js', 'serve']);
@@ -66,6 +75,11 @@ export async function updateCommand(options = {}) {
     }
   } else {
     console.log(chalk.dim('\n⚙  Skipping build + context refresh (--skip-build)\n'));
+  }
+
+  if (!installedPackage) {
+    console.log(chalk.red('\n✗ DSM update finished in recovery mode.\n'));
+    process.exit(1);
   }
 
   console.log(chalk.green('\n✓ DSM update complete.\n'));

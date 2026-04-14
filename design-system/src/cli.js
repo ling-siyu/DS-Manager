@@ -1,7 +1,9 @@
 #!/usr/bin/env node
+import { realpathSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import { buildCommand } from './commands/build.js';
+import { doctorCommand } from './commands/doctor.js';
 import { generateContextCommand } from './commands/generate-context.js';
 import { getTokenCommand } from './commands/get-token.js';
 import { initCommand } from './commands/init.js';
@@ -9,6 +11,7 @@ import { installHookCommand } from './commands/install-hook.js';
 import { listComponentsCommand } from './commands/list-components.js';
 import { scanCommand } from './commands/scan.js';
 import { serveCommand } from './commands/serve.js';
+import { syncComponentsCommand } from './commands/sync-components.js';
 import { uiCommand } from './commands/ui.js';
 import { updateCommand } from './commands/update.js';
 import { validateCommand } from './commands/validate.js';
@@ -56,7 +59,15 @@ program
   .command('validate [path]')
   .description('Validate files for design system compliance (exit 1 if violations found)')
   .option('--json', 'Output results as JSON')
+  .option('--config', 'Only validate DSM configuration and project wiring')
+  .option('--all', 'Validate both scanned files and DSM configuration')
   .action(validateCommand);
+
+program
+  .command('doctor')
+  .description('Check DSM configuration, registry health, generated files, and project wiring')
+  .option('--json', 'Output as JSON')
+  .action(doctorCommand);
 
 program
   .command('get-token <query>')
@@ -89,6 +100,15 @@ program
   .action(updateCommand);
 
 program
+  .command('sync-components')
+  .description('Discover React components from the codebase and compare or sync components.json')
+  .option('--json', 'Output as JSON')
+  .option('--check', 'Show drift only and exit nonzero when the registry is out of sync')
+  .option('--write', 'Write the updated registry back to design-system/components.json')
+  .option('--merge', 'Preserve manual metadata where possible when writing')
+  .action(syncComponentsCommand);
+
+program
   .command('ui')
   .description('Start a local design system preview server for designers')
   .option('-p, --port <number>', 'Port to listen on', '7777')
@@ -99,6 +119,19 @@ export async function main(argv = process.argv.slice(2)) {
   await program.parseAsync(argv, { from: 'user' });
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  main();
+function isDirectInvocation(argvPath) {
+  if (!argvPath) return false;
+
+  try {
+    return realpathSync(argvPath) === fileURLToPath(import.meta.url);
+  } catch {
+    return argvPath === fileURLToPath(import.meta.url);
+  }
+}
+
+if (isDirectInvocation(process.argv[1])) {
+  main().catch((error) => {
+    console.error(error.stack || String(error));
+    process.exit(1);
+  });
 }

@@ -133,9 +133,7 @@ export async function collectScanResults(scanPath = '.') {
   return { absolutePath, files, totalErrors, totalWarnings, results };
 }
 
-export async function scanCommand(scanPath = '.', options = {}) {
-  const { absolutePath, files, totalErrors, totalWarnings, results } = await collectScanResults(scanPath);
-
+export function printScanResults({ absolutePath, files, totalErrors, totalWarnings, results }, options = {}) {
   console.log(chalk.cyan(`\n🔍 Scanning ${absolutePath}\n`));
 
   if (files.length === 0) {
@@ -172,4 +170,9 @@ export async function scanCommand(scanPath = '.', options = {}) {
 
   console.log(chalk.dim('Tip: Replace hardcoded values with CSS variables from design-system/build/css-vars.css'));
   console.log(chalk.dim('     or use the /tokenize Claude Code command to auto-replace.\n'));
+}
+
+export async function scanCommand(scanPath = '.', options = {}) {
+  const scanResults = await collectScanResults(scanPath);
+  printScanResults(scanResults, options);
 }

@@ -2,12 +2,15 @@ import {
   chmodSync,
   existsSync,
   mkdirSync,
+  mkdtempSync,
   readFileSync,
   readdirSync,
+  rmSync,
   unlinkSync,
   writeFileSync,
 } from 'fs';
 import { spawn } from 'child_process';
+import { tmpdir } from 'os';
 import { resolve, relative } from 'path';
 
 export function wireMcpServer(targetRoot, command, args) {
@@ -146,7 +149,7 @@ export function verifyInstalledPackage(targetRoot) {
 }
 
 export async function runStreamingCommand(command, args, options = {}) {
-  const { cwd, env, onStdout, onStderr } = options;
+  const { cwd, env, onStdout, onStderr, timeoutMs } = options;
 
   await new Promise((resolveRun, rejectRun) => {
     const child = spawn(command, args, {
@@ -154,6 +157,31 @@ export async function runStreamingCommand(command, args, options = {}) {
       env,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
+    let settled = false;
+    let timeoutId = null;
+
+    const rejectOnce = (error) => {
+      if (settled) return;
+      settled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      rejectRun(error);
+    };
+
+    const resolveOnce = () => {
+      if (settled) return;
+      settled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      resolveRun();
+    };
+
+    if (timeoutMs) {
+      timeoutId = setTimeout(() => {
+        const failure = new Error(`${command} timed out after ${timeoutMs}ms`);
+        failure.code = 'ETIMEDOUT';
+        child.kill('SIGTERM');
+        rejectOnce(failure);
+      }, timeoutMs);
+    }
 
     child.stdout?.on('data', (chunk) => {
       process.stdout.write(chunk);
@@ -165,10 +193,11 @@ export async function runStreamingCommand(command, args, options = {}) {
       onStderr?.(chunk);
     });
 
-    child.once('error', rejectRun);
+    child.once('error', rejectOnce);
     child.once('close', (code, signal) => {
+      if (settled) return;
       if (code === 0) {
-        resolveRun();
+        resolveOnce();
         return;
       }
 
@@ -177,13 +206,13 @@ export async function runStreamingCommand(command, args, options = {}) {
         : `${command} exited with code ${code}`);
       failure.code = code;
       failure.signal = signal;
-      rejectRun(failure);
+      rejectOnce(failure);
     });
   });
 }
 
-async function runCommandCapturingStdout(command, args, options = {}) {
-  const { cwd, env, onStderr } = options;
+export async function runCommandCapturingStdout(command, args, options = {}) {
+  const { cwd, env, onStderr, timeoutMs } = options;
 
   return await new Promise((resolveRun, rejectRun) => {
     let stdout = '';
@@ -192,6 +221,31 @@ async function runCommandCapturingStdout(command, args, options = {}) {
       env,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
+    let settled = false;
+    let timeoutId = null;
+
+    const rejectOnce = (error) => {
+      if (settled) return;
+      settled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      rejectRun(error);
+    };
+
+    const resolveOnce = () => {
+      if (settled) return;
+      settled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      resolveRun(stdout);
+    };
+
+    if (timeoutMs) {
+      timeoutId = setTimeout(() => {
+        const failure = new Error(`${command} timed out after ${timeoutMs}ms`);
+        failure.code = 'ETIMEDOUT';
+        child.kill('SIGTERM');
+        rejectOnce(failure);
+      }, timeoutMs);
+    }
 
     child.stdout?.setEncoding('utf8');
     child.stdout?.on('data', (chunk) => {
@@ -203,10 +257,11 @@ async function runCommandCapturingStdout(command, args, options = {}) {
       onStderr?.(chunk);
     });
 
-    child.once('error', rejectRun);
+    child.once('error', rejectOnce);
     child.once('close', (code, signal) => {
+      if (settled) return;
       if (code === 0) {
-        resolveRun(stdout);
+        resolveOnce();
         return;
       }
 
@@ -215,9 +270,53 @@ async function runCommandCapturingStdout(command, args, options = {}) {
         : `${command} exited with code ${code}`);
       failure.code = code;
       failure.signal = signal;
-      rejectRun(failure);
+      rejectOnce(failure);
     });
   });
+}
+
+export async function verifyInstalledCli(targetRoot, options = {}) {
+  const { expectedVersion } = options;
+  const candidates = [
+    { command: 'npx', args: ['--no-install', 'dsm', '--version'] },
+    { command: process.execPath, args: ['./node_modules/dsm/src/cli.js', '--version'] },
+    { command: process.execPath, args: ['./design-system/bin/dsm.js', '--version'] },
+  ];
+  const failures = [];
+
+  for (const candidate of candidates) {
+    try {
+      const stdout = await runCommandCapturingStdout(candidate.command, candidate.args, {
+        cwd: targetRoot,
+        env: process.env,
+        timeoutMs: 15_000,
+      });
+      const output = stdout.trim();
+
+      if (!output) {
+        failures.push(`${candidate.command} ${candidate.args.join(' ')} produced no output`);
+        continue;
+      }
+
+      if (expectedVersion && output !== expectedVersion) {
+        failures.push(`${candidate.command} ${candidate.args.join(' ')} returned ${output}, expected ${expectedVersion}`);
+        continue;
+      }
+
+      return {
+        ok: true,
+        command: `${candidate.command} ${candidate.args.join(' ')}`,
+        output,
+      };
+    } catch (error) {
+      failures.push(`${candidate.command} ${candidate.args.join(' ')} failed: ${error.message}`);
+    }
+  }
+
+  return {
+    ok: false,
+    message: failures.join(' | '),
+  };
 }
 
 export function buildManualInstallMessage(targetRoot, tarballPath, packageManagerName) {
@@ -248,9 +347,8 @@ export async function installPackageIntoProject(targetRoot, packageSourceRoot, o
   }
 
   const vendorDir = resolve(targetRoot, 'design-system/vendor');
-  const npmCacheDir = resolve(targetRoot, 'design-system/.npm-cache');
+  const npmCacheDir = mkdtempSync(resolve(tmpdir(), 'dsm-npm-cache-'));
   if (!existsSync(vendorDir)) mkdirSync(vendorDir, { recursive: true });
-  if (!existsSync(npmCacheDir)) mkdirSync(npmCacheDir, { recursive: true });
 
   const npmEnv = { ...process.env, npm_config_cache: npmCacheDir };
 
@@ -260,50 +358,54 @@ export async function installPackageIntoProject(targetRoot, packageSourceRoot, o
     }
   }
 
-  const packOutput = await runCommandCapturingStdoutFn(
-    'npm',
-    ['pack', '--json', '--pack-destination', vendorDir],
-    { cwd: packageSourceRoot, env: npmEnv },
-  );
-
-  let packedFilename;
   try {
-    packedFilename = JSON.parse(packOutput)[0]?.filename;
-  } catch {
-    packedFilename = packOutput.trim().split('\n').pop();
-  }
-
-  if (!packedFilename) {
-    throw new Error('npm pack did not produce a tarball');
-  }
-
-  const packageManager = detectPackageManagerFn(targetRoot);
-  const packageSpec = `./design-system/vendor/${packedFilename}`;
-  const tarballPath = resolve(vendorDir, packedFilename);
-
-  try {
-    await runStreamingCommandFn(
-      packageManager.cmd,
-      [...packageManager.args, packageSpec],
-      {
-        cwd: targetRoot,
-        env: packageManager.name === 'npm' ? npmEnv : process.env,
-      },
+    const packOutput = await runCommandCapturingStdoutFn(
+      'npm',
+      ['pack', '--json', '--pack-destination', vendorDir],
+      { cwd: packageSourceRoot, env: npmEnv },
     );
-  } catch (error) {
-    error.message = `${error.message}. ${buildManualInstallMessage(targetRoot, tarballPath, packageManager.name)}`;
-    throw error;
-  }
 
-  if (!verifyInstalledPackageFn(targetRoot)) {
-    throw new Error(`Install command completed, but DSM could not be verified in the project. ${buildManualInstallMessage(targetRoot, tarballPath, packageManager.name)}`);
-  }
+    let packedFilename;
+    try {
+      packedFilename = JSON.parse(packOutput)[0]?.filename;
+    } catch {
+      packedFilename = packOutput.trim().split('\n').pop();
+    }
 
-  return {
-    status: `installed via ${packageManager.name}`,
-    tarballPath,
-    packageManager: packageManager.name,
-    packageSpec,
-    installed: true,
-  };
+    if (!packedFilename) {
+      throw new Error('npm pack did not produce a tarball');
+    }
+
+    const packageManager = detectPackageManagerFn(targetRoot);
+    const packageSpec = `./design-system/vendor/${packedFilename}`;
+    const tarballPath = resolve(vendorDir, packedFilename);
+
+    try {
+      await runStreamingCommandFn(
+        packageManager.cmd,
+        [...packageManager.args, packageSpec],
+        {
+          cwd: targetRoot,
+          env: packageManager.name === 'npm' ? npmEnv : process.env,
+        },
+      );
+    } catch (error) {
+      error.message = `${error.message}. ${buildManualInstallMessage(targetRoot, tarballPath, packageManager.name)}`;
+      throw error;
+    }
+
+    if (!verifyInstalledPackageFn(targetRoot)) {
+      throw new Error(`Install command completed, but DSM could not be verified in the project. ${buildManualInstallMessage(targetRoot, tarballPath, packageManager.name)}`);
+    }
+
+    return {
+      status: `installed via ${packageManager.name}`,
+      tarballPath,
+      packageManager: packageManager.name,
+      packageSpec,
+      installed: true,
+    };
+  } finally {
+    rmSync(npmCacheDir, { recursive: true, force: true });
+  }
 }
