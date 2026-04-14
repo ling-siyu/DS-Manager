@@ -13,10 +13,10 @@ ${HOOK_MARKER}
 
 # Find dsm: prefer the project install, then the repo-local wrapper, then local/global node_modules
 DSM="./node_modules/.bin/dsm"
-if [ ! -x "$DSM" ]; then
+if [ ! -f "$DSM" ]; then
   DSM="design-system/bin/dsm.js"
 fi
-if [ ! -f "$DSM" ] && [ ! -x "$DSM" ]; then
+if [ ! -f "$DSM" ]; then
   DSM="$(npm root 2>/dev/null)/dsm/src/cli.js"
 fi
 if [ ! -f "$DSM" ]; then

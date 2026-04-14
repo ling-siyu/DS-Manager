@@ -34,7 +34,6 @@ function renderNav(route) {
     openLevels,
     getActiveChildId(route),
   );
-  window.lucide?.createIcons();
 }
 
 function navigate(route) {
@@ -92,6 +91,7 @@ document.addEventListener('click', (event) => {
       openLevels.add(levelId);
     }
     renderNav(parseRoute());
+    window.lucide?.createIcons();
     return;
   }
 

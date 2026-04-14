@@ -24,9 +24,12 @@ function walkDir(dir, files = []) {
   return files;
 }
 
-/** PascalCase → kebab-case  e.g. ChevronDown → chevron-down */
+/** PascalCase → kebab-case  e.g. ChevronDown → chevron-down, XMLParser → xml-parser */
 function toKebab(name) {
-  return name.replace(/[A-Z]/g, (c, offset) => (offset > 0 ? '-' : '') + c.toLowerCase());
+  return name
+    .replace(/([a-z\d])([A-Z])/g, '$1-$2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+    .toLowerCase();
 }
 
 /**

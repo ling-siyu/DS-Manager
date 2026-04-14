@@ -42,7 +42,13 @@ function createLocalCliWrapper(targetRoot, cliPath) {
   if (!existsSync(binDir)) mkdirSync(binDir, { recursive: true });
 
   const wrapperSource = `#!/usr/bin/env node
-import ${JSON.stringify(cliPath)};
+import { main } from ${JSON.stringify(cliPath)};
+try {
+  await main(process.argv.slice(2));
+} catch (err) {
+  console.error(err.stack || String(err));
+  process.exitCode = 1;
+}
 `;
 
   writeFileSync(wrapperPath, wrapperSource, 'utf8');
@@ -132,11 +138,17 @@ function installPackageIntoProject(targetRoot) {
     }
   }
 
-  const packedFilename = execFileSync(
+  const packOutput = execFileSync(
     'npm',
-    ['pack', '--silent', '--pack-destination', vendorDir],
+    ['pack', '--json', '--pack-destination', vendorDir],
     { cwd: TEMPLATES_DIR, encoding: 'utf8', env: npmEnv },
-  ).trim().split('\n').pop();
+  );
+  let packedFilename;
+  try {
+    packedFilename = JSON.parse(packOutput)[0]?.filename;
+  } catch {
+    packedFilename = packOutput.trim().split('\n').pop();
+  }
 
   if (!packedFilename) {
     throw new Error('npm pack did not produce a tarball');
@@ -276,8 +288,7 @@ export async function initCommand(options = {}) {
       console.log(chalk.dim('     Falling back to the local wrapper scripts for this project.\n'));
     }
   } else {
-    console.log(chalk.cyan('\n📦 Installing DSM package...\n'));
-    console.log(`  ${chalk.dim('–')}  ${chalk.white('dev dependency')}  ${chalk.dim('skipped (--skip-install)')}`);
+    console.log(chalk.dim('\n📦 Skipping DSM package install (--skip-install)\n'));
   }
 
   const scriptStatus = wirePackageScripts(targetRoot, { preferInstalledBinary: installedPackage });

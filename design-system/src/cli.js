@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import { buildCommand } from './commands/build.js';
 import { generateContextCommand } from './commands/generate-context.js';
@@ -86,4 +87,10 @@ program
   .option('--no-open', 'Do not automatically open the browser')
   .action(uiCommand);
 
-program.parse();
+export async function main(argv = process.argv.slice(2)) {
+  await program.parseAsync(argv, { from: 'user' });
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main();
+}

@@ -102,7 +102,7 @@ Full token reference: `design-system/context.md`
 *~800 tokens/session saved*
 - Always use `/usr/bin/git` for git operations, not bare `git` (bare `git` fails with command not found in this shell environment)
 - Always use `/usr/bin/grep` for grep in Bash commands, not bare `grep` (bare `grep` fails with `rtk` command not found error)
-- CLI entry point: `node src/cli.js <command>` from `/Users/lingsiyu/Projects/DS-Manager/design-system/`
+- CLI entry point: `node src/cli.js <command>` from the `design-system/` directory
 
 ### Preview Server
 *~700 tokens/session saved*
@@ -130,7 +130,7 @@ Full token reference: `design-system/context.md`
 
 ### Build & Verify
 *~400 tokens/session saved*
-- After editing `tokens.json` or `style-dictionary.config.mjs`, run `cd /Users/lingsiyu/Projects/DS-Manager/design-system && node src/cli.js build` to regenerate `build/css-vars.css` and `build/tokens.js`
+- After editing `tokens.json` or `style-dictionary.config.mjs`, run `cd design-system && node src/cli.js build` to regenerate `build/css-vars.css` and `build/tokens.js`
 - `coderabbit review --plain -t committed` fails if the commit hasn't been pushed yet; use `coderabbit review --plain -t all` as fallback
 
 <!-- headroom:learn:end -->

@@ -43,7 +43,7 @@ Before:
 After:
 ```tsx
 <div style={{ color: 'var(--ds-semantic-color-text-default)', background: 'var(--ds-semantic-color-background-subtle)' }}>
-  <button className="bg-[var(--ds-semantic-color-interactive-primary-bg)] text-white p-3">Submit</button>
+  <button className="bg-[var(--ds-semantic-color-interactive-primary-bg)] text-[var(--ds-semantic-color-interactive-primary-text)] p-3">Submit</button>
 </div>
 ```
 
