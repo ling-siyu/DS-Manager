@@ -5,6 +5,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  renameSync,
   rmSync,
   unlinkSync,
   writeFileSync,
@@ -226,6 +227,38 @@ export function getFastUpdatePackageManager(targetRoot) {
   }
 
   return packageManager;
+}
+
+export async function installTarballDirectly(targetRoot, tarballPath, overrides = {}) {
+  const { runStreamingCommandFn = runStreamingCommand } = overrides;
+  const nodeModulesDir = resolve(targetRoot, 'node_modules');
+  if (!existsSync(nodeModulesDir)) mkdirSync(nodeModulesDir, { recursive: true });
+  const unpackDir = mkdtempSync(resolve(nodeModulesDir, '.dsm-unpack-'));
+  const packageDir = resolve(unpackDir, 'package');
+  const installedDir = resolve(nodeModulesDir, 'dsm');
+
+  try {
+    await runStreamingCommandFn('tar', ['-xzf', tarballPath, '-C', unpackDir], {
+      cwd: targetRoot,
+      env: process.env,
+      timeoutMs: 30_000,
+    });
+
+    if (!existsSync(packageDir)) {
+      throw new Error(`Tarball did not contain an npm package payload at ${packageDir}`);
+    }
+
+    rmSync(installedDir, { recursive: true, force: true });
+    renameSync(packageDir, installedDir);
+    ensureLocalBinShim(targetRoot);
+
+    return {
+      installedDir,
+      mode: 'direct-tarball',
+    };
+  } finally {
+    rmSync(unpackDir, { recursive: true, force: true });
+  }
 }
 
 export function verifyInstalledPackage(targetRoot) {
@@ -495,6 +528,7 @@ export async function installPackageIntoProject(targetRoot, packageSourceRoot, o
     runStreamingCommandFn = runStreamingCommand,
     verifyInstalledPackageFn = verifyInstalledPackage,
     detectPackageManagerFn = detectPackageManager,
+    installTarballDirectlyFn = installTarballDirectly,
   } = overrides;
   const packagePath = resolve(targetRoot, 'package.json');
   if (!existsSync(packagePath)) {
@@ -539,6 +573,7 @@ export async function installPackageIntoProject(targetRoot, packageSourceRoot, o
     const packageManager = detectPackageManagerFn(targetRoot);
     const packageSpec = `./design-system/vendor/${packedFilename}`;
     const tarballPath = resolve(vendorDir, packedFilename);
+    let installMode = packageManager.name;
 
     try {
       await runStreamingCommandFn(
@@ -550,18 +585,33 @@ export async function installPackageIntoProject(targetRoot, packageSourceRoot, o
         },
       );
     } catch (error) {
-      error.message = `${error.message}. ${buildManualInstallMessage(targetRoot, tarballPath, packageManager.name)}`;
-      throw error;
+      try {
+        await installTarballDirectlyFn(targetRoot, tarballPath, {
+          runStreamingCommandFn,
+        });
+        installMode = 'direct tarball fallback';
+      } catch (fallbackError) {
+        error.message = `${error.message}. ${buildManualInstallMessage(targetRoot, tarballPath, packageManager.name)} Direct tarball fallback also failed: ${fallbackError.message}`;
+        throw error;
+      }
     }
 
     if (!verifyInstalledPackageFn(targetRoot)) {
-      throw new Error(`Install command completed, but DSM could not be verified in the project. ${buildManualInstallMessage(targetRoot, tarballPath, packageManager.name)}`);
+      await installTarballDirectlyFn(targetRoot, tarballPath, {
+        runStreamingCommandFn,
+      });
+
+      if (!verifyInstalledPackageFn(targetRoot)) {
+        throw new Error(`Install command completed, but DSM could not be verified in the project. ${buildManualInstallMessage(targetRoot, tarballPath, packageManager.name)}`);
+      }
+
+      installMode = 'direct tarball fallback';
     }
 
     return {
-      status: `installed via ${packageManager.name}`,
+      status: `installed via ${installMode}`,
       tarballPath,
-      packageManager: packageManager.name,
+      packageManager: installMode,
       packageSpec,
       installed: true,
     };

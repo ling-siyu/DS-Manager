@@ -10,6 +10,7 @@ import {
   createLocalCliWrapper,
   ensureLocalBinShim,
   getFastUpdatePackageManager,
+  installTarballDirectly,
   installPackageIntoProject,
   runStreamingCommand,
   verifyInstalledCli,
@@ -59,6 +60,9 @@ test('installPackageIntoProject reports tarball path and manual recovery command
       runStreamingCommandFn: async () => {
         throw new Error('spawn npm failed');
       },
+      installTarballDirectlyFn: async () => {
+        throw new Error('tar fallback failed');
+      },
     }),
     (error) => {
       assert.match(error.message, /spawn npm failed/);
@@ -78,9 +82,31 @@ test('installPackageIntoProject verifies the install before reporting success', 
       detectPackageManagerFn: () => ({ name: 'npm', cmd: 'npm', args: ['install', '-D'] }),
       runStreamingCommandFn: async () => {},
       verifyInstalledPackageFn: () => false,
+      installTarballDirectlyFn: async () => {},
     }),
     /could not be verified in the project/,
   );
+});
+
+test('installPackageIntoProject falls back to a direct tarball extraction when package-manager install fails', async () => {
+  const targetRoot = createTempProject();
+
+  const result = await installPackageIntoProject(targetRoot, '/tmp/dsm-source', {
+    runCommandCapturingStdoutFn: async () => JSON.stringify([{ filename: 'dsm-0.1.0.tgz' }]),
+    detectPackageManagerFn: () => ({ name: 'npm', cmd: 'npm', args: ['install', '-D'] }),
+    runStreamingCommandFn: async () => {
+      throw new Error('npm stalled');
+    },
+    verifyInstalledPackageFn: () => true,
+    installTarballDirectlyFn: async () => ({
+      installedDir: resolve(targetRoot, 'node_modules/dsm'),
+      mode: 'direct-tarball',
+    }),
+  });
+
+  assert.equal(result.installed, true);
+  assert.equal(result.status, 'installed via direct tarball fallback');
+  assert.equal(result.packageManager, 'direct tarball fallback');
 });
 
 test('installPackageIntoProject reports skipped installs without pretending success', async () => {
@@ -260,6 +286,27 @@ test('ensureLocalBinShim creates a consumer-facing dsm entrypoint that delegates
 
   const shimSource = readFileSync(resolve(targetRoot, 'node_modules/.bin/dsm'), 'utf8');
   assert.match(shimSource, /new URL\('\.\.\/\.\.\/design-system\/bin\/dsm\.js', import\.meta\.url\)/);
+});
+
+test('installTarballDirectly extracts the npm package payload into node_modules/dsm and refreshes the local shim', async () => {
+  const targetRoot = createTempProject();
+  const tarballPath = resolve(targetRoot, 'design-system/vendor/dsm-0.1.0.tgz');
+  mkdirSync(resolve(targetRoot, 'design-system/vendor'), { recursive: true });
+  writeFileSync(tarballPath, 'fake tgz payload');
+
+  let extractedTo = null;
+  await installTarballDirectly(targetRoot, tarballPath, {
+    runStreamingCommandFn: async (_command, args) => {
+      extractedTo = args[3];
+      const packageDir = resolve(args[3], 'package');
+      mkdirSync(packageDir, { recursive: true });
+      writeFileSync(resolve(packageDir, 'package.json'), JSON.stringify({ name: 'dsm' }));
+    },
+  });
+
+  assert.equal(existsSync(resolve(targetRoot, 'node_modules/dsm/package.json')), true);
+  assert.equal(existsSync(resolve(targetRoot, 'node_modules/.bin/dsm')), true);
+  assert.equal(existsSync(resolve(extractedTo, 'package')), false);
 });
 
 test('getFastUpdatePackageManager uses a lighter no-save npm install path for updates', () => {

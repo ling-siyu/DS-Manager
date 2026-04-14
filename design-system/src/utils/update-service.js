@@ -5,6 +5,7 @@ import {
   buildManualInstallMessage,
   cleanupLegacyProjectCache,
   getFastUpdatePackageManager,
+  installTarballDirectly,
   runCommandCapturingStdout,
   runStreamingCommand,
   verifyInstalledCli,
@@ -53,6 +54,7 @@ export async function refreshInstalledDsm(targetRoot, packageSourceRoot, options
 
     const packageManager = getFastUpdatePackageManager(targetRoot);
     const packageSpec = `./design-system/vendor/${packedFilename}`;
+    let installMode = packageManager.name;
 
     logger('install tarball', 'in_progress');
     try {
@@ -66,19 +68,36 @@ export async function refreshInstalledDsm(targetRoot, packageSourceRoot, options
         },
       );
     } catch (error) {
-      const timeoutHint = error.code === 'ETIMEDOUT'
-        ? 'The install step timed out. Retry `dsm update`, or run the manual recovery command below.'
-        : 'DSM could not install the tarball automatically.';
-      error.message = `${error.message}. ${timeoutHint} ${buildManualInstallMessage(targetRoot, tarballPath, packageManager.name)}`;
-      throw error;
+      logger('install tarball', 'warning', `${packageManager.name} failed, trying direct tarball fallback`);
+      try {
+        logger('extract tarball fallback', 'in_progress');
+        await installTarballDirectly(targetRoot, tarballPath);
+        installMode = 'direct tarball fallback';
+        steps.push({ name: 'extract tarball fallback', status: 'done', tarballPath });
+        logger('extract tarball fallback', 'done', tarballPath);
+      } catch (fallbackError) {
+        const timeoutHint = error.code === 'ETIMEDOUT'
+          ? 'The install step timed out. Retry `dsm update`, or run the manual recovery command below.'
+          : 'DSM could not install the tarball automatically.';
+        error.message = `${error.message}. ${timeoutHint} ${buildManualInstallMessage(targetRoot, tarballPath, packageManager.name)} Direct tarball fallback also failed: ${fallbackError.message}`;
+        throw error;
+      }
     }
 
     if (!verifyInstalledPackage(targetRoot)) {
-      throw new Error(`Install command completed, but DSM could not be verified in the project. ${buildManualInstallMessage(targetRoot, tarballPath, packageManager.name)}`);
+      logger('extract tarball fallback', 'in_progress');
+      await installTarballDirectly(targetRoot, tarballPath);
+      installMode = 'direct tarball fallback';
+      steps.push({ name: 'extract tarball fallback', status: 'done', tarballPath });
+      logger('extract tarball fallback', 'done', tarballPath);
+
+      if (!verifyInstalledPackage(targetRoot)) {
+        throw new Error(`Install command completed, but DSM could not be verified in the project. ${buildManualInstallMessage(targetRoot, tarballPath, packageManager.name)}`);
+      }
     }
 
-    steps.push({ name: 'install tarball', status: 'done', packageManager: packageManager.name, tarballPath, packageSpec });
-    logger('install tarball', 'done', packageManager.name);
+    steps.push({ name: 'install tarball', status: 'done', packageManager: installMode, tarballPath, packageSpec });
+    logger('install tarball', 'done', installMode);
 
     logger('verify installed package', 'in_progress');
     const cliVerification = await verifyInstalledCli(targetRoot, { expectedVersion });

@@ -107,6 +107,14 @@ function mergeExistingWithRename(existing, orphaned, discovered) {
   };
 }
 
+function dedupeComponentsByName(components) {
+  const byName = new Map();
+  for (const component of components) {
+    byName.set(component.name, component);
+  }
+  return Array.from(byName.values());
+}
+
 function getMetadataDiff(existing, discovered) {
   const differences = [];
 
@@ -180,7 +188,11 @@ export function buildSyncPlan(registry, discoveredComponents, options = {}) {
     }
   }
 
-  mergedComponents.sort((left, right) => left.name.localeCompare(right.name));
+  const finalComponents = dedupeComponentsByName(
+    mergedComponents.filter((component) => discoveredByName.has(component.name) || !consumedRenames.has(component.name)),
+  );
+
+  finalComponents.sort((left, right) => left.name.localeCompare(right.name));
 
   const changed = missingFromRegistry.length > 0
     || stalePaths.length > 0
@@ -196,7 +208,7 @@ export function buildSyncPlan(registry, discoveredComponents, options = {}) {
     renamedCandidates,
     nextRegistry: {
       ...registry,
-      components: mergedComponents,
+      components: finalComponents,
     },
   };
 }
