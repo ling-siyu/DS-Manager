@@ -147,6 +147,15 @@ dsm install-hook           # fails if a hook already exists
 dsm install-hook --force   # appends to an existing hook
 ```
 
+### `dsm update`
+
+Refreshes a pilot project from the DSM checkout you are currently running. This repacks the current local DSM source, reinstalls it into the target project, refreshes scripts and MCP wiring, and rebuilds generated context by default.
+
+```bash
+dsm update
+dsm update --skip-build
+```
+
 ### `dsm serve`
 
 Starts an MCP (Model Context Protocol) stdio server. Used internally by Claude Code — you typically don't need to run this manually.

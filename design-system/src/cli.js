@@ -10,15 +10,17 @@ import { listComponentsCommand } from './commands/list-components.js';
 import { scanCommand } from './commands/scan.js';
 import { serveCommand } from './commands/serve.js';
 import { uiCommand } from './commands/ui.js';
+import { updateCommand } from './commands/update.js';
 import { validateCommand } from './commands/validate.js';
 import { watchCommand } from './commands/watch.js';
+import { getDsmVersion } from './utils/metadata.js';
 
 const program = new Command();
 
 program
   .name('dsm')
   .description('Design System Manager — tokenize, build, and enforce your design system')
-  .version('0.1.0');
+  .version(getDsmVersion());
 
 program
   .command('init')
@@ -79,6 +81,12 @@ program
   .description('Install a pre-commit git hook that runs dsm validate before each commit')
   .option('--force', 'Append dsm block to an existing pre-commit hook instead of aborting')
   .action(installHookCommand);
+
+program
+  .command('update')
+  .description('Refresh the current project from the DSM source checkout used to run this command')
+  .option('--skip-build', 'Skip rebuilding tokens and regenerating context files after updating DSM')
+  .action(updateCommand);
 
 program
   .command('ui')

@@ -1,174 +1,20 @@
-import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, chmodSync, readdirSync, unlinkSync } from 'fs';
+import { existsSync, mkdirSync, copyFileSync, writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { execFileSync } from 'child_process';
 import chalk from 'chalk';
 import { buildCommand } from './build.js';
 import { generateContextCommand } from './generate-context.js';
 import { installHookCommand } from './install-hook.js';
+import {
+  createLocalCliWrapper,
+  installPackageIntoProject,
+  wireMcpServer,
+  wirePackageScripts,
+} from '../utils/project-install.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_DIR = resolve(__dirname, '../../');
 const CLAUDE_COMMANDS_DIR = resolve(TEMPLATES_DIR, 'templates/claude-commands');
-
-/** Read .claude/settings.json, merge in the dsm MCP server entry, write back. */
-function wireMcpServer(targetRoot, command, args) {
-  const settingsDir = resolve(targetRoot, '.claude');
-  const settingsPath = resolve(settingsDir, 'settings.json');
-
-  if (!existsSync(settingsDir)) mkdirSync(settingsDir, { recursive: true });
-
-  let settings = {};
-  if (existsSync(settingsPath)) {
-    try { settings = JSON.parse(readFileSync(settingsPath, 'utf8')); } catch { /* keep empty */ }
-  }
-
-  settings.mcpServers ??= {};
-
-  settings.mcpServers.dsm = {
-    command,
-    args,
-    cwd: targetRoot,
-  };
-
-  writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf8');
-  return 'updated';
-}
-
-function createLocalCliWrapper(targetRoot, cliPath) {
-  const binDir = resolve(targetRoot, 'design-system/bin');
-  const wrapperPath = resolve(binDir, 'dsm.js');
-
-  if (!existsSync(binDir)) mkdirSync(binDir, { recursive: true });
-
-  const wrapperSource = `#!/usr/bin/env node
-import { main } from ${JSON.stringify(cliPath)};
-try {
-  await main(process.argv.slice(2));
-} catch (err) {
-  console.error(err.stack || String(err));
-  process.exitCode = 1;
-}
-`;
-
-  writeFileSync(wrapperPath, wrapperSource, 'utf8');
-  chmodSync(wrapperPath, 0o755);
-}
-
-function wirePackageScripts(targetRoot, options = {}) {
-  const packagePath = resolve(targetRoot, 'package.json');
-  if (!existsSync(packagePath)) return 'skipped (no package.json at project root)';
-
-  const { preferInstalledBinary = false } = options;
-
-  let pkg;
-  try {
-    pkg = JSON.parse(readFileSync(packagePath, 'utf8'));
-  } catch (err) {
-    return `failed: could not parse package.json (${err.message})`;
-  }
-
-  pkg.scripts ??= {};
-
-  const cliPrefix = preferInstalledBinary ? 'dsm' : 'node design-system/bin/dsm.js';
-  const legacyCliPrefix = 'node design-system/bin/dsm.js';
-
-  const desiredScripts = {
-    dsm: cliPrefix,
-    'dsm:build': `${cliPrefix} build`,
-    'dsm:watch': `${cliPrefix} watch`,
-    'dsm:scan': `${cliPrefix} scan .`,
-    'dsm:validate': `${cliPrefix} validate .`,
-    'dsm:generate-context': `${cliPrefix} generate-context`,
-  };
-
-  let changed = false;
-  for (const [name, command] of Object.entries(desiredScripts)) {
-    const current = pkg.scripts[name];
-    const legacyCommand = name === 'dsm' ? legacyCliPrefix : `${legacyCliPrefix}${command.slice(cliPrefix.length)}`;
-
-    if (current == null) {
-      pkg.scripts[name] = command;
-      changed = true;
-      continue;
-    }
-
-    if (preferInstalledBinary && current === legacyCommand) {
-      pkg.scripts[name] = command;
-      changed = true;
-    }
-  }
-
-  if (!changed) return 'skipped (scripts already exist)';
-
-  writeFileSync(packagePath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
-  return 'updated';
-}
-
-function detectPackageManager(targetRoot) {
-  if (existsSync(resolve(targetRoot, 'pnpm-lock.yaml'))) {
-    return { name: 'pnpm', cmd: 'pnpm', args: ['add', '-D'] };
-  }
-
-  if (existsSync(resolve(targetRoot, 'yarn.lock'))) {
-    return { name: 'yarn', cmd: 'yarn', args: ['add', '-D'] };
-  }
-
-  if (existsSync(resolve(targetRoot, 'bun.lock')) || existsSync(resolve(targetRoot, 'bun.lockb'))) {
-    return { name: 'bun', cmd: 'bun', args: ['add', '-d'] };
-  }
-
-  return { name: 'npm', cmd: 'npm', args: ['install', '-D'] };
-}
-
-function installPackageIntoProject(targetRoot) {
-  const packagePath = resolve(targetRoot, 'package.json');
-  if (!existsSync(packagePath)) return 'skipped (no package.json at project root)';
-
-  const vendorDir = resolve(targetRoot, 'design-system/vendor');
-  const npmCacheDir = resolve(targetRoot, 'design-system/.npm-cache');
-  if (!existsSync(vendorDir)) mkdirSync(vendorDir, { recursive: true });
-  if (!existsSync(npmCacheDir)) mkdirSync(npmCacheDir, { recursive: true });
-
-  const npmEnv = { ...process.env, npm_config_cache: npmCacheDir };
-
-  for (const file of readdirSync(vendorDir)) {
-    if (file.startsWith('dsm-') && file.endsWith('.tgz')) {
-      unlinkSync(resolve(vendorDir, file));
-    }
-  }
-
-  const packOutput = execFileSync(
-    'npm',
-    ['pack', '--json', '--pack-destination', vendorDir],
-    { cwd: TEMPLATES_DIR, encoding: 'utf8', env: npmEnv },
-  );
-  let packedFilename;
-  try {
-    packedFilename = JSON.parse(packOutput)[0]?.filename;
-  } catch {
-    packedFilename = packOutput.trim().split('\n').pop();
-  }
-
-  if (!packedFilename) {
-    throw new Error('npm pack did not produce a tarball');
-  }
-
-  const packageManager = detectPackageManager(targetRoot);
-  const packageSpec = `./design-system/vendor/${packedFilename}`;
-
-  execFileSync(
-    packageManager.cmd,
-    [...packageManager.args, packageSpec],
-    {
-      cwd: targetRoot,
-      stdio: 'inherit',
-      env: packageManager.name === 'npm' ? npmEnv : process.env,
-    },
-  );
-
-  return `installed via ${packageManager.name}`;
-}
 
 export async function initCommand(options = {}) {
   const targetRoot = process.cwd();
@@ -280,9 +126,10 @@ export async function initCommand(options = {}) {
   if (!options.skipInstall) {
     console.log(chalk.cyan('\n📦 Installing DSM package...\n'));
     try {
-      const status = installPackageIntoProject(targetRoot);
-      installedPackage = true;
-      console.log(`  ${chalk.green('✓')}  ${chalk.white('dev dependency')}  ${chalk.dim(status)}`);
+      const { status, installed } = await installPackageIntoProject(targetRoot, TEMPLATES_DIR);
+      installedPackage = installed === true;
+      const icon = installedPackage ? chalk.green('✓') : chalk.dim('–');
+      console.log(`  ${icon}  ${chalk.white('dev dependency')}  ${chalk.dim(status)}`);
     } catch (err) {
       console.log(`  ${chalk.yellow('⚠')}  ${chalk.white('dev dependency')}  ${chalk.dim(`install failed: ${err.message}`)}`);
       console.log(chalk.dim('     Falling back to the local wrapper scripts for this project.\n'));
@@ -305,16 +152,18 @@ export async function initCommand(options = {}) {
   console.log(chalk.cyan('\n⚙  Building tokens...\n'));
   try {
     await buildCommand();
-  } catch {
-    console.log(chalk.yellow('  ⚠  Build skipped — run `dsm build` manually after setup.\n'));
+  } catch (error) {
+    console.log(chalk.yellow(`  ⚠  Build skipped — ${error.message}`));
+    console.log(chalk.dim('     Run `dsm build` manually after setup.\n'));
   }
 
   // ── Step 3: Generate CLAUDE.md + AGENTS.md ────────────────────────────
   console.log(chalk.cyan('📝 Generating context files...\n'));
   try {
     await generateContextCommand();
-  } catch {
-    console.log(chalk.yellow('  ⚠  Context generation skipped — run `dsm generate-context` manually.\n'));
+  } catch (error) {
+    console.log(chalk.yellow(`  ⚠  Context generation skipped — ${error.message}`));
+    console.log(chalk.dim('     Run `dsm generate-context` manually.\n'));
   }
 
   // ── Step 4: Install pre-commit hook (unless --skip-hook) ──────────────

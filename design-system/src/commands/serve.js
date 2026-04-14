@@ -8,12 +8,13 @@ import { resolveProjectPaths } from '../utils/paths.js';
 import { collectScanResults } from './scan.js';
 import { searchTokens } from './get-token.js';
 import { getComponents } from './list-components.js';
+import { getDsmVersion } from '../utils/metadata.js';
 
 export async function serveCommand() {
   const { tokensPath, componentsPath } = resolveProjectPaths();
 
   const server = new Server(
-    { name: 'dsm', version: '0.1.0' },
+    { name: 'dsm', version: getDsmVersion() },
     { capabilities: { tools: {} } }
   );
 
