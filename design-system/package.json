@@ -22,7 +22,8 @@
     "scan": "node src/cli.js scan ..",
     "validate": "node src/cli.js validate ..",
     "generate-context": "node src/cli.js generate-context",
-    "ui": "node src/cli.js ui"
+    "ui": "node src/cli.js ui",
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

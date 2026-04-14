@@ -31,6 +31,23 @@ const CONTENT_TYPES = {
   '.js': 'application/javascript; charset=utf-8',
 };
 
+export function createBindErrorMessage(error, { host, port, attemptedPorts } = {}) {
+  const reason = error?.message || 'Unknown bind failure';
+
+  if (error?.code === 'EADDRINUSE') {
+    const attemptedRange = attemptedPorts?.length
+      ? ` after checking ${attemptedPorts[0]}-${attemptedPorts[attemptedPorts.length - 1]}`
+      : '';
+    return `No port available near ${port}${attemptedRange}; every probed port on ${host} is already in use. Last error: ${reason}`;
+  }
+
+  if (error?.code === 'EPERM' || error?.code === 'EACCES') {
+    return `Could not bind DSM UI to ${host}:${port} because the environment denied the listen attempt (${error.code}). ${reason}`;
+  }
+
+  return `Could not bind DSM UI to ${host}:${port}. ${reason}`;
+}
+
 function loadTokenStyles(paths) {
   const cssVarsPath = resolve(paths.buildDir, 'css-vars.css');
   if (!existsSync(cssVarsPath)) {
@@ -40,21 +57,52 @@ function loadTokenStyles(paths) {
   return readFileSync(cssVarsPath, 'utf8');
 }
 
-async function findAvailablePort(start) {
-  for (let port = start; port < start + 10; port += 1) {
-    const ok = await new Promise((resolvePort) => {
-      const server = createNetServer();
-      server.once('error', () => resolvePort(false));
-      server.once('listening', () => {
-        server.close(() => resolvePort(true));
-      });
-      server.listen(port, '127.0.0.1');
-    });
+async function probePort(port, host = '127.0.0.1') {
+  return new Promise((resolvePort, rejectPort) => {
+    const server = createNetServer();
+    server.once('error', (error) => {
+      if (error.code === 'EADDRINUSE') {
+        resolvePort({ available: false, reason: 'in-use', error });
+        return;
+      }
 
-    if (ok) return port;
+      rejectPort(error);
+    });
+    server.once('listening', () => {
+      server.close(() => resolvePort({ available: true }));
+    });
+    server.listen(port, host);
+  });
+}
+
+export async function findAvailablePort(start, options = {}) {
+  const { host = '127.0.0.1', attempts = 10, probePortFn = probePort } = options;
+  const attemptedPorts = [];
+
+  for (let port = start; port < start + attempts; port += 1) {
+    attemptedPorts.push(port);
+    let result;
+    try {
+      result = await probePortFn(port, host);
+    } catch (error) {
+      const bindError = new Error(createBindErrorMessage(error, { host, port }));
+      bindError.code = error.code;
+      bindError.cause = error;
+      throw bindError;
+    }
+
+    if (result.available) {
+      return port;
+    }
   }
 
-  throw new Error(`No port available near ${start}`);
+  const error = new Error(createBindErrorMessage(
+    { code: 'EADDRINUSE', message: 'Address already in use' },
+    { host, port: start, attemptedPorts },
+  ));
+  error.code = 'EADDRINUSE';
+  error.attemptedPorts = attemptedPorts;
+  throw error;
 }
 
 function openBrowser(url) {
@@ -142,7 +190,8 @@ export async function uiCommand(options = {}) {
   let previewRuntime = await loadPreviewRuntime(paths, getComponents(paths.componentsPath) ?? []);
   const previewFrameStyles = loadPreviewFrameStyles(paths);
 
-  const port = await findAvailablePort(requestedPort);
+  const host = '127.0.0.1';
+  const port = await findAvailablePort(requestedPort, { host });
   const clients = new Set();
 
   const server = createServer((req, res) => {
@@ -274,11 +323,13 @@ export async function uiCommand(options = {}) {
   });
 
   await new Promise((resolveListen, rejectListen) => {
-    server.once('error', rejectListen);
-    server.listen(port, '127.0.0.1', () => resolveListen());
+    server.once('error', (error) => {
+      rejectListen(new Error(createBindErrorMessage(error, { host, port })));
+    });
+    server.listen(port, host, () => resolveListen());
   });
 
-  const url = `http://127.0.0.1:${port}`;
+  const url = `http://${host}:${port}`;
 
   console.log(chalk.cyan('\nDesign system preview is running.\n'));
   console.log(`  ${chalk.bold('URL:')} ${chalk.underline(url)}`);
