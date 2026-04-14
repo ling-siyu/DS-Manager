@@ -11,8 +11,14 @@ ${HOOK_MARKER}
 # Installed by: dsm install-hook
 # Remove this block to disable.
 
-# Find dsm: prefer local node_modules, fall back to global
-DSM="$(npm root 2>/dev/null)/dsm/src/cli.js"
+# Find dsm: prefer the project install, then the repo-local wrapper, then local/global node_modules
+DSM="./node_modules/.bin/dsm"
+if [ ! -x "$DSM" ]; then
+  DSM="design-system/bin/dsm.js"
+fi
+if [ ! -f "$DSM" ] && [ ! -x "$DSM" ]; then
+  DSM="$(npm root 2>/dev/null)/dsm/src/cli.js"
+fi
 if [ ! -f "$DSM" ]; then
   DSM="$(npm root -g 2>/dev/null)/dsm/src/cli.js"
 fi

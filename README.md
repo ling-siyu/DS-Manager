@@ -28,7 +28,7 @@ Bootstrap a new project from scratch:
 dsm init
 ```
 
-This scaffolds `tokens.json`, `components.json`, the Style Dictionary config, Claude Code settings, and installs the pre-commit validation hook.
+This scaffolds `tokens.json`, `components.json`, the Style Dictionary config, Claude Code settings, installs `dsm` into the target project as a dev dependency when `package.json` is present, and installs the pre-commit validation hook.
 
 Then build your tokens:
 
@@ -42,10 +42,11 @@ dsm build
 
 ### `dsm init`
 
-One-command project bootstrap. Scaffolds all required config files in the current directory and installs the pre-commit hook.
+One-command project bootstrap. Scaffolds all required config files in the current directory, installs `dsm` into the target project when possible, and installs the pre-commit hook.
 
 ```bash
 dsm init
+dsm init --skip-install   # scaffold only, keep using the local wrapper
 ```
 
 ### `dsm build`
@@ -120,6 +121,8 @@ dsm validate src/
 ### `dsm install-hook`
 
 Installs a git pre-commit hook that runs `dsm validate` before every commit. Blocks commits with token violations.
+
+The hook prefers the project-local `dsm` install from `node_modules/.bin` and falls back to the repo-local wrapper if needed.
 
 ```bash
 dsm install-hook           # fails if a hook already exists

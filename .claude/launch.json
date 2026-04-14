@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dsm-ui",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["design-system/src/cli.js", "ui", "--port", "7777"],
+      "port": 7777
+    }
+  ]
+}

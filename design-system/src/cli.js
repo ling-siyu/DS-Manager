@@ -23,6 +23,7 @@ program
   .command('init')
   .description('Initialize design system config in the current project')
   .option('--skip-hook', 'Skip installing the pre-commit git hook')
+  .option('--skip-install', 'Skip installing DSM as a dev dependency in the current project')
   .action(initCommand);
 
 program
