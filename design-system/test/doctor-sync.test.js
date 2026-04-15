@@ -2,14 +2,18 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { chmodSync, mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
 import { spawnSync } from 'child_process';
+import { fileURLToPath } from 'url';
 
 import { collectConfigHealth } from '../src/utils/config-health.js';
 import { resolveProjectPaths } from '../src/utils/paths.js';
 import { discoverComponents } from '../src/utils/component-discovery.js';
 import { buildSyncPlan } from '../src/commands/sync-components.js';
 import { getDsmVersion } from '../src/utils/metadata.js';
+
+const TEST_DIR = dirname(fileURLToPath(import.meta.url));
+const PACKAGE_ROOT = resolve(TEST_DIR, '..');
 
 function createFixtureProject() {
   const root = mkdtempSync(resolve(tmpdir(), 'dsm-doctor-test-'));
@@ -63,13 +67,13 @@ function createFixtureProject() {
 test('CLI bootstrap executes correctly through a symlinked bin shim path', () => {
   const binRoot = mkdtempSync(resolve(tmpdir(), 'dsm-bin-test-'));
   const shimPath = resolve(binRoot, 'dsm');
-  const cliPath = resolve(process.cwd(), 'design-system/src/cli.js');
+  const cliPath = resolve(PACKAGE_ROOT, 'src/cli.js');
 
   symlinkSync(cliPath, shimPath);
   chmodSync(cliPath, 0o755);
 
   const result = spawnSync(shimPath, ['--version'], {
-    cwd: process.cwd(),
+    cwd: PACKAGE_ROOT,
     encoding: 'utf8',
   });
 

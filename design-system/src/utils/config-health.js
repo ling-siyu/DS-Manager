@@ -11,6 +11,8 @@ const GENERATED_FILES = [
   'context.md',
 ];
 
+const LEGACY_SCAFFOLD_PATH = /^src\/components\/(ui|features)\//;
+
 function createIssue(severity, code, message, data = {}) {
   return { severity, code, message, ...data };
 }
@@ -167,6 +169,7 @@ export async function collectConfigHealth(paths, options = {}) {
   const registryComponents = Array.isArray(componentsFile?.components) ? componentsFile.components : [];
   const discovery = discoverComponents(paths.repoRoot);
   const discoveredByName = discovery.byName;
+  const hasDiscoveredSourceComponents = discovery.components.length > 0;
   const diagnosticsByName = {};
   const duplicateNames = new Set();
   const seenNames = new Set();
@@ -204,12 +207,14 @@ export async function collectConfigHealth(paths, options = {}) {
     if (!component.path) {
       issues.push(createIssue('fatal', 'component-path-missing', `Component "${componentName}" is missing its source path.`, { componentName }));
     } else if (!sourceExists) {
-      const scaffolded = /^src\/components\/(ui|features)\//.test(component.path);
+      const scaffolded = LEGACY_SCAFFOLD_PATH.test(component.path);
       issues.push(createIssue(
-        scaffolded ? 'fatal' : 'warning',
+        'warning',
         'component-path-missing',
-        `Component "${componentName}" points to a missing source path: ${component.path}.`,
-        { componentName, path: sourcePath, scaffolded },
+        scaffolded && hasDiscoveredSourceComponents
+          ? `Component "${componentName}" points to a missing legacy scaffold path: ${component.path}. Run \`dsm sync-components --write\` to align the registry with discovered project components.`
+          : `Component "${componentName}" points to a missing source path: ${component.path}.`,
+        { componentName, path: sourcePath, scaffolded, bootstrapPlaceholder: scaffolded && hasDiscoveredSourceComponents },
       ));
     }
 

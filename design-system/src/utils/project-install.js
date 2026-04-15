@@ -14,6 +14,31 @@ import {
 import { spawn } from 'child_process';
 import { tmpdir } from 'os';
 import { resolve, relative } from 'path';
+import { discoverComponents } from './component-discovery.js';
+
+function createStarterComponentRegistry(targetRoot) {
+  const discovered = discoverComponents(targetRoot);
+
+  return {
+    $schema: 'https://design-system-manager/schemas/components.json',
+    $version: '0.1.0',
+    $description: discovered.components.length > 0
+      ? 'Starter registry generated from discovered project components. Review and enrich entries as your design system evolves.'
+      : 'Starter registry for design system components. Add real project components here or run `dsm sync-components --write` to discover them.',
+    components: discovered.components.map((component) => ({
+      name: component.name,
+      path: component.path,
+      ...(Object.keys(component.props || {}).length ? { props: component.props } : {}),
+      ...(component.variants?.length ? { variants: component.variants } : {}),
+      ...(component.sizes?.length ? { sizes: component.sizes } : {}),
+    })),
+    conventions: {
+      naming: 'PascalCase for component names, camelCase for props',
+      location: 'Prefer real source-backed component paths from your project tree instead of template placeholder paths.',
+      newComponent: 'Run `dsm generate-context` after adding or registering a new component to refresh agent guidance.',
+    },
+  };
+}
 
 export function cleanupLegacyProjectCache(targetRoot) {
   rmSync(resolve(targetRoot, 'design-system/.npm-cache'), { recursive: true, force: true });
@@ -142,7 +167,8 @@ export function ensureCoreDsmProjectFiles(targetRoot, templateRoot) {
       run: () => {
         const dest = resolve(targetRoot, 'design-system/components.json');
         if (existsSync(dest)) return 'skipped (already exists)';
-        copyFileSync(resolve(templateRoot, 'components.json'), dest);
+        const starterRegistry = createStarterComponentRegistry(targetRoot);
+        writeFileSync(dest, JSON.stringify(starterRegistry, null, 2) + '\n', 'utf8');
       },
     },
     {

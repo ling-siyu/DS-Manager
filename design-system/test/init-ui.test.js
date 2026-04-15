@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { spawn } from 'child_process';
 import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 
 import {
   buildManualInstallMessage,
@@ -22,6 +23,9 @@ import { createBindErrorMessage, findAvailablePort } from '../src/commands/ui.js
 import { getDsmVersion } from '../src/utils/metadata.js';
 import { collectScanResults } from '../src/commands/scan.js';
 import { loadPreviewFrameStyles } from '../src/utils/preview.js';
+
+const TEST_DIR = dirname(fileURLToPath(import.meta.url));
+const PACKAGE_ROOT = resolve(TEST_DIR, '..');
 
 function createTempProject() {
   const root = mkdtempSync(resolve(tmpdir(), 'dsm-init-test-'));
@@ -214,7 +218,7 @@ test('ensureCoreDsmProjectFiles bootstraps the minimum DSM config into a fresh r
   const targetRoot = mkdtempSync(resolve(tmpdir(), 'dsm-core-scaffold-'));
   writeFileSync(resolve(targetRoot, 'package.json'), JSON.stringify({ name: 'fixture', private: true }, null, 2));
 
-  const results = ensureCoreDsmProjectFiles(targetRoot, resolve(process.cwd(), 'design-system'));
+  const results = ensureCoreDsmProjectFiles(targetRoot, PACKAGE_ROOT);
 
   assert.equal(existsSync(resolve(targetRoot, 'design-system/tokens.json')), true);
   assert.equal(existsSync(resolve(targetRoot, 'design-system/components.json')), true);
