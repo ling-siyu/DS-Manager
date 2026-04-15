@@ -1,5 +1,6 @@
 import {
   chmodSync,
+  copyFileSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -117,6 +118,61 @@ process.exit(lastResult?.code ?? 1);
   chmodSync(wrapperPath, 0o755);
 }
 
+export function ensureCoreDsmProjectFiles(targetRoot, templateRoot) {
+  const steps = [
+    {
+      label: 'design-system/ directory',
+      run: () => {
+        const dir = resolve(targetRoot, 'design-system');
+        if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+        const buildDir = resolve(dir, 'build');
+        if (!existsSync(buildDir)) mkdirSync(buildDir, { recursive: true });
+      },
+    },
+    {
+      label: 'design-system/tokens.json',
+      run: () => {
+        const dest = resolve(targetRoot, 'design-system/tokens.json');
+        if (existsSync(dest)) return 'skipped (already exists)';
+        copyFileSync(resolve(templateRoot, 'tokens.json'), dest);
+      },
+    },
+    {
+      label: 'design-system/components.json',
+      run: () => {
+        const dest = resolve(targetRoot, 'design-system/components.json');
+        if (existsSync(dest)) return 'skipped (already exists)';
+        copyFileSync(resolve(templateRoot, 'components.json'), dest);
+      },
+    },
+    {
+      label: 'design-system/style-dictionary.config.mjs',
+      run: () => {
+        const dest = resolve(targetRoot, 'design-system/style-dictionary.config.mjs');
+        if (existsSync(dest)) return 'skipped (already exists)';
+        copyFileSync(resolve(templateRoot, 'style-dictionary.config.mjs'), dest);
+      },
+    },
+    {
+      label: 'design-system/package.json',
+      run: () => {
+        const dest = resolve(targetRoot, 'design-system/package.json');
+        if (existsSync(dest)) return 'skipped (already exists)';
+        writeFileSync(dest, JSON.stringify({ type: 'module' }, null, 2) + '\n', 'utf8');
+      },
+    },
+  ];
+
+  return steps.map((step) => {
+    try {
+      const status = step.run() ?? 'created';
+      return { label: step.label, status };
+    } catch (error) {
+      return { label: step.label, status: `failed: ${error.message}` };
+    }
+  });
+}
+
 export function ensureLocalBinShim(targetRoot) {
   const binDir = resolve(targetRoot, 'node_modules/.bin');
   const binPath = resolve(binDir, 'dsm');
@@ -124,52 +180,59 @@ export function ensureLocalBinShim(targetRoot) {
   if (!existsSync(binDir)) mkdirSync(binDir, { recursive: true });
 
   const shimSource = `#!/usr/bin/env node
-import { spawn } from 'child_process';
-import { existsSync } from 'fs';
-import { fileURLToPath } from 'url';
+(async () => {
+  const { spawn } = await import('child_process');
+  const { existsSync } = await import('fs');
+  const path = await import('path');
 
-const candidates = [
-  fileURLToPath(new URL('../dsm/bin/dsm.js', import.meta.url)),
-  fileURLToPath(new URL('../src/cli.js', import.meta.url)),
-  fileURLToPath(new URL('../../design-system/bin/dsm.js', import.meta.url)),
-  fileURLToPath(new URL('../../../design-system/bin/dsm.js', import.meta.url)),
-].filter((candidate, index, all) => all.indexOf(candidate) === index);
+  const shimDir = path.dirname(path.resolve(process.argv[1]));
+  const candidates = [
+    path.resolve(shimDir, '../dsm/bin/dsm.js'),
+    path.resolve(shimDir, '../dsm/src/cli.js'),
+    path.resolve(shimDir, '../src/cli.js'),
+    path.resolve(shimDir, '../../design-system/bin/dsm.js'),
+    path.resolve(shimDir, '../../../design-system/bin/dsm.js'),
+  ].filter((candidate, index, all) => all.indexOf(candidate) === index);
 
-let lastFailure = null;
-for (const candidate of candidates) {
-  if (!existsSync(candidate)) continue;
+  let lastFailure = null;
+  for (const candidate of candidates) {
+    if (!existsSync(candidate)) continue;
 
-  const exitCode = await new Promise((resolveRun) => {
-    const child = spawn(process.execPath, [candidate, ...process.argv.slice(2)], {
-      stdio: 'inherit',
+    const exitCode = await new Promise((resolveRun) => {
+      const child = spawn(process.execPath, [candidate, ...process.argv.slice(2)], {
+        stdio: 'inherit',
+      });
+
+      child.once('error', (error) => {
+        lastFailure = error.stack || String(error);
+        resolveRun(1);
+      });
+
+      child.once('close', (code, signal) => {
+        if (signal) {
+          process.kill(process.pid, signal);
+          return;
+        }
+
+        resolveRun(code ?? 1);
+      });
     });
 
-    child.once('error', (error) => {
-      lastFailure = error.stack || String(error);
-      resolveRun(1);
-    });
+    if (exitCode === 0) {
+      process.exit(0);
+    }
 
-    child.once('close', (code, signal) => {
-      if (signal) {
-        process.kill(process.pid, signal);
-        return;
-      }
-
-      resolveRun(code ?? 1);
-    });
-  });
-
-  if (exitCode === 0) {
-    process.exit(0);
+    lastFailure = lastFailure || \`\${candidate} exited with code \${exitCode}\`;
   }
 
-  lastFailure = lastFailure || \`\${candidate} exited with code \${exitCode}\`;
-}
-
-if (lastFailure) {
-  process.stderr.write(String(lastFailure) + '\\n');
-}
-process.exit(1);
+  if (lastFailure) {
+    process.stderr.write(String(lastFailure) + '\\n');
+  }
+  process.exit(1);
+})().catch((error) => {
+  process.stderr.write((error?.stack || String(error)) + '\\n');
+  process.exit(1);
+});
 `;
 
   writeFileSync(binPath, shimSource, 'utf8');

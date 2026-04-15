@@ -9,6 +9,7 @@ import {
   buildManualInstallMessage,
   cleanupLegacyProjectCache,
   createLocalCliWrapper,
+  ensureCoreDsmProjectFiles,
   ensureLocalBinShim,
   getFastUpdatePackageManager,
   installTarballDirectly,
@@ -209,6 +210,19 @@ test('wirePackageScripts keeps dsm:update pinned to the wrapper even when other 
   assert.equal(pkg.scripts['dsm:update'], 'node design-system/bin/dsm.js update');
 });
 
+test('ensureCoreDsmProjectFiles bootstraps the minimum DSM config into a fresh repo', () => {
+  const targetRoot = mkdtempSync(resolve(tmpdir(), 'dsm-core-scaffold-'));
+  writeFileSync(resolve(targetRoot, 'package.json'), JSON.stringify({ name: 'fixture', private: true }, null, 2));
+
+  const results = ensureCoreDsmProjectFiles(targetRoot, resolve(process.cwd(), 'design-system'));
+
+  assert.equal(existsSync(resolve(targetRoot, 'design-system/tokens.json')), true);
+  assert.equal(existsSync(resolve(targetRoot, 'design-system/components.json')), true);
+  assert.equal(existsSync(resolve(targetRoot, 'design-system/style-dictionary.config.mjs')), true);
+  assert.equal(existsSync(resolve(targetRoot, 'design-system/package.json')), true);
+  assert.ok(results.some((step) => step.label === 'design-system/tokens.json'));
+});
+
 test('createLocalCliWrapper prefers installed DSM and falls back to the source checkout', () => {
   const targetRoot = createTempProject();
   createLocalCliWrapper(targetRoot, '/tmp/source-dsm/src/cli.js');
@@ -286,10 +300,11 @@ test('ensureLocalBinShim creates a consumer-facing dsm entrypoint that can resol
   ensureLocalBinShim(targetRoot);
 
   const shimSource = readFileSync(resolve(targetRoot, 'node_modules/.bin/dsm'), 'utf8');
-  assert.match(shimSource, /new URL\('\.\.\/dsm\/bin\/dsm\.js', import\.meta\.url\)/);
-  assert.match(shimSource, /new URL\('\.\.\/src\/cli\.js', import\.meta\.url\)/);
-  assert.match(shimSource, /new URL\('\.\.\/\.\.\/design-system\/bin\/dsm\.js', import\.meta\.url\)/);
-  assert.match(shimSource, /new URL\('\.\.\/\.\.\/\.\.\/design-system\/bin\/dsm\.js', import\.meta\.url\)/);
+  assert.match(shimSource, /path\.resolve\(shimDir, '\.\.\/dsm\/bin\/dsm\.js'\)/);
+  assert.match(shimSource, /path\.resolve\(shimDir, '\.\.\/dsm\/src\/cli\.js'\)/);
+  assert.match(shimSource, /path\.resolve\(shimDir, '\.\.\/src\/cli\.js'\)/);
+  assert.match(shimSource, /path\.resolve\(shimDir, '\.\.\/\.\.\/design-system\/bin\/dsm\.js'\)/);
+  assert.match(shimSource, /path\.resolve\(shimDir, '\.\.\/\.\.\/\.\.\/design-system\/bin\/dsm\.js'\)/);
 });
 
 test('installTarballDirectly extracts the npm package payload into node_modules/dsm and refreshes the local shim', async () => {
@@ -335,6 +350,52 @@ process.exit(1);
   const output = await new Promise((resolveRun, rejectRun) => {
     const child = spawn(process.execPath, [
       resolve(targetRoot, 'node_modules/dsm/bin/dsm.js'),
+      '--version',
+    ], {
+      cwd: targetRoot,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk;
+    });
+
+    child.once('error', rejectRun);
+    child.once('close', (code) => {
+      if (code !== 0) {
+        rejectRun(new Error(stderr || `exit ${code}`));
+        return;
+      }
+      resolveRun(stdout.trim());
+    });
+  });
+
+  assert.equal(output, '0.1.0');
+});
+
+test('the generated shim still works when executed from node_modules/.bin/dsm in a plain CommonJS context', async () => {
+  const targetRoot = createTempProject();
+  mkdirSync(resolve(targetRoot, 'node_modules/dsm/src'), { recursive: true });
+
+  ensureLocalBinShim(targetRoot);
+  writeFileSync(resolve(targetRoot, 'node_modules/dsm/src/cli.js'), `#!/usr/bin/env node
+if (process.argv.includes('--version')) {
+  console.log('0.1.0');
+  process.exit(0);
+}
+console.error('unexpected args');
+process.exit(1);
+`);
+
+  const output = await new Promise((resolveRun, rejectRun) => {
+    const child = spawn(process.execPath, [
+      resolve(targetRoot, 'node_modules/.bin/dsm'),
       '--version',
     ], {
       cwd: targetRoot,

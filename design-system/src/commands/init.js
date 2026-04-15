@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, copyFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, copyFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import chalk from 'chalk';
@@ -7,6 +7,7 @@ import { generateContextCommand } from './generate-context.js';
 import { installHookCommand } from './install-hook.js';
 import {
   createLocalCliWrapper,
+  ensureCoreDsmProjectFiles,
   ensureLocalBinShim,
   installPackageIntoProject,
   wireMcpServer,
@@ -25,47 +26,10 @@ export async function initCommand(options = {}) {
 
   // ── Step 1: Scaffold files ─────────────────────────────────────────────
   const scaffoldSteps = [
-    {
-      label: 'design-system/ directory',
-      run: () => {
-        const dir = resolve(targetRoot, 'design-system');
-        if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-        const buildDir = resolve(dir, 'build');
-        if (!existsSync(buildDir)) mkdirSync(buildDir, { recursive: true });
-      },
-    },
-    {
-      label: 'design-system/tokens.json',
-      run: () => {
-        const dest = resolve(targetRoot, 'design-system/tokens.json');
-        if (existsSync(dest)) return 'skipped (already exists)';
-        copyFileSync(resolve(TEMPLATES_DIR, 'tokens.json'), dest);
-      },
-    },
-    {
-      label: 'design-system/components.json',
-      run: () => {
-        const dest = resolve(targetRoot, 'design-system/components.json');
-        if (existsSync(dest)) return 'skipped (already exists)';
-        copyFileSync(resolve(TEMPLATES_DIR, 'components.json'), dest);
-      },
-    },
-    {
-      label: 'design-system/style-dictionary.config.mjs',
-      run: () => {
-        const dest = resolve(targetRoot, 'design-system/style-dictionary.config.mjs');
-        if (existsSync(dest)) return 'skipped (already exists)';
-        copyFileSync(resolve(TEMPLATES_DIR, 'style-dictionary.config.mjs'), dest);
-      },
-    },
-    {
-      label: 'design-system/package.json',
-      run: () => {
-        const dest = resolve(targetRoot, 'design-system/package.json');
-        if (existsSync(dest)) return 'skipped (already exists)';
-        writeFileSync(dest, JSON.stringify({ type: 'module' }, null, 2) + '\n', 'utf8');
-      },
-    },
+    ...ensureCoreDsmProjectFiles(targetRoot, TEMPLATES_DIR).map((step) => ({
+      label: step.label,
+      run: () => step.status,
+    })),
     {
       label: '.claude/commands/tokenize.md',
       run: () => {

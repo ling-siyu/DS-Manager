@@ -5,6 +5,7 @@ import { buildCommand } from './build.js';
 import { generateContextCommand } from './generate-context.js';
 import {
   createLocalCliWrapper,
+  ensureCoreDsmProjectFiles,
   ensureLocalBinShim,
   wireMcpServer,
   wirePackageScripts,
@@ -22,6 +23,12 @@ export async function updateCommand(options = {}) {
 
   console.log(chalk.cyan(`\n🔄 Updating Design System Manager v${getDsmVersion()}\n`));
   console.log(chalk.dim(`   Target: ${targetRoot}\n`));
+
+  const scaffoldResults = ensureCoreDsmProjectFiles(targetRoot, PACKAGE_SOURCE_ROOT);
+  for (const step of scaffoldResults) {
+    const icon = step.status?.startsWith('failed') ? chalk.red('✗') : step.status === 'created' ? chalk.green('✓') : chalk.dim('–');
+    console.log(`  ${icon}  ${chalk.white(step.label)}  ${chalk.dim(step.status)}`);
+  }
 
   createLocalCliWrapper(targetRoot, resolve(PACKAGE_SOURCE_ROOT, 'src/cli.js'));
   ensureLocalBinShim(targetRoot);
