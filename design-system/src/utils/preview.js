@@ -15,6 +15,8 @@ const PREVIEW_CONFIG_FILES = [
   'preview.adapter.mjs',
 ];
 
+const IMPORTABLE_COMPONENT_EXTENSIONS = new Set(['.js', '.jsx', '.mjs', '.ts', '.tsx']);
+
 function escapeForInlineJSON(value) {
   return JSON.stringify(value)
     .replace(/</g, '\\u003c')
@@ -25,6 +27,24 @@ function sanitizeError(error) {
   if (!error) return 'Unknown error';
   if (typeof error === 'string') return error;
   return error.message || String(error);
+}
+
+function isImportableComponentPath(filePath) {
+  return IMPORTABLE_COMPONENT_EXTENSIONS.has(extname(filePath));
+}
+
+function buildAutoComponentPaths(paths, components, explicitNames = new Set()) {
+  return (components || []).reduce((items, component) => {
+    const name = String(component?.name || '').trim();
+    const componentPath = String(component?.path || '').trim();
+    if (!name || !componentPath || explicitNames.has(name)) return items;
+
+    const absolutePath = resolve(paths.repoRoot, componentPath);
+    if (!existsSync(absolutePath) || !isImportableComponentPath(absolutePath)) return items;
+
+    items[name] = absolutePath;
+    return items;
+  }, {});
 }
 
 function isPlainObject(value) {
@@ -114,6 +134,8 @@ function buildComponentPreviewMetadata(component, summary, componentHealth = {})
     reason = 'Rendering the registered React component through the preview adapter.';
   } else if (!sourceExists) {
     reason = 'The registry path does not currently resolve to a source file in this repo.';
+  } else if (!hasAdapterMapping) {
+    reason = 'DSM found the source file, but no live preview adapter mapping is registered for this component.';
   } else if (summary.status !== 'ready' && hasAdapterMapping) {
     reason = summary.reason;
   } else if (hasAdapterMapping && !hasPreviewData) {
@@ -161,8 +183,28 @@ export function resolvePreviewConfigPath(paths) {
 export async function loadPreviewSummary(paths, components) {
   const configPath = resolvePreviewConfigPath(paths);
   const componentNames = new Set((components || []).map((component) => component.name));
+  const autoComponentPaths = buildAutoComponentPaths(paths, components);
+  const autoComponentNames = Object.keys(autoComponentPaths).sort((left, right) => left.localeCompare(right));
 
   if (!configPath) {
+    if (autoComponentNames.length) {
+      return {
+        framework: 'react',
+        mode: 'source-backed-metadata',
+        status: 'configured',
+        reason: 'DSM can auto-render source-backed React components without a custom preview adapter.',
+        modeLabel: 'Source-backed metadata',
+        configPath: null,
+        availableComponents: autoComponentNames,
+        autoComponentPaths,
+        defaults: {},
+        hasProviders: false,
+        hasDecorators: false,
+        errors: [],
+        warnings: ['No preview adapter configured; DSM will import eligible components directly from their registry paths.'],
+      };
+    }
+
     return {
       framework: null,
       mode: 'metadata-only',
@@ -171,6 +213,7 @@ export async function loadPreviewSummary(paths, components) {
       modeLabel: 'Metadata only',
       configPath: null,
       availableComponents: [],
+      autoComponentPaths: {},
       defaults: {},
       hasProviders: false,
       hasDecorators: false,
@@ -191,6 +234,7 @@ export async function loadPreviewSummary(paths, components) {
       modeLabel: 'Metadata only',
       configPath,
       availableComponents: [],
+      autoComponentPaths: {},
       defaults: {},
       hasProviders: false,
       hasDecorators: false,
@@ -209,6 +253,7 @@ export async function loadPreviewSummary(paths, components) {
       modeLabel: 'Metadata only',
       configPath,
       availableComponents: [],
+      autoComponentPaths: {},
       defaults: {},
       hasProviders: false,
       hasDecorators: false,
@@ -229,6 +274,7 @@ export async function loadPreviewSummary(paths, components) {
       modeLabel: 'Metadata only',
       configPath,
       availableComponents: [],
+      autoComponentPaths: {},
       defaults: {},
       hasProviders: false,
       hasDecorators: false,
@@ -256,6 +302,13 @@ export async function loadPreviewSummary(paths, components) {
     return items;
   }, []);
 
+  const explicitNames = new Set(mappedComponents);
+  const fallbackComponentPaths = buildAutoComponentPaths(paths, components, explicitNames);
+  const availableComponents = [...new Set([
+    ...mappedComponents,
+    ...Object.keys(fallbackComponentPaths),
+  ])].sort((left, right) => left.localeCompare(right));
+
   const defaults = sanitizeDefaults(adapter.defaults, componentNames, errors);
 
   return {
@@ -267,7 +320,8 @@ export async function loadPreviewSummary(paths, components) {
       : 'React preview adapter detected.',
     modeLabel: errors.length ? 'Source-backed metadata' : 'Source-backed metadata',
     configPath,
-    availableComponents: mappedComponents.sort((left, right) => left.localeCompare(right)),
+    availableComponents,
+    autoComponentPaths: fallbackComponentPaths,
     defaults,
     hasProviders: typeof adapter.renderProviders === 'function',
     hasDecorators: Array.isArray(adapter.decorators) && adapter.decorators.length > 0,
@@ -309,17 +363,35 @@ export async function buildPreviewBundle(paths, summary) {
 
   const tempDir = join(tmpdir(), `dsm-preview-${Date.now()}`);
   const entryPath = join(tempDir, 'entry.jsx');
+  const autoComponentEntries = Object.entries(summary.autoComponentPaths || {})
+    .map(([name, absolutePath]) => `      ${JSON.stringify(name)}: () => import(${JSON.stringify(absolutePath)}),`)
+    .join('\n');
+  const adapterImport = summary.configPath
+    ? `import * as adapterModule from ${JSON.stringify(summary.configPath)};`
+    : 'const adapterModule = {};';
 
   mkdirSync(tempDir, { recursive: true });
   writeFileSync(entryPath, `
     import React from 'react';
     import { createRoot } from 'react-dom/client';
     import PreviewApp from ${JSON.stringify(PACKAGE_UI_REACT_APP_PATH)};
-    import adapter from ${JSON.stringify(summary.configPath)};
+    ${adapterImport}
+
+    const autoComponents = {
+${autoComponentEntries}
+    };
+    const adapter = adapterModule?.default ?? adapterModule ?? {};
+    const resolvedAdapter = {
+      ...adapter,
+      components: {
+        ...autoComponents,
+        ...(adapter.components || {}),
+      },
+    };
 
     const root = createRoot(document.getElementById('root'));
     root.render(React.createElement(PreviewApp, {
-      adapter,
+      adapter: resolvedAdapter,
       boot: window.__DSM_PREVIEW_DATA__ || {},
     }));
   `);

@@ -21,8 +21,9 @@ import {
 } from '../src/utils/project-install.js';
 import { createBindErrorMessage, findAvailablePort } from '../src/commands/ui.js';
 import { getDsmVersion } from '../src/utils/metadata.js';
+import { resolveProjectPaths } from '../src/utils/paths.js';
 import { collectScanResults } from '../src/commands/scan.js';
-import { loadPreviewFrameStyles } from '../src/utils/preview.js';
+import { loadPreviewFrameStyles, loadPreviewSummary, loadPreviewRuntime } from '../src/utils/preview.js';
 
 const TEST_DIR = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = resolve(TEST_DIR, '..');
@@ -31,6 +32,42 @@ function createTempProject() {
   const root = mkdtempSync(resolve(tmpdir(), 'dsm-init-test-'));
   mkdirSync(resolve(root, 'design-system'), { recursive: true });
   writeFileSync(resolve(root, 'package.json'), JSON.stringify({ name: 'fixture', private: true }, null, 2));
+  return root;
+}
+
+function createPreviewFixtureProject() {
+  const root = createTempProject();
+  mkdirSync(resolve(root, 'design-system/build'), { recursive: true });
+  mkdirSync(resolve(root, 'src/components/ui'), { recursive: true });
+
+  writeFileSync(resolve(root, 'design-system/tokens.json'), JSON.stringify({
+    primitive: {
+      color: {
+        brand: {
+          500: { $type: 'color', $value: '#000000' },
+        },
+      },
+    },
+  }, null, 2));
+  writeFileSync(resolve(root, 'design-system/build/css-vars.css'), ':root{}');
+  writeFileSync(resolve(root, 'design-system/build/tailwind.tokens.cjs'), 'module.exports = {};');
+  writeFileSync(resolve(root, 'design-system/build/tokens.js'), 'export default {};');
+  writeFileSync(resolve(root, 'design-system/components.json'), JSON.stringify({
+    components: [
+      {
+        name: 'Button',
+        path: 'src/components/ui/Button.tsx',
+        previewProps: { children: 'Hello' },
+      },
+    ],
+  }, null, 2));
+  writeFileSync(resolve(root, 'src/components/ui/Button.tsx'), `
+    import React from 'react';
+    export default function Button({ children }) {
+      return <button>{children}</button>;
+    }
+  `);
+
   return root;
 }
 
@@ -54,6 +91,32 @@ test('runStreamingCommand handles very noisy stdout without ENOBUFS-style buffer
   }
 
   assert.ok(chunks.reduce((sum, size) => sum + size, 0) > 1024 * 1024);
+});
+
+test('loadPreviewSummary enables direct source previews without a preview adapter', async () => {
+  const root = createPreviewFixtureProject();
+  const paths = resolveProjectPaths(root);
+  const components = JSON.parse(readFileSync(resolve(root, 'design-system/components.json'), 'utf8')).components;
+
+  const summary = await loadPreviewSummary(paths, components);
+
+  assert.equal(summary.status, 'configured');
+  assert.equal(summary.framework, 'react');
+  assert.deepEqual(summary.availableComponents, ['Button']);
+  assert.equal(typeof summary.autoComponentPaths.Button, 'string');
+  assert.match(summary.reason, /auto-render source-backed React components/i);
+});
+
+test('loadPreviewRuntime builds a live preview bundle for direct source imports', async () => {
+  const root = createPreviewFixtureProject();
+  const paths = resolveProjectPaths(root);
+  const components = JSON.parse(readFileSync(resolve(root, 'design-system/components.json'), 'utf8')).components;
+
+  const runtime = await loadPreviewRuntime(paths, components);
+
+  assert.equal(runtime.summary.status, 'ready');
+  assert.equal(runtime.summary.mode, 'live-render');
+  assert.ok(runtime.assets.has('/main.js'));
 });
 
 test('installPackageIntoProject reports tarball path and manual recovery command on install failure', async () => {

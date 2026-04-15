@@ -11,9 +11,39 @@ function pickExport(moduleValue, componentName) {
   return candidate || null;
 }
 
+function isRenderableNode(value) {
+  if (value == null) return true;
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return true;
+  if (React.isValidElement(value)) return true;
+  if (Array.isArray(value)) return value.every(isRenderableNode);
+  return false;
+}
+
+function hasRenderableChildrenObject(value) {
+  return Boolean(value && React.isValidElement(value.children));
+}
+
+function normalizeWrappedOutput(value, fallback, label) {
+  if (typeof value === 'function') {
+    return React.createElement(value, null, fallback);
+  }
+
+  if (isRenderableNode(value)) {
+    return value;
+  }
+
+  if (hasRenderableChildrenObject(value)) {
+    return value.children;
+  }
+
+  throw new Error(`${label} must return a renderable React node.`);
+}
+
 function applyProviders(adapter, child, componentName, props) {
   if (typeof adapter?.renderProviders !== 'function') return child;
-  return adapter.renderProviders({ children: child, componentName, props });
+
+  const wrapped = adapter.renderProviders({ children: child, componentName, props });
+  return normalizeWrappedOutput(wrapped, child, 'adapter.renderProviders');
 }
 
 function applyDecorators(adapter, child, componentName, props) {
@@ -21,7 +51,16 @@ function applyDecorators(adapter, child, componentName, props) {
 
   return adapter.decorators.reduce((output, decorator) => {
     if (typeof decorator !== 'function') return output;
-    return decorator({ children: output, componentName, props });
+
+    const context = { children: output, componentName, props };
+    const story = () => output;
+    let wrapped = decorator.length >= 2 ? decorator(story, context) : decorator(context);
+
+    if (decorator.length < 2 && !isRenderableNode(wrapped) && !hasRenderableChildrenObject(wrapped)) {
+      wrapped = decorator(story, context);
+    }
+
+    return normalizeWrappedOutput(wrapped, output, 'Preview decorator');
   }, child);
 }
 
