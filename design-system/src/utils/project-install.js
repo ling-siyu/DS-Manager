@@ -125,20 +125,51 @@ export function ensureLocalBinShim(targetRoot) {
 
   const shimSource = `#!/usr/bin/env node
 import { spawn } from 'child_process';
+import { existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 
-const wrapperPath = fileURLToPath(new URL('../../design-system/bin/dsm.js', import.meta.url));
-const child = spawn(process.execPath, [wrapperPath, ...process.argv.slice(2)], {
-  stdio: 'inherit',
-});
+const candidates = [
+  fileURLToPath(new URL('../dsm/bin/dsm.js', import.meta.url)),
+  fileURLToPath(new URL('../src/cli.js', import.meta.url)),
+  fileURLToPath(new URL('../../design-system/bin/dsm.js', import.meta.url)),
+  fileURLToPath(new URL('../../../design-system/bin/dsm.js', import.meta.url)),
+].filter((candidate, index, all) => all.indexOf(candidate) === index);
 
-child.once('close', (code, signal) => {
-  if (signal) {
-    process.kill(process.pid, signal);
-    return;
+let lastFailure = null;
+for (const candidate of candidates) {
+  if (!existsSync(candidate)) continue;
+
+  const exitCode = await new Promise((resolveRun) => {
+    const child = spawn(process.execPath, [candidate, ...process.argv.slice(2)], {
+      stdio: 'inherit',
+    });
+
+    child.once('error', (error) => {
+      lastFailure = error.stack || String(error);
+      resolveRun(1);
+    });
+
+    child.once('close', (code, signal) => {
+      if (signal) {
+        process.kill(process.pid, signal);
+        return;
+      }
+
+      resolveRun(code ?? 1);
+    });
+  });
+
+  if (exitCode === 0) {
+    process.exit(0);
   }
-  process.exit(code ?? 1);
-});
+
+  lastFailure = lastFailure || \`\${candidate} exited with code \${exitCode}\`;
+}
+
+if (lastFailure) {
+  process.stderr.write(String(lastFailure) + '\\n');
+}
+process.exit(1);
 `;
 
   writeFileSync(binPath, shimSource, 'utf8');

@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { spawn } from 'child_process';
 import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { resolve } from 'path';
@@ -279,13 +280,16 @@ test('cleanupLegacyProjectCache removes repo-local npm cache directories', () =>
   assert.equal(existsSync(resolve(targetRoot, 'design-system/.npm-cache')), false);
 });
 
-test('ensureLocalBinShim creates a consumer-facing dsm entrypoint that delegates to the project wrapper', () => {
+test('ensureLocalBinShim creates a consumer-facing dsm entrypoint that can resolve both installed and project-local DSM runtimes', () => {
   const targetRoot = createTempProject();
 
   ensureLocalBinShim(targetRoot);
 
   const shimSource = readFileSync(resolve(targetRoot, 'node_modules/.bin/dsm'), 'utf8');
+  assert.match(shimSource, /new URL\('\.\.\/dsm\/bin\/dsm\.js', import\.meta\.url\)/);
+  assert.match(shimSource, /new URL\('\.\.\/src\/cli\.js', import\.meta\.url\)/);
   assert.match(shimSource, /new URL\('\.\.\/\.\.\/design-system\/bin\/dsm\.js', import\.meta\.url\)/);
+  assert.match(shimSource, /new URL\('\.\.\/\.\.\/\.\.\/design-system\/bin\/dsm\.js', import\.meta\.url\)/);
 });
 
 test('installTarballDirectly extracts the npm package payload into node_modules/dsm and refreshes the local shim', async () => {
@@ -307,6 +311,57 @@ test('installTarballDirectly extracts the npm package payload into node_modules/
   assert.equal(existsSync(resolve(targetRoot, 'node_modules/dsm/package.json')), true);
   assert.equal(existsSync(resolve(targetRoot, 'node_modules/.bin/dsm')), true);
   assert.equal(existsSync(resolve(extractedTo, 'package')), false);
+});
+
+test('the generated shim still works when executed from node_modules/dsm/bin/dsm.js', async () => {
+  const targetRoot = createTempProject();
+  mkdirSync(resolve(targetRoot, 'node_modules/dsm/bin'), { recursive: true });
+  mkdirSync(resolve(targetRoot, 'node_modules/dsm/src'), { recursive: true });
+  writeFileSync(resolve(targetRoot, 'node_modules/dsm/package.json'), JSON.stringify({ name: 'dsm', type: 'module' }));
+
+  ensureLocalBinShim(targetRoot);
+  const shimSource = readFileSync(resolve(targetRoot, 'node_modules/.bin/dsm'), 'utf8');
+  writeFileSync(resolve(targetRoot, 'node_modules/dsm/bin/dsm.js'), shimSource, 'utf8');
+  chmodSync(resolve(targetRoot, 'node_modules/dsm/bin/dsm.js'), 0o755);
+  writeFileSync(resolve(targetRoot, 'node_modules/dsm/src/cli.js'), `#!/usr/bin/env node
+if (process.argv.includes('--version')) {
+  console.log('0.1.0');
+  process.exit(0);
+}
+console.error('unexpected args');
+process.exit(1);
+`);
+
+  const output = await new Promise((resolveRun, rejectRun) => {
+    const child = spawn(process.execPath, [
+      resolve(targetRoot, 'node_modules/dsm/bin/dsm.js'),
+      '--version',
+    ], {
+      cwd: targetRoot,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk;
+    });
+
+    child.once('error', rejectRun);
+    child.once('close', (code) => {
+      if (code !== 0) {
+        rejectRun(new Error(stderr || `exit ${code}`));
+        return;
+      }
+      resolveRun(stdout.trim());
+    });
+  });
+
+  assert.equal(output, '0.1.0');
 });
 
 test('getFastUpdatePackageManager uses a lighter no-save npm install path for updates', () => {
