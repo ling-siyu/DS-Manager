@@ -7,6 +7,7 @@ import { buildCommand } from './commands/build.js';
 import { doctorCommand } from './commands/doctor.js';
 import { generateContextCommand } from './commands/generate-context.js';
 import { getTokenCommand } from './commands/get-token.js';
+import { importTokensCommand } from './commands/import-tokens.js';
 import { initCommand } from './commands/init.js';
 import { installHookCommand } from './commands/install-hook.js';
 import { listComponentsCommand } from './commands/list-components.js';
@@ -58,6 +59,17 @@ program
   .description('Compile tokens.json → CSS variables + Tailwind config')
   .option('--verbose', 'Show detailed output')
   .action(buildCommand);
+
+program
+  .command('import-tokens <source>')
+  .description('Convert a TypeScript-native token module into DSM DTCG JSON (writes to stdout by default)')
+  .option('-o, --output <path>', 'Write DTCG tokens to a file instead of stdout')
+  .option(
+    '--validate <tailwindConfig>',
+    'Reconstruct the Tailwind theme from the imported tokens and diff it against ' +
+    'this tailwind.config.js to prove value fidelity'
+  )
+  .action((source, options) => importTokensCommand(source, options));
 
 program
   .command('watch')

@@ -55,9 +55,25 @@ export function flattenTokens(obj, prefix = '') {
   return result;
 }
 
-export function resolveReference(ref, flat) {
+/**
+ * Resolve a `{path.to.token}` alias to its final value, following transitive
+ * chains (an alias whose value is itself another alias) all the way down.
+ *
+ * Returns the original `ref` if the path is unknown (unchanged from the old
+ * single-level behavior). A `seen` set guards against reference cycles: if a
+ * token is revisited, we stop and return its raw (still-aliased) value rather
+ * than recursing forever. Composite ($value is an object) resolution is handled
+ * by the build pipeline, not here — callers only pass string refs.
+ */
+export function resolveReference(ref, flat, seen = new Set()) {
   const inner = ref.replace(/^\{|\}$/g, '');
-  return flat[inner]?.$value ?? ref;
+  const target = flat[inner];
+  if (!target) return ref;        // unknown reference — leave as-is
+  const value = target.$value;
+  if (typeof value !== 'string' || !value.startsWith('{')) return value;
+  if (seen.has(inner)) return value;   // cycle — stop before infinite recursion
+  seen.add(inner);
+  return resolveReference(value, flat, seen);
 }
 
 export function loadTokens(tokensPath) {
