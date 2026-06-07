@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { basename, resolve } from 'path';
-import { realpathSync } from 'fs';
+import { realpathSync, existsSync, statSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import { buildCommand } from './commands/build.js';
@@ -24,7 +24,27 @@ const program = new Command();
 program
   .name('dsm')
   .description('Design System Manager — tokenize, build, and enforce your design system')
-  .version(getDsmVersion());
+  .version(getDsmVersion())
+  .option(
+    '-C, --target <path>',
+    'Run as if dsm were started in <path> instead of the current directory. ' +
+    'Use this to point dsm at a target project (e.g. -C ../securamark-frontend).'
+  );
+
+// Resolve --target once, before any command runs, by changing into that directory.
+// Every command resolves paths from process.cwd() (see resolveProjectPaths / scan),
+// so a single chdir makes the whole CLI operate on the target with no per-command
+// changes. The path is resolved against the original cwd before we move.
+program.hook('preAction', (thisCommand) => {
+  const target = thisCommand.opts().target;
+  if (!target) return;
+
+  const resolved = resolve(target);
+  if (!existsSync(resolved) || !statSync(resolved).isDirectory()) {
+    throw new Error(`--target path does not exist or is not a directory: ${resolved}`);
+  }
+  process.chdir(resolved);
+});
 
 program
   .command('init')
