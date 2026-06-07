@@ -11,21 +11,33 @@ the original DS-Manager engine, kept and extended, not rewritten.
 
 **Architectural stance:** this is a *standalone* tool. **SecuraMark is an external target /
 dogfood project** at `~/Projects/securamark-frontend` (sibling dir). During foundation work
-it is **READ-ONLY** — read its tokens/components, never write to it. The only writes to a
-target come later, via the gated AI edit loop (approve/revert), never silently.
+it is **READ-ONLY** — read its tokens/components, never write to its tracked branches. The
+only writes to a target's real branches come later, via the gated AI edit loop
+(approve/revert), never silently. **Sanctioned exception:** an *isolated, never-pushed,
+never-merged* experiment branch in SecuraMark (e.g. `dsm-experiment`) used purely to
+smoke-test that it can consume DSM output. Captured target data lives in this repo under
+**`targets/<name>/`** (see `targets/securamark/`), never in the target.
 
 ## Current state
 
 - **Branch:** `ai-native-rebuild`.
 - **Phase 0 — DONE.** Added `-C, --target <path>` to the CLI (a `preAction` chdir hook).
   Baseline of `dsm` vs SecuraMark captured in **`docs/phase-0-baseline.md`** — read it first.
+- **Phase 1 — DONE.** `dsm import-tokens` (TS→DTCG via esbuild bundle-and-import) +
+  transitive `resolveReference`. SecuraMark's tokens captured at **`targets/securamark/`**
+  (`refresh.sh` regenerates + validates; git diff is the drift check). `--validate`
+  reconstructs SecuraMark's Tailwind theme from the DTCG and matches the real config exactly.
 
 ## Phased plan (milestone-first: validate the two hard upgrades before the UI)
 
 0. **Connect & baseline** ✅ — `--target`, run `scan`/`sync-components` vs SecuraMark.
-1. **TS→DTCG token importer** — SecuraMark tokens are TS-native (`src/designTokens/`);
-   DSM expects DTCG JSON. New `dsm import-tokens`. Also fix `resolveReference` (single-level
-   → transitive). Validate: generated `tailwind.tokens.cjs` matches SecuraMark's real config.
+1. **TS→DTCG token importer** ✅ — `dsm import-tokens` (loads real values via esbuild
+   bundle-and-import, not static parsing) + transitive `resolveReference`. Fidelity proven by
+   `--validate` (reconstructs SecuraMark's Tailwind theme from the DTCG, matches exactly).
+   Capture committed at `targets/securamark/`. *Deferred:* routing through `dsm build` so the
+   generated `tailwind.tokens.cjs` byte-matches needs Style-Dictionary formatter work (its
+   formatter is demo-`primitive.*`/`semantic.*`-specific) — left for when Phase 3 rebuilds the
+   consumer.
 2. **TS-parser component discovery** — replace the regex in `utils/component-discovery.js`
    with the TypeScript compiler API / ts-morph. Must follow imported prop types, resolve
    union/intersection/utility types, and expand `(typeof CONST)[number]` variant/size enums.
