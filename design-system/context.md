@@ -225,16 +225,16 @@ Lucide: apply `width/height: var(--ds-component-icon-{preset}-size)` and `stroke
 | `component.input.radius` | `{primitive.borderRadius.md} → 6px` |
 | `component.input.bg` | `{primitive.color.white} → #ffffff` |
 | `component.input.bgDisabled` | `{primitive.color.neutral.50} → #fafafa` |
-| `component.input.border` | `{semantic.color.border.default} → {primitive.color.neutral.200}` |
-| `component.input.borderFocus` | `{semantic.color.border.focus} → {primitive.color.brand.500}` |
-| `component.input.borderError` | `{semantic.color.border.error} → {primitive.color.red.400}` |
-| `component.input.text` | `{semantic.color.text.default} → {primitive.color.neutral.900}` |
-| `component.input.placeholder` | `{semantic.color.text.muted} → {primitive.color.neutral.500}` |
+| `component.input.border` | `{semantic.color.border.default} → #e5e5e5` |
+| `component.input.borderFocus` | `{semantic.color.border.focus} → #6366f1` |
+| `component.input.borderError` | `{semantic.color.border.error} → #f87171` |
+| `component.input.text` | `{semantic.color.text.default} → #171717` |
+| `component.input.placeholder` | `{semantic.color.text.muted} → #737373` |
 | `component.card.padding.sm` | `{primitive.spacing.4} → 16px` |
 | `component.card.padding.md` | `{primitive.spacing.6} → 24px` |
 | `component.card.padding.lg` | `{primitive.spacing.8} → 32px` |
 | `component.card.radius` | `{primitive.borderRadius.lg} → 8px` |
-| `component.card.border` | `{semantic.color.border.subtle} → {primitive.color.neutral.100}` |
+| `component.card.border` | `{semantic.color.border.subtle} → #f5f5f5` |
 | `component.card.shadow` | `{primitive.shadow.sm} → 0 1px 2px 0 rgba(0,0,0,0.05)` |
 | `component.card.bg` | `{primitive.color.white} → #ffffff` |
 | `component.badge.paddingX` | `{primitive.spacing.2} → 8px` |
@@ -269,8 +269,8 @@ Lucide: apply `width/height: var(--ds-component-icon-{preset}-size)` and `stroke
 ### Badge
 - **Level:** Lv.1
 - **File:** `src/components/ui/Badge.tsx`
-- **Description:** Small status or label indicator.
-- **Variants:** default, error, warning, success, info
+- **Description:** Compact status or label indicator driven by DSM semantic text tokens.
+- **Variants:** neutral, brand, success, warning, error
 - **Sizes:** n/a
 - **Contains:** none
 - **Required props:** children
@@ -278,7 +278,7 @@ Lucide: apply `width/height: var(--ds-component-icon-{preset}-size)` and `stroke
 ### Button
 - **Level:** Lv.1
 - **File:** `src/components/ui/Button.tsx`
-- **Description:** Primary interactive element. Supports multiple variants, sizes, and states.
+- **Description:** Primary interactive element. Variants, sizes, and disabled state — styled entirely from DSM tokens.
 - **Variants:** primary, secondary, ghost, destructive
 - **Sizes:** sm, md, lg
 - **Contains:** none
@@ -287,98 +287,8 @@ Lucide: apply `width/height: var(--ds-component-icon-{preset}-size)` and `stroke
 ### Card
 - **Level:** Lv.1
 - **File:** `src/components/ui/Card.tsx`
-- **Description:** Surface container with consistent padding, radius, and shadow.
+- **Description:** Surface container with consistent padding, radius, and shadow from DSM tokens.
 - **Variants:** default, flat, elevated
 - **Sizes:** sm, md, lg
 - **Contains:** none
 - **Required props:** children
-
-### Input
-- **Level:** Lv.1
-- **File:** `src/components/ui/Input.tsx`
-- **Description:** Text input field. Handles all text-like input types with validation states.
-- **Variants:** default, error
-- **Sizes:** sm, md, lg
-- **Contains:** none
-- **Required props:** none
-
-### Tooltip
-- **Level:** Lv.1
-- **File:** `src/components/ui/Tooltip.tsx`
-- **Description:** Contextual hint shown on hover.
-- **Variants:** n/a
-- **Sizes:** n/a
-- **Contains:** none
-- **Required props:** content, children
-
-### Typography
-- **Level:** Lv.1
-- **File:** `src/components/ui/Typography.tsx`
-- **Description:** Text rendering with semantic heading and body styles.
-- **Variants:** h1, h2, h3, h4, body, bodyLg, bodySm, label, caption
-- **Sizes:** n/a
-- **Contains:** none
-- **Required props:** children
-
-### AssetLevelNav
-- **Level:** Lv.2
-- **File:** `design-system/src/ui/index.html`
-- **Description:** Level-based sidebar navigation used by the DSM preview to move through token and component layers.
-- **Variants:** n/a
-- **Sizes:** n/a
-- **Contains:** Card, Badge, Typography
-- **Required props:** none
-
-### Modal
-- **Level:** Lv.2
-- **File:** `src/components/ui/Modal.tsx`
-- **Description:** Dialog overlay for focused tasks or confirmations.
-- **Variants:** n/a
-- **Sizes:** n/a
-- **Contains:** Button, Typography
-- **Required props:** isOpen, onClose, children
-
-### PreviewHeader
-- **Level:** Lv.2
-- **File:** `design-system/src/ui/index.html`
-- **Description:** Hero header for the DSM preview, combining search, metadata, and hierarchy framing.
-- **Variants:** n/a
-- **Sizes:** n/a
-- **Contains:** Input, Badge, Typography
-- **Required props:** none
-
-### RegistryComponentCard
-- **Level:** Lv.2
-- **File:** `design-system/src/ui/index.html`
-- **Description:** Registry card for design-system components shown in the DSM preview, including status and composition metadata.
-- **Variants:** n/a
-- **Sizes:** n/a
-- **Contains:** Card, Badge, Typography
-- **Required props:** none
-
-### SummaryCard
-- **Level:** Lv.2
-- **File:** `design-system/src/ui/index.html`
-- **Description:** Compact metric card used to summarize counts and grouped asset information in the DSM preview.
-- **Variants:** n/a
-- **Sizes:** n/a
-- **Contains:** Card, Typography
-- **Required props:** none
-
-### TokenCard
-- **Level:** Lv.2
-- **File:** `design-system/src/ui/index.html`
-- **Description:** Preview card for individual token samples, including color swatches, spacing bars, and type specimens.
-- **Variants:** n/a
-- **Sizes:** n/a
-- **Contains:** Card, Typography
-- **Required props:** none
-
-### PreviewShell
-- **Level:** Lv.3
-- **File:** `design-system/src/ui/index.html`
-- **Description:** Top-level DSM preview layout that composes the header, level navigation, summaries, token cards, and component cards.
-- **Variants:** n/a
-- **Sizes:** n/a
-- **Contains:** PreviewHeader, AssetLevelNav, SummaryCard, TokenCard, RegistryComponentCard
-- **Required props:** none

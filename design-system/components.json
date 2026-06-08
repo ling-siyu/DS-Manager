@@ -6,72 +6,46 @@
     {
       "name": "Button",
       "path": "src/components/ui/Button.tsx",
-      "description": "Primary interactive element. Supports multiple variants, sizes, and states.",
+      "description": "Primary interactive element. Variants, sizes, and disabled state — styled entirely from DSM tokens.",
       "variants": ["primary", "secondary", "ghost", "destructive"],
       "sizes": ["sm", "md", "lg"],
       "props": {
-        "variant": { "type": "string", "default": "primary", "options": ["primary", "secondary", "ghost", "destructive"] },
-        "size":    { "type": "string", "default": "md",      "options": ["sm", "md", "lg"] },
-        "disabled":{ "type": "boolean","default": false },
-        "loading": { "type": "boolean","default": false },
+        "variant":  { "type": "string", "default": "primary", "options": ["primary", "secondary", "ghost", "destructive"] },
+        "size":     { "type": "string", "default": "md",      "options": ["sm", "md", "lg"] },
         "fullWidth":{ "type": "boolean","default": false },
-        "leftIcon": { "type": "ReactNode","default": null },
-        "rightIcon":{ "type": "ReactNode","default": null },
-        "onClick":  { "type": "function" },
+        "disabled": { "type": "boolean","default": false },
         "children": { "type": "ReactNode", "required": true }
       },
-      "previewProps": {
-        "children": "Click me"
-      },
+      "previewProps": { "children": "Button" },
       "previewScenarios": [
-        {
-          "name": "Primary",
-          "props": { "variant": "primary", "children": "Primary button" }
-        },
-        {
-          "name": "Disabled",
-          "props": { "disabled": true, "children": "Disabled button" }
-        }
+        { "name": "Primary",     "props": { "variant": "primary",     "children": "Primary" } },
+        { "name": "Secondary",   "props": { "variant": "secondary",   "children": "Secondary" } },
+        { "name": "Ghost",       "props": { "variant": "ghost",       "children": "Ghost" } },
+        { "name": "Destructive", "props": { "variant": "destructive", "children": "Delete" } },
+        { "name": "Disabled",    "props": { "disabled": true,          "children": "Disabled" } },
+        { "name": "Large",       "props": { "size": "lg",              "children": "Large button" } }
       ],
       "tokens": ["component.button.*", "semantic.color.interactive.*"],
       "status": "stable",
       "doNotCreate": true
     },
     {
-      "name": "Input",
-      "path": "src/components/ui/Input.tsx",
-      "description": "Text input field. Handles all text-like input types with validation states.",
-      "variants": ["default", "error"],
-      "sizes": ["sm", "md", "lg"],
-      "props": {
-        "size":        { "type": "string",  "default": "md", "options": ["sm", "md", "lg"] },
-        "disabled":    { "type": "boolean", "default": false },
-        "error":       { "type": "boolean", "default": false },
-        "errorMessage":{ "type": "string" },
-        "label":       { "type": "string" },
-        "placeholder": { "type": "string" },
-        "helperText":  { "type": "string" },
-        "leftIcon":    { "type": "ReactNode" },
-        "rightIcon":   { "type": "ReactNode" }
-      },
-      "tokens": ["component.input.*", "semantic.color.border.*"],
-      "status": "stable",
-      "doNotCreate": true
-    },
-    {
       "name": "Card",
       "path": "src/components/ui/Card.tsx",
-      "description": "Surface container with consistent padding, radius, and shadow.",
+      "description": "Surface container with consistent padding, radius, and shadow from DSM tokens.",
       "variants": ["default", "flat", "elevated"],
       "sizes": ["sm", "md", "lg"],
       "props": {
         "variant": { "type": "string", "default": "default", "options": ["default", "flat", "elevated"] },
-        "padding": { "type": "string", "default": "md",      "options": ["sm", "md", "lg", "none"] },
+        "padding": { "type": "string", "default": "md",      "options": ["sm", "md", "lg"] },
         "children":{ "type": "ReactNode", "required": true }
       },
-      "previewProps": {
-        "children": "Card content"
-      },
+      "previewProps": { "children": "Card content" },
+      "previewScenarios": [
+        { "name": "Default",  "props": { "variant": "default",  "children": "Default card" } },
+        { "name": "Elevated", "props": { "variant": "elevated", "children": "Elevated card" } },
+        { "name": "Flat",     "props": { "variant": "flat",     "children": "Flat card" } }
+      ],
       "tokens": ["component.card.*"],
       "status": "stable",
       "doNotCreate": true
@@ -79,112 +53,22 @@
     {
       "name": "Badge",
       "path": "src/components/ui/Badge.tsx",
-      "description": "Small status or label indicator.",
-      "variants": ["default", "error", "warning", "success", "info"],
+      "description": "Compact status or label indicator driven by DSM semantic text tokens.",
+      "variants": ["neutral", "brand", "success", "warning", "error"],
       "props": {
-        "variant": { "type": "string", "default": "default", "options": ["default", "error", "warning", "success", "info"] },
+        "variant": { "type": "string", "default": "neutral", "options": ["neutral", "brand", "success", "warning", "error"] },
         "children":{ "type": "ReactNode", "required": true }
       },
-      "tokens": ["component.badge.*", "semantic.color.status.*"],
+      "previewProps": { "children": "Badge" },
+      "previewScenarios": [
+        { "name": "Neutral", "props": { "variant": "neutral", "children": "Neutral" } },
+        { "name": "Brand",   "props": { "variant": "brand",   "children": "Brand" } },
+        { "name": "Success", "props": { "variant": "success", "children": "Success" } },
+        { "name": "Warning", "props": { "variant": "warning", "children": "Warning" } },
+        { "name": "Error",   "props": { "variant": "error",   "children": "Error" } }
+      ],
+      "tokens": ["semantic.color.text.*", "semantic.color.background.subtle"],
       "status": "stable",
-      "doNotCreate": true
-    },
-    {
-      "name": "Tooltip",
-      "path": "src/components/ui/Tooltip.tsx",
-      "description": "Contextual hint shown on hover.",
-      "props": {
-        "content":  { "type": "string", "required": true },
-        "placement":{ "type": "string", "default": "top", "options": ["top", "bottom", "left", "right"] },
-        "children": { "type": "ReactNode", "required": true }
-      },
-      "tokens": ["component.tooltip.*"],
-      "status": "stable",
-      "doNotCreate": true
-    },
-    {
-      "name": "Modal",
-      "path": "src/components/ui/Modal.tsx",
-      "description": "Dialog overlay for focused tasks or confirmations.",
-      "contains": ["Button", "Typography"],
-      "props": {
-        "isOpen":   { "type": "boolean", "required": true },
-        "onClose":  { "type": "function","required": true },
-        "title":    { "type": "string" },
-        "size":     { "type": "string", "default": "md", "options": ["sm", "md"] },
-        "children": { "type": "ReactNode","required": true }
-      },
-      "tokens": ["component.modal.*"],
-      "status": "stable",
-      "doNotCreate": true
-    },
-    {
-      "name": "Typography",
-      "path": "src/components/ui/Typography.tsx",
-      "description": "Text rendering with semantic heading and body styles.",
-      "variants": ["h1", "h2", "h3", "h4", "body", "bodyLg", "bodySm", "label", "caption"],
-      "props": {
-        "variant":  { "type": "string", "default": "body" },
-        "color":    { "type": "string", "default": "default" },
-        "as":       { "type": "string", "$description": "Override HTML element" },
-        "children": { "type": "ReactNode","required": true }
-      },
-      "tokens": ["semantic.typography.*", "semantic.color.text.*"],
-      "status": "stable",
-      "doNotCreate": true
-    },
-    {
-      "name": "PreviewHeader",
-      "path": "design-system/src/ui/index.html",
-      "description": "Hero header for the DSM preview, combining search, metadata, and hierarchy framing.",
-      "contains": ["Input", "Badge", "Typography"],
-      "tokens": ["component.preview.search.*", "semantic.color.text.*", "semantic.color.background.*"],
-      "status": "beta",
-      "doNotCreate": true
-    },
-    {
-      "name": "AssetLevelNav",
-      "path": "design-system/src/ui/index.html",
-      "description": "Level-based sidebar navigation used by the DSM preview to move through token and component layers.",
-      "contains": ["Card", "Badge", "Typography"],
-      "tokens": ["component.preview.sidebar.*", "component.card.*", "semantic.color.interactive.*"],
-      "status": "beta",
-      "doNotCreate": true
-    },
-    {
-      "name": "SummaryCard",
-      "path": "design-system/src/ui/index.html",
-      "description": "Compact metric card used to summarize counts and grouped asset information in the DSM preview.",
-      "contains": ["Card", "Typography"],
-      "tokens": ["component.card.*", "semantic.color.text.*"],
-      "status": "beta",
-      "doNotCreate": true
-    },
-    {
-      "name": "TokenCard",
-      "path": "design-system/src/ui/index.html",
-      "description": "Preview card for individual token samples, including color swatches, spacing bars, and type specimens.",
-      "contains": ["Card", "Typography"],
-      "tokens": ["component.preview.tokenCard.*", "component.card.*", "semantic.color.text.*"],
-      "status": "beta",
-      "doNotCreate": true
-    },
-    {
-      "name": "RegistryComponentCard",
-      "path": "design-system/src/ui/index.html",
-      "description": "Registry card for design-system components shown in the DSM preview, including status and composition metadata.",
-      "contains": ["Card", "Badge", "Typography"],
-      "tokens": ["component.preview.componentCard.*", "component.card.*", "semantic.color.status.*"],
-      "status": "beta",
-      "doNotCreate": true
-    },
-    {
-      "name": "PreviewShell",
-      "path": "design-system/src/ui/index.html",
-      "description": "Top-level DSM preview layout that composes the header, level navigation, summaries, token cards, and component cards.",
-      "contains": ["PreviewHeader", "AssetLevelNav", "SummaryCard", "TokenCard", "RegistryComponentCard"],
-      "tokens": ["component.preview.shell.*", "semantic.color.background.*"],
-      "status": "beta",
       "doNotCreate": true
     }
   ],
