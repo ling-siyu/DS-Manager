@@ -96,11 +96,16 @@ body {
 .group-count { color: var(--p-muted); font-weight: 400; font-size: 12px; }
 .group-body { margin-top: 10px; }
 
-/* Dense color swatch board */
-.swatch-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
-.swatch-chip { display: flex; flex-direction: column; gap: 4px; }
-.chip-color { height: 44px; border-radius: 6px; border: 1px solid rgba(128, 128, 128, 0.25); }
-.chip-name { font-size: 10px; color: var(--p-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Color swatch grid-table: swatch + token name + color code per cell */
+.swatch-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
+.swatch-chip {
+  display: flex; align-items: center; gap: 10px; padding: 6px 8px;
+  border: 1px solid var(--p-border); border-radius: 8px; background: var(--p-panel);
+}
+.chip-color { width: 34px; height: 34px; flex: none; border-radius: 6px; border: 1px solid rgba(128, 128, 128, 0.25); }
+.chip-meta { display: flex; flex-direction: column; min-width: 0; }
+.chip-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip-code { font-size: 11px; color: var(--p-muted); font-family: ui-monospace, monospace; }
 
 /* List view for type / dimension tokens */
 .token-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--p-border); border-radius: 10px; overflow: hidden; background: var(--p-panel); }

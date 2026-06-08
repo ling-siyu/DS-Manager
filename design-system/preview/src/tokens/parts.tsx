@@ -40,7 +40,10 @@ export function SwatchBoard({ items, theme }: { items: GalleryToken[]; theme: Th
         return (
           <div key={t.path} className="swatch-chip" title={title}>
             <span className="chip-color" style={{ background: active }} />
-            <span className="chip-name">{t.name}</span>
+            <div className="chip-meta">
+              <span className="chip-name">{t.name}</span>
+              <code className="chip-code">{active}</code>
+            </div>
           </div>
         );
       })}
