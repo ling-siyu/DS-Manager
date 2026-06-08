@@ -6,6 +6,7 @@ export type TokenKind =
   | 'fontWeight'
   | 'typography'
   | 'fontSize'
+  | 'letterSpacing'
   | 'radius'
   | 'spacing'
   | 'dimension'
@@ -41,6 +42,7 @@ export function kindOf(token: GalleryToken): TokenKind {
 
   if (type === 'dimension' || type === 'number') {
     if (/fontsize/.test(path)) return 'fontSize';
+    if (/letterspacing|tracking/.test(path)) return 'letterSpacing';
     if (/radius/.test(path)) return 'radius';
     if (/spacing/.test(path)) return 'spacing';
     return 'dimension';
@@ -52,4 +54,26 @@ export function asText(value: unknown): string {
   if (Array.isArray(value)) return value.join(', ');
   if (value && typeof value === 'object') return JSON.stringify(value);
   return String(value ?? '');
+}
+
+// ── Token categories (mirrors SecuraMark's Storybook Foundations grouping) ──
+
+export type TokenCategory = 'colors' | 'typography' | 'layout' | 'motion' | 'icons';
+
+export const CATEGORIES: { id: TokenCategory; label: string }[] = [
+  { id: 'colors', label: 'Colors' },
+  { id: 'typography', label: 'Typography' },
+  { id: 'layout', label: 'Layout' },
+  { id: 'motion', label: 'Motion' },
+  { id: 'icons', label: 'Icons' },
+];
+
+export function categoryOf(token: GalleryToken): TokenCategory {
+  const kind = kindOf(token);
+  const path = token.path.toLowerCase();
+  if (kind === 'color') return 'colors';
+  if (['fontFamily', 'fontWeight', 'fontSize', 'letterSpacing', 'typography'].includes(kind)) return 'typography';
+  if (/icon/.test(path)) return 'icons';
+  if (kind === 'duration' || kind === 'easing' || /transition|motion|animation|cubicbezier|duration|easing/.test(path)) return 'motion';
+  return 'layout'; // radius, shadow, spacing, dimension, aspect-ratio, border-width, opacity
 }

@@ -20,6 +20,16 @@
       "fillSupport": true,
       "variants": ["outlined", "rounded", "sharp"],
       "axes": ["wght", "FILL", "GRAD", "opsz"]
+    },
+    "phosphor": {
+      "source": "@phosphor-icons/react",
+      "style": "outline",
+      "weightSupport": true,
+      "strokeWidthSupport": false,
+      "fillSupport": true,
+      "weights": ["thin", "light", "regular", "bold", "fill", "duotone"],
+      "defaultWeight": "light",
+      "axes": []
     }
   },
   "defaultSet": "lucide",

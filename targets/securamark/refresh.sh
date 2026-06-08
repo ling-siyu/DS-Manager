@@ -28,3 +28,6 @@ node "$REPO_ROOT/design-system/bin/dsm.js" \
   import-tokens src/designTokens.ts \
   --output "$OUT" \
   --validate tailwind.config.js
+
+# Capture which icons SecuraMark uses (set + style + used icons) → icons.json.
+node "$REPO_ROOT/targets/securamark/capture-icons.mjs" "$SOURCE"

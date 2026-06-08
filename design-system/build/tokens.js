@@ -101,11 +101,11 @@ export const PrimitiveSpacing15 = "6px";
 export const PrimitiveSpacing25 = "10px";
 export const PrimitiveSpacing35 = "14px";
 export const PrimitiveTypographyFontFamilySans =
-  "'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans JP', 'Noto Sans KR', sans-serif";
+  "'Inter', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Source Han Sans SC', 'Heiti SC', system-ui, sans-serif"; // Mixed-script stack: Latin/primary (Inter) first, then the CJK fallback chain (Noto Sans SC, …), then a generic. Per-glyph fallback renders Latin in Inter and CJK in Noto Sans SC within the same text run.
 export const PrimitiveTypographyFontFamilySerif =
-  "ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif";
+  "Georgia, Cambria, 'Times New Roman', 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', serif"; // Mixed-script serif stack: Latin serif first, then CJK serif fallbacks (Noto Serif SC, …), then a generic.
 export const PrimitiveTypographyFontFamilyMono =
-  "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace";
+  "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Noto Sans SC', 'PingFang SC', 'Source Han Sans SC', monospace"; // Mixed-script monospace stack: Latin monospace first, then CJK fallbacks (Noto Sans SC, …), then a generic.
 export const PrimitiveTypographyFontSizeXs = "12px";
 export const PrimitiveTypographyFontSizeSm = "14px";
 export const PrimitiveTypographyFontSizeBase = "16px";
@@ -325,98 +325,98 @@ export const SemanticMotionTransitionFade = {
   delay: "0ms",
 }; // Linear fade — opacity transitions
 export const SemanticTypographyDisplay = {
-  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontFamily: "'Inter', 'Noto Sans SC', sans-serif",
   fontSize: "60px",
   fontWeight: 700,
   lineHeight: 1.1,
   letterSpacing: "-0.025em",
 }; // Hero / marketing headline — largest display text
 export const SemanticTypographyHeadingXl = {
-  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontFamily: "'Inter', 'Noto Sans SC', sans-serif",
   fontSize: "48px",
   fontWeight: 700,
   lineHeight: 1.1,
   letterSpacing: "-0.025em",
 }; // Page-level hero heading
 export const SemanticTypographyHeadingLg = {
-  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontFamily: "'Inter', 'Noto Sans SC', sans-serif",
   fontSize: "36px",
   fontWeight: 600,
   lineHeight: 1.25,
   letterSpacing: "-0.025em",
 }; // Primary section heading
 export const SemanticTypographyHeadingMd = {
-  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontFamily: "'Inter', 'Noto Sans SC', sans-serif",
   fontSize: "30px",
   fontWeight: 600,
   lineHeight: 1.3,
   letterSpacing: "-0.025em",
 }; // Secondary section heading
 export const SemanticTypographyHeadingSm = {
-  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontFamily: "'Inter', 'Noto Sans SC', sans-serif",
   fontSize: "24px",
   fontWeight: 600,
   lineHeight: 1.375,
   letterSpacing: "0em",
 }; // Subsection heading
 export const SemanticTypographyHeadingXs = {
-  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontFamily: "'Inter', 'Noto Sans SC', sans-serif",
   fontSize: "20px",
   fontWeight: 500,
   lineHeight: 1.4,
   letterSpacing: "0em",
 }; // Card title, dialog heading
 export const SemanticTypographyBodyLg = {
-  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontFamily: "'Inter', 'Noto Sans SC', sans-serif",
   fontSize: "18px",
   fontWeight: 400,
   lineHeight: 1.625,
   letterSpacing: "0em",
 }; // Large body — lead paragraphs, introductory text
 export const SemanticTypographyBodyBase = {
-  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontFamily: "'Inter', 'Noto Sans SC', sans-serif",
   fontSize: "16px",
   fontWeight: 400,
   lineHeight: 1.5,
   letterSpacing: "0em",
 }; // Default body copy
 export const SemanticTypographyBodySm = {
-  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontFamily: "'Inter', 'Noto Sans SC', sans-serif",
   fontSize: "14px",
   fontWeight: 400,
   lineHeight: 1.5,
   letterSpacing: "0em",
 }; // Small body — secondary content, descriptions
 export const SemanticTypographyLabelLg = {
-  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontFamily: "'Inter', 'Noto Sans SC', sans-serif",
   fontSize: "16px",
   fontWeight: 500,
   lineHeight: 1,
   letterSpacing: "0em",
 }; // Large UI label — form labels, nav items
 export const SemanticTypographyLabelBase = {
-  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontFamily: "'Inter', 'Noto Sans SC', sans-serif",
   fontSize: "14px",
   fontWeight: 500,
   lineHeight: 1,
   letterSpacing: "0em",
 }; // Default UI label — buttons, tabs, badges
 export const SemanticTypographyLabelSm = {
-  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontFamily: "'Inter', 'Noto Sans SC', sans-serif",
   fontSize: "12px",
   fontWeight: 500,
   lineHeight: 1,
   letterSpacing: "0em",
 }; // Small UI label — chips, tags, compact controls
 export const SemanticTypographyCaption = {
-  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontFamily: "'Inter', 'Noto Sans SC', sans-serif",
   fontSize: "12px",
   fontWeight: 400,
   lineHeight: 1.5,
   letterSpacing: "0.025em",
 }; // Caption / helper text — timestamps, supporting detail
 export const SemanticTypographyOverline = {
-  fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
+  fontFamily: "'Inter', 'Noto Sans SC', sans-serif",
   fontSize: "11px",
   fontWeight: 600,
   lineHeight: 1.5,
@@ -424,7 +424,7 @@ export const SemanticTypographyOverline = {
 }; // Overline / eyebrow — uppercase category labels above headings
 export const SemanticTypographyCode = {
   fontFamily:
-    "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+    "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Noto Sans SC', monospace",
   fontSize: "14px",
   fontWeight: 400,
   lineHeight: 1.625,

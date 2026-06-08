@@ -240,9 +240,9 @@ module.exports = {
   "inner": "inset 0 2px 4px 0 rgba(0,0,0,0.05)"
 },
   fontFamily: {
-  "sans": "'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans JP', 'Noto Sans KR', sans-serif",
-  "serif": "ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif",
-  "mono": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
+  "sans": "'Inter', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Source Han Sans SC', 'Heiti SC', system-ui, sans-serif",
+  "serif": "Georgia, Cambria, 'Times New Roman', 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', serif",
+  "mono": "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Noto Sans SC', 'PingFang SC', 'Source Han Sans SC', monospace"
 },
   opacity: {
   "0": 0,

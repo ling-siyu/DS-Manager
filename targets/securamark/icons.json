@@ -1,0 +1,245 @@
+{
+  "set": "phosphor",
+  "source": "@phosphor-icons/react",
+  "style": {
+    "weight": "light"
+  },
+  "icons": [
+    {
+      "name": "ArrowClockwise",
+      "count": 5
+    },
+    {
+      "name": "ArrowLeft",
+      "count": 5
+    },
+    {
+      "name": "ArrowRight",
+      "count": 1
+    },
+    {
+      "name": "ArrowSquareOut",
+      "count": 2
+    },
+    {
+      "name": "Bell",
+      "count": 1
+    },
+    {
+      "name": "BugBeetle",
+      "count": 1
+    },
+    {
+      "name": "Camera",
+      "count": 3
+    },
+    {
+      "name": "CaretDown",
+      "count": 7
+    },
+    {
+      "name": "CaretLeft",
+      "count": 1
+    },
+    {
+      "name": "CaretRight",
+      "count": 4
+    },
+    {
+      "name": "Certificate",
+      "count": 3
+    },
+    {
+      "name": "ChatCircleDots",
+      "count": 1
+    },
+    {
+      "name": "Check",
+      "count": 4
+    },
+    {
+      "name": "CheckCircle",
+      "count": 4
+    },
+    {
+      "name": "Clock",
+      "count": 2
+    },
+    {
+      "name": "ClockCounterClockwise",
+      "count": 3
+    },
+    {
+      "name": "Copy",
+      "count": 2
+    },
+    {
+      "name": "DotsThree",
+      "count": 2
+    },
+    {
+      "name": "DownloadSimple",
+      "count": 1
+    },
+    {
+      "name": "FileArrowUp",
+      "count": 1
+    },
+    {
+      "name": "FileText",
+      "count": 3
+    },
+    {
+      "name": "FileX",
+      "count": 1
+    },
+    {
+      "name": "Fingerprint",
+      "count": 1
+    },
+    {
+      "name": "FingerprintSimple",
+      "count": 1
+    },
+    {
+      "name": "Funnel",
+      "count": 1
+    },
+    {
+      "name": "Gavel",
+      "count": 1
+    },
+    {
+      "name": "Gear",
+      "count": 4
+    },
+    {
+      "name": "Headset",
+      "count": 1
+    },
+    {
+      "name": "IdentificationCard",
+      "count": 3
+    },
+    {
+      "name": "Images",
+      "count": 1
+    },
+    {
+      "name": "ImageSquare",
+      "count": 5
+    },
+    {
+      "name": "Info",
+      "count": 4
+    },
+    {
+      "name": "Lightning",
+      "count": 1
+    },
+    {
+      "name": "List",
+      "count": 2
+    },
+    {
+      "name": "Lock",
+      "count": 3
+    },
+    {
+      "name": "MagnifyingGlass",
+      "count": 3
+    },
+    {
+      "name": "MegaphoneSimple",
+      "count": 1
+    },
+    {
+      "name": "Minus",
+      "count": 2
+    },
+    {
+      "name": "Monitor",
+      "count": 2
+    },
+    {
+      "name": "Moon",
+      "count": 2
+    },
+    {
+      "name": "Paperclip",
+      "count": 2
+    },
+    {
+      "name": "PaperPlaneRight",
+      "count": 1
+    },
+    {
+      "name": "Plus",
+      "count": 7
+    },
+    {
+      "name": "Rows",
+      "count": 2
+    },
+    {
+      "name": "SealCheck",
+      "count": 2
+    },
+    {
+      "name": "ShieldCheck",
+      "count": 4
+    },
+    {
+      "name": "SignIn",
+      "count": 1
+    },
+    {
+      "name": "SignOut",
+      "count": 4
+    },
+    {
+      "name": "SortAscending",
+      "count": 1
+    },
+    {
+      "name": "SquaresFour",
+      "count": 2
+    },
+    {
+      "name": "Stamp",
+      "count": 1
+    },
+    {
+      "name": "Sun",
+      "count": 2
+    },
+    {
+      "name": "Trash",
+      "count": 8
+    },
+    {
+      "name": "UploadSimple",
+      "count": 3
+    },
+    {
+      "name": "User",
+      "count": 5
+    },
+    {
+      "name": "Warning",
+      "count": 6
+    },
+    {
+      "name": "WarningCircle",
+      "count": 4
+    },
+    {
+      "name": "WechatLogo",
+      "count": 6
+    },
+    {
+      "name": "X",
+      "count": 11
+    }
+  ]
+}

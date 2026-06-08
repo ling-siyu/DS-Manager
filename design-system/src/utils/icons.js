@@ -65,6 +65,84 @@ function extractMaterialSymbols(content) {
   return [...names];
 }
 
+// Named exports of @phosphor-icons/react that are NOT icons.
+const PHOSPHOR_NON_ICONS = new Set(['IconContext', 'IconBase', 'Icon', 'SSRProvider']);
+
+/**
+ * Extract Phosphor icon names from import statements.
+ * Handles: import { Lock, X as Close } from '@phosphor-icons/react'
+ */
+function extractPhosphorImports(content) {
+  const names = new Set();
+  const re = /import\s*(?:type\s*)?\{([^}]+)\}\s*from\s*['"]@phosphor-icons\/react['"]/g;
+  let m;
+  while ((m = re.exec(content)) !== null) {
+    for (const part of m[1].split(',')) {
+      const name = part.trim().split(/\s+as\s+/)[0].trim();
+      if (name && /^[A-Z]/.test(name) && !PHOSPHOR_NON_ICONS.has(name)) names.add(name);
+    }
+  }
+  return [...names];
+}
+
+// Import-statement extractors keyed by set id.
+const SET_EXTRACTORS = {
+  phosphor: extractPhosphorImports,
+  lucide: extractLucideImports,
+};
+
+/** Best-effort detection of a project's global icon style (Phosphor IconContext weight). */
+function detectIconWeight(files) {
+  for (const filePath of files) {
+    let content;
+    try { content = readFileSync(filePath, 'utf8'); } catch { continue; }
+    const m = content.match(/IconContext[\s\S]{0,120}?weight:\s*['"](\w+)['"]/);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+/**
+ * Capture a project's icon usage: detect the primary icon set, its style, and the
+ * actually-imported icons (with per-file usage counts). This is the icon analogue
+ * of the token importer — it reads which icons a project pulls from its set.
+ *
+ * Returns { set, source, style: { weight }, icons: [{ name, count }] }.
+ */
+export function captureIconUsage(repoRoot, iconsData = {}) {
+  const files = walkDir(repoRoot);
+  const usage = { phosphor: new Map(), lucide: new Map() };
+
+  for (const filePath of files) {
+    let content;
+    try { content = readFileSync(filePath, 'utf8'); } catch { continue; }
+    // Strip block comments so documented/example imports (e.g. in JSDoc) don't
+    // count as real usage.
+    content = content.replace(/\/\*[\s\S]*?\*\//g, '');
+    for (const [set, extract] of Object.entries(SET_EXTRACTORS)) {
+      for (const name of extract(content)) {
+        usage[set].set(name, (usage[set].get(name) ?? 0) + 1);
+      }
+    }
+  }
+
+  // Primary set = the one with the most distinct icons used.
+  let set = null;
+  let max = 0;
+  for (const [s, m] of Object.entries(usage)) {
+    if (m.size > max) { max = m.size; set = s; }
+  }
+  if (!set) return { set: null, source: null, style: {}, icons: [] };
+
+  const meta = iconsData.sets?.[set] ?? {};
+  const weight = (set === 'phosphor' ? detectIconWeight(files) : null) ?? meta.defaultWeight ?? null;
+  const icons = [...usage[set].entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  return { set, source: meta.source ?? null, style: { weight }, icons };
+}
+
 /**
  * Scan project source files for icon usage.
  * Returns an array of { set, lucideId, lucideName, materialName, alias, files }.

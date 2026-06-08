@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
-import { loadTokens, loadRawTokens, flattenTokens } from './tokens.js';
+import { loadTokens, loadRawTokens, flattenTokens, resolveReference } from './tokens.js';
 import { discoverComponents, ownProps } from './component-discovery.js';
+import { captureIconUsage } from './icons.js';
 
 // Pure data layer for the preview. buildPreviewData() turns the on-disk token
 // and component sources into a single JSON-serializable object the Vite app
@@ -54,13 +55,26 @@ function buildDsmTokens(tokensPath) {
   }
 }
 
+/** Resolve `{alias}` reference strings inside a composite token value object so
+ *  typography/transition specimens render real values, not raw references. */
+function resolveComposite(value, flat) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  const out = {};
+  for (const [key, v] of Object.entries(value)) {
+    out[key] = typeof v === 'string' && v.startsWith('{') ? resolveReference(v, flat) : v;
+  }
+  return out;
+}
+
 /** SecuraMark's captured DTCG — raw groups (color/fontFamily/fontSize/…). */
 function buildSecuramarkTokens(securamarkTokensPath) {
   if (!securamarkTokensPath || !existsSync(securamarkTokensPath)) return [];
   try {
     const raw = loadRawTokens(securamarkTokensPath);
     const flat = flattenTokens(raw);
-    return Object.entries(flat).map(([path, token]) => toGalleryItem(path, token));
+    return Object.entries(flat).map(([path, token]) =>
+      toGalleryItem(path, { ...token, $value: resolveComposite(token.$value, flat) }),
+    );
   } catch (err) {
     console.warn(`preview-data: could not load SecuraMark tokens (${err.message})`);
     return [];
@@ -105,6 +119,25 @@ function readCssVars(buildDir) {
   return readFileSync(cssPath, 'utf8');
 }
 
+/** Icon usage: SecuraMark from its committed capture; DSM scanned live. */
+function buildIcons({ repoRoot, dsRoot }) {
+  const capturePath = repoRoot ? resolve(repoRoot, 'targets/securamark/icons.json') : null;
+  let securamark = null;
+  if (capturePath && existsSync(capturePath)) {
+    try { securamark = JSON.parse(readFileSync(capturePath, 'utf8')); } catch { securamark = null; }
+  }
+
+  let dsm = null;
+  if (dsRoot) {
+    const iconsData = existsSync(resolve(dsRoot, 'icons.json'))
+      ? JSON.parse(readFileSync(resolve(dsRoot, 'icons.json'), 'utf8'))
+      : {};
+    try { dsm = captureIconUsage(resolve(dsRoot, 'src'), iconsData); } catch { dsm = null; }
+  }
+
+  return { securamark, dsm };
+}
+
 /**
  * Assemble the full preview payload. `paths` is the object returned by
  * resolveProjectPaths() (tokensPath, componentsPath, dsRoot, repoRoot, buildDir).
@@ -121,5 +154,6 @@ export function buildPreviewData(paths) {
     },
     components: buildComponents(paths),
     cssVars: readCssVars(paths.buildDir),
+    icons: buildIcons(paths),
   };
 }

@@ -34,8 +34,16 @@ export interface PreviewComponent {
   previewScenarios: PreviewScenario[];
 }
 
+export interface IconCapture {
+  set: string | null;
+  source: string | null;
+  style: { weight?: string | null };
+  icons: { name: string; count: number }[];
+}
+
 export interface PreviewData {
   tokenSets: { dsm: GalleryToken[]; securamark: GalleryToken[] };
   components: PreviewComponent[];
   cssVars: string;
+  icons: { securamark: IconCapture | null; dsm: IconCapture | null };
 }

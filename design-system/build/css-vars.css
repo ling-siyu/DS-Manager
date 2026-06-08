@@ -97,9 +97,9 @@
   --ds-primitive-spacing-1-5: 6px;
   --ds-primitive-spacing-2-5: 10px;
   --ds-primitive-spacing-3-5: 14px;
-  --ds-primitive-typography-fontFamily-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans JP', 'Noto Sans KR', sans-serif;
-  --ds-primitive-typography-fontFamily-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  --ds-primitive-typography-fontFamily-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --ds-primitive-typography-fontFamily-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Source Han Sans SC', 'Heiti SC', system-ui, sans-serif; /** Mixed-script stack: Latin/primary (Inter) first, then the CJK fallback chain (Noto Sans SC, …), then a generic. Per-glyph fallback renders Latin in Inter and CJK in Noto Sans SC within the same text run. */
+  --ds-primitive-typography-fontFamily-serif: Georgia, Cambria, 'Times New Roman', 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', serif; /** Mixed-script serif stack: Latin serif first, then CJK serif fallbacks (Noto Serif SC, …), then a generic. */
+  --ds-primitive-typography-fontFamily-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Noto Sans SC', 'PingFang SC', 'Source Han Sans SC', monospace; /** Mixed-script monospace stack: Latin monospace first, then CJK fallbacks (Noto Sans SC, …), then a generic. */
   --ds-primitive-typography-fontSize-xs: 12px;
   --ds-primitive-typography-fontSize-sm: 14px;
   --ds-primitive-typography-fontSize-base: 16px;
@@ -289,91 +289,91 @@
   --ds-semantic-motion-transition-exit: 150ms cubic-bezier(0.4, 0, 1, 1) 0ms; /** Exit transition — elements leaving the screen */
   --ds-semantic-motion-transition-fade: 200ms cubic-bezier(0, 0, 1, 1) 0ms; /** Linear fade — opacity transitions */
   /* semantic.typography.display — Hero / marketing headline — largest display text */
-  --ds-semantic-typography-display-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --ds-semantic-typography-display-font-family: 'Inter', 'Noto Sans SC', sans-serif;
   --ds-semantic-typography-display-font-size: 60px;
   --ds-semantic-typography-display-font-weight: 700;
   --ds-semantic-typography-display-line-height: 1.1;
   --ds-semantic-typography-display-letter-spacing: -0.025em;
   /* semantic.typography.heading.xl — Page-level hero heading */
-  --ds-semantic-typography-heading-xl-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --ds-semantic-typography-heading-xl-font-family: 'Inter', 'Noto Sans SC', sans-serif;
   --ds-semantic-typography-heading-xl-font-size: 48px;
   --ds-semantic-typography-heading-xl-font-weight: 700;
   --ds-semantic-typography-heading-xl-line-height: 1.1;
   --ds-semantic-typography-heading-xl-letter-spacing: -0.025em;
   /* semantic.typography.heading.lg — Primary section heading */
-  --ds-semantic-typography-heading-lg-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --ds-semantic-typography-heading-lg-font-family: 'Inter', 'Noto Sans SC', sans-serif;
   --ds-semantic-typography-heading-lg-font-size: 36px;
   --ds-semantic-typography-heading-lg-font-weight: 600;
   --ds-semantic-typography-heading-lg-line-height: 1.25;
   --ds-semantic-typography-heading-lg-letter-spacing: -0.025em;
   /* semantic.typography.heading.md — Secondary section heading */
-  --ds-semantic-typography-heading-md-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --ds-semantic-typography-heading-md-font-family: 'Inter', 'Noto Sans SC', sans-serif;
   --ds-semantic-typography-heading-md-font-size: 30px;
   --ds-semantic-typography-heading-md-font-weight: 600;
   --ds-semantic-typography-heading-md-line-height: 1.3;
   --ds-semantic-typography-heading-md-letter-spacing: -0.025em;
   /* semantic.typography.heading.sm — Subsection heading */
-  --ds-semantic-typography-heading-sm-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --ds-semantic-typography-heading-sm-font-family: 'Inter', 'Noto Sans SC', sans-serif;
   --ds-semantic-typography-heading-sm-font-size: 24px;
   --ds-semantic-typography-heading-sm-font-weight: 600;
   --ds-semantic-typography-heading-sm-line-height: 1.375;
   --ds-semantic-typography-heading-sm-letter-spacing: 0em;
   /* semantic.typography.heading.xs — Card title, dialog heading */
-  --ds-semantic-typography-heading-xs-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --ds-semantic-typography-heading-xs-font-family: 'Inter', 'Noto Sans SC', sans-serif;
   --ds-semantic-typography-heading-xs-font-size: 20px;
   --ds-semantic-typography-heading-xs-font-weight: 500;
   --ds-semantic-typography-heading-xs-line-height: 1.4;
   --ds-semantic-typography-heading-xs-letter-spacing: 0em;
   /* semantic.typography.body.lg — Large body — lead paragraphs, introductory text */
-  --ds-semantic-typography-body-lg-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --ds-semantic-typography-body-lg-font-family: 'Inter', 'Noto Sans SC', sans-serif;
   --ds-semantic-typography-body-lg-font-size: 18px;
   --ds-semantic-typography-body-lg-font-weight: 400;
   --ds-semantic-typography-body-lg-line-height: 1.625;
   --ds-semantic-typography-body-lg-letter-spacing: 0em;
   /* semantic.typography.body.base — Default body copy */
-  --ds-semantic-typography-body-base-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --ds-semantic-typography-body-base-font-family: 'Inter', 'Noto Sans SC', sans-serif;
   --ds-semantic-typography-body-base-font-size: 16px;
   --ds-semantic-typography-body-base-font-weight: 400;
   --ds-semantic-typography-body-base-line-height: 1.5;
   --ds-semantic-typography-body-base-letter-spacing: 0em;
   /* semantic.typography.body.sm — Small body — secondary content, descriptions */
-  --ds-semantic-typography-body-sm-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --ds-semantic-typography-body-sm-font-family: 'Inter', 'Noto Sans SC', sans-serif;
   --ds-semantic-typography-body-sm-font-size: 14px;
   --ds-semantic-typography-body-sm-font-weight: 400;
   --ds-semantic-typography-body-sm-line-height: 1.5;
   --ds-semantic-typography-body-sm-letter-spacing: 0em;
   /* semantic.typography.label.lg — Large UI label — form labels, nav items */
-  --ds-semantic-typography-label-lg-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --ds-semantic-typography-label-lg-font-family: 'Inter', 'Noto Sans SC', sans-serif;
   --ds-semantic-typography-label-lg-font-size: 16px;
   --ds-semantic-typography-label-lg-font-weight: 500;
   --ds-semantic-typography-label-lg-line-height: 1;
   --ds-semantic-typography-label-lg-letter-spacing: 0em;
   /* semantic.typography.label.base — Default UI label — buttons, tabs, badges */
-  --ds-semantic-typography-label-base-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --ds-semantic-typography-label-base-font-family: 'Inter', 'Noto Sans SC', sans-serif;
   --ds-semantic-typography-label-base-font-size: 14px;
   --ds-semantic-typography-label-base-font-weight: 500;
   --ds-semantic-typography-label-base-line-height: 1;
   --ds-semantic-typography-label-base-letter-spacing: 0em;
   /* semantic.typography.label.sm — Small UI label — chips, tags, compact controls */
-  --ds-semantic-typography-label-sm-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --ds-semantic-typography-label-sm-font-family: 'Inter', 'Noto Sans SC', sans-serif;
   --ds-semantic-typography-label-sm-font-size: 12px;
   --ds-semantic-typography-label-sm-font-weight: 500;
   --ds-semantic-typography-label-sm-line-height: 1;
   --ds-semantic-typography-label-sm-letter-spacing: 0em;
   /* semantic.typography.caption — Caption / helper text — timestamps, supporting detail */
-  --ds-semantic-typography-caption-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --ds-semantic-typography-caption-font-family: 'Inter', 'Noto Sans SC', sans-serif;
   --ds-semantic-typography-caption-font-size: 12px;
   --ds-semantic-typography-caption-font-weight: 400;
   --ds-semantic-typography-caption-line-height: 1.5;
   --ds-semantic-typography-caption-letter-spacing: 0.025em;
   /* semantic.typography.overline — Overline / eyebrow — uppercase category labels above headings */
-  --ds-semantic-typography-overline-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --ds-semantic-typography-overline-font-family: 'Inter', 'Noto Sans SC', sans-serif;
   --ds-semantic-typography-overline-font-size: 11px;
   --ds-semantic-typography-overline-font-weight: 600;
   --ds-semantic-typography-overline-line-height: 1.5;
   --ds-semantic-typography-overline-letter-spacing: 0.1em;
   /* semantic.typography.code — Inline and block code snippets */
-  --ds-semantic-typography-code-font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --ds-semantic-typography-code-font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Noto Sans SC', monospace;
   --ds-semantic-typography-code-font-size: 14px;
   --ds-semantic-typography-code-font-weight: 400;
   --ds-semantic-typography-code-line-height: 1.625;
