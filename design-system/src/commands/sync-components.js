@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import chalk from 'chalk';
 import { resolveProjectPaths } from '../utils/paths.js';
-import { discoverComponents } from '../utils/component-discovery.js';
+import { discoverComponents, ownProps } from '../utils/component-discovery.js';
 
 function normalizeValue(value) {
   if (Array.isArray(value)) {
@@ -137,9 +137,13 @@ export function buildSyncPlan(registry, discoveredComponents, options = {}) {
   const merge = options.merge === true;
   const existingComponents = Array.isArray(registry.components) ? registry.components : [];
   const existingByName = new Map(existingComponents.map((component) => [component.name, component]));
-  const discoveredByName = new Map(discoveredComponents.map((component) => [component.name, component]));
 
-  const missingFromRegistry = discoveredComponents.filter((component) => !existingByName.has(component.name));
+  // Persist only authored props. The inherited DOM/aria/event surface stays in
+  // discovery (Phase 3 may use it) but must not bloat the registry or context.
+  const discovered = discoveredComponents.map((component) => ({ ...component, props: ownProps(component.props) }));
+  const discoveredByName = new Map(discovered.map((component) => [component.name, component]));
+
+  const missingFromRegistry = discovered.filter((component) => !existingByName.has(component.name));
   const stalePaths = existingComponents
     .filter((component) => discoveredByName.has(component.name) && discoveredByName.get(component.name).path !== component.path)
     .map((component) => ({
@@ -156,7 +160,7 @@ export function buildSyncPlan(registry, discoveredComponents, options = {}) {
     }))
     .filter((entry) => entry.fields.length > 0);
   const registryOnly = existingComponents.filter((component) => !discoveredByName.has(component.name));
-  const renamedCandidates = registryOnly.flatMap((component) => discoveredComponents
+  const renamedCandidates = registryOnly.flatMap((component) => discovered
     .filter((candidate) => candidate.path === component.path)
     .map((candidate) => ({
       from: component.name,
@@ -167,7 +171,7 @@ export function buildSyncPlan(registry, discoveredComponents, options = {}) {
     .map((entry) => [entry.to, existingByName.get(entry.from)]));
   const consumedRenames = new Set(renamedCandidates.map((entry) => entry.from));
 
-  const mergedComponents = discoveredComponents.map((component) => {
+  const mergedComponents = discovered.map((component) => {
     const existing = existingByName.get(component.name);
     const renamed = renamedByTarget.get(component.name);
 

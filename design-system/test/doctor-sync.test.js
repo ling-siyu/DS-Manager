@@ -249,6 +249,29 @@ test('sync plan reports metadata drift when inferred props or variants change', 
   ]);
 });
 
+test('sync plan persists only authored props, dropping inherited DOM attrs', () => {
+  const discoveredComponents = [
+    {
+      name: 'Button',
+      path: 'src/components/ui/Button.tsx',
+      props: {
+        variant: { type: 'string', options: ['primary'] },
+        onClick: { type: 'function', inherited: true },
+        disabled: { type: 'boolean', inherited: true },
+      },
+      variants: ['primary'],
+      sizes: [],
+    },
+  ];
+
+  const plan = buildSyncPlan({ components: [] }, discoveredComponents, { merge: false });
+  const button = plan.nextRegistry.components.find((c) => c.name === 'Button');
+
+  // Inherited DOM attrs are dropped from the registry; authored props remain.
+  assert.deepEqual(Object.keys(button.props), ['variant']);
+  assert.deepEqual(button.variants, ['primary']);
+});
+
 test('sync plan merge mode transfers renamed registry metadata onto discovered components', () => {
   const registry = {
     components: [

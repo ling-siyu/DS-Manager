@@ -362,3 +362,17 @@ export function discoverComponents(repoRoot, options = {}) {
 export function resolveComponentSourcePath(repoRoot, componentPath) {
   return resolve(repoRoot, componentPath);
 }
+
+/**
+ * Keep only props authored on the target, dropping the inherited DOM/aria/event
+ * surface (props flagged `inherited`). Discovery keeps the full catalogue; this
+ * is what consumers (registry, generated context) should persist/render by
+ * default so they aren't drowned in hundreds of inherited attributes.
+ */
+export function ownProps(props = {}) {
+  const out = {};
+  for (const [name, meta] of Object.entries(props)) {
+    if (!meta?.inherited) out[name] = meta;
+  }
+  return out;
+}
