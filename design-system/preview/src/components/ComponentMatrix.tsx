@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
-import type { PreviewComponent } from '../types';
+import type { PreviewComponent, SecuraMarkComponent as SMComponent } from '../types';
 import type { Theme, Viewport } from '../App';
+import RenderBoundary from './RenderBoundary';
+import SecuraMarkComponent from './SecuraMarkComponent';
 
-// Vite resolves DSM's own components statically via glob (they live outside the
-// preview root; ui.js allows fs access). Cross-repo SecuraMark components are a
-// later pass.
+// DSM's own components are resolved statically via glob (outside the preview root;
+// ui.js allows fs access).
 const LOADERS = import.meta.glob('../../../src/components/ui/*.tsx') as Record<
   string,
   () => Promise<{ default: ComponentType<Record<string, unknown>> }>
@@ -17,33 +18,18 @@ function loaderFor(path: string) {
   return key ? LOADERS[key] : null;
 }
 
-const VIEWPORT_WIDTH: Record<Viewport, string> = {
-  full: '100%',
-  tablet: '768px',
-  mobile: '375px',
-};
+const VIEWPORT_WIDTH: Record<Viewport, string> = { full: '100%', tablet: '768px', mobile: '375px' };
 
-class RenderBoundary extends React.Component<
-  { resetKey: string; children: React.ReactNode },
-  { error: string }
-> {
-  state = { error: '' };
-  static getDerivedStateFromError(e: unknown) {
-    return { error: e instanceof Error ? e.message : String(e) };
-  }
-  componentDidUpdate(prev: { resetKey: string }) {
-    if (prev.resetKey !== this.props.resetKey && this.state.error) this.setState({ error: '' });
-  }
-  render() {
-    return this.state.error ? (
-      <div className="render-error">Render error: {this.state.error}</div>
-    ) : (
-      this.props.children
-    );
-  }
+const NOOP = () => {};
+
+/** No-op handlers for a SecuraMark component's declared callback props, so
+ *  controlled inputs render without React's "value without onChange" warning. */
+function handlerProps(component: PreviewComponent | SMComponent): Record<string, unknown> {
+  const names = (component as SMComponent).handlers ?? [];
+  return Object.fromEntries(names.map((h) => [h, NOOP]));
 }
 
-function LiveComponent({ path, props }: { path: string; props: Record<string, unknown> }) {
+function DsmLive({ path, props }: { path: string; props: Record<string, unknown> }) {
   const [Comp, setComp] = useState<ComponentType<Record<string, unknown>> | null>(null);
   const [error, setError] = useState('');
 
@@ -67,13 +53,27 @@ function LiveComponent({ path, props }: { path: string; props: Record<string, un
   return <Comp {...props} />;
 }
 
-function ComponentCard({ component, viewport }: { component: PreviewComponent; viewport: Viewport }) {
+function ComponentCard({
+  component,
+  source,
+  iconWeight,
+  viewport,
+}: {
+  component: PreviewComponent | SMComponent;
+  source: 'dsm' | 'securamark';
+  iconWeight?: string;
+  viewport: Viewport;
+}) {
   const scenarios = component.previewScenarios.length
     ? component.previewScenarios
     : [{ name: 'Default', props: {} }];
   const [idx, setIdx] = useState(0);
   const selected = scenarios[Math.min(idx, scenarios.length - 1)];
-  const props = { ...component.previewProps, ...selected.props };
+  const props = {
+    ...(source === 'securamark' ? handlerProps(component) : {}),
+    ...component.previewProps,
+    ...selected.props,
+  };
   const ownProps = Object.entries(component.props);
 
   return (
@@ -91,40 +91,35 @@ function ComponentCard({ component, viewport }: { component: PreviewComponent; v
           Scenario
           <select value={idx} onChange={(e) => setIdx(Number(e.target.value))}>
             {scenarios.map((s, i) => (
-              <option key={s.name} value={i}>
-                {s.name}
-              </option>
+              <option key={s.name} value={i}>{s.name}</option>
             ))}
           </select>
         </label>
         {component.variants.length > 0 && (
           <div className="variant-chips">
-            {component.variants.map((v) => (
-              <span key={v} className="chip">
-                {v}
-              </span>
-            ))}
+            {component.variants.map((v) => <span key={v} className="chip">{v}</span>)}
           </div>
         )}
       </div>
 
       <div className="canvas" style={{ maxWidth: VIEWPORT_WIDTH[viewport] }}>
-        <RenderBoundary resetKey={`${component.name}:${idx}`}>
-          <LiveComponent path={component.path} props={props} />
+        <RenderBoundary resetKey={`${source}:${component.name}:${idx}`}>
+          {source === 'securamark' ? (
+            <SecuraMarkComponent absPath={(component as SMComponent).absPath} props={props} iconWeight={iconWeight} />
+          ) : (
+            <DsmLive path={component.path} props={props} />
+          )}
         </RenderBoundary>
       </div>
 
       {ownProps.length > 0 && (
         <details className="props-table">
-          <summary>{ownProps.length} authored props</summary>
+          <summary>{ownProps.length} props</summary>
           <table>
             <tbody>
               {ownProps.map(([name, meta]) => (
                 <tr key={name}>
-                  <td className="prop-name">
-                    {name}
-                    {meta.required ? <span className="req">*</span> : null}
-                  </td>
+                  <td className="prop-name">{name}{meta.required ? <span className="req">*</span> : null}</td>
                   <td className="prop-type">{meta.options ? meta.options.join(' | ') : meta.type}</td>
                 </tr>
               ))}
@@ -138,18 +133,24 @@ function ComponentCard({ component, viewport }: { component: PreviewComponent; v
 
 export default function ComponentMatrix({
   components,
+  source,
+  iconWeight,
   theme,
   viewport,
 }: {
-  components: PreviewComponent[];
+  components: (PreviewComponent | SMComponent)[];
+  source: 'dsm' | 'securamark';
+  iconWeight?: string;
   theme: Theme;
   viewport: Viewport;
 }) {
-  if (components.length === 0) return <p className="empty">No components in the registry.</p>;
+  if (components.length === 0) {
+    return <p className="empty">No {source === 'securamark' ? 'SecuraMark' : 'DSM'} components available.</p>;
+  }
   return (
     <div className="matrix" data-theme={theme}>
       {components.map((c) => (
-        <ComponentCard key={c.name} component={c} viewport={viewport} />
+        <ComponentCard key={c.name} component={c} source={source} iconWeight={iconWeight} viewport={viewport} />
       ))}
     </div>
   );

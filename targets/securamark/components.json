@@ -1,0 +1,207 @@
+{
+  "$description": "Curated SecuraMark components rendered live in the DSM preview (cross-repo). Paths are relative to the SecuraMark repo root. Pure leaf components; `handlers` lists callback props that get a no-op at render so controlled inputs work without React warnings. Overlay (Modal/Snackbar), data-driven (Select/CityInput/FileUpload), and feature components are out of scope for now.",
+  "components": [
+    {
+      "name": "Button",
+      "path": "src/components/ui/Button.tsx",
+      "description": "Primary interactive element — outline / ghost / danger / primary variants, uppercase tracking.",
+      "variants": ["outline", "ghost", "danger", "success", "primary", "wechat"],
+      "sizes": ["sm", "md", "lg"],
+      "props": {
+        "variant": { "type": "string", "options": ["outline", "ghost", "danger", "success", "primary", "wechat"] },
+        "size": { "type": "string", "options": ["sm", "md", "lg"] },
+        "disabled": { "type": "boolean" },
+        "children": { "type": "ReactNode", "required": true }
+      },
+      "previewProps": { "children": "Button" },
+      "previewScenarios": [
+        { "name": "Outline", "props": { "variant": "outline", "children": "Outline" } },
+        { "name": "Primary", "props": { "variant": "primary", "children": "Primary" } },
+        { "name": "Danger", "props": { "variant": "danger", "children": "Delete" } },
+        { "name": "Ghost", "props": { "variant": "ghost", "children": "Ghost" } },
+        { "name": "Large", "props": { "size": "lg", "children": "Large" } },
+        { "name": "Disabled", "props": { "disabled": true, "children": "Disabled" } }
+      ]
+    },
+    {
+      "name": "Badge",
+      "path": "src/components/ui/Badge.tsx",
+      "description": "Status indicator with a Phosphor icon — encrypted / pending / done / error / warning.",
+      "variants": ["encrypted", "pending", "done", "error", "warning"],
+      "props": {
+        "label": { "type": "string", "required": true },
+        "variant": { "type": "string", "options": ["encrypted", "pending", "done", "error", "warning"] }
+      },
+      "previewProps": { "label": "Encrypted" },
+      "previewScenarios": [
+        { "name": "Encrypted", "props": { "variant": "encrypted", "label": "Encrypted" } },
+        { "name": "Pending", "props": { "variant": "pending", "label": "Pending" } },
+        { "name": "Done", "props": { "variant": "done", "label": "Verified" } },
+        { "name": "Error", "props": { "variant": "error", "label": "Failed" } },
+        { "name": "Warning", "props": { "variant": "warning", "label": "Warning" } }
+      ]
+    },
+    {
+      "name": "TextInput",
+      "path": "src/components/ui/TextInput.tsx",
+      "description": "Labelled text field (text / password / tel / date).",
+      "handlers": ["onChange", "onBlur"],
+      "props": {
+        "label": { "type": "string" },
+        "type": { "type": "string", "options": ["text", "password", "tel", "date"] },
+        "value": { "type": "string", "required": true },
+        "placeholder": { "type": "string" },
+        "disabled": { "type": "boolean" }
+      },
+      "previewProps": { "label": "Email", "value": "asset@securamark.io", "placeholder": "you@example.com" },
+      "previewScenarios": [
+        { "name": "Email", "props": { "label": "Email", "value": "asset@securamark.io" } },
+        { "name": "Password", "props": { "label": "Password", "type": "password", "value": "correct horse" } },
+        { "name": "Empty", "props": { "label": "Asset name", "value": "", "placeholder": "Untitled" } },
+        { "name": "Disabled", "props": { "label": "Locked", "value": "Read only", "disabled": true } }
+      ]
+    },
+    {
+      "name": "TextArea",
+      "path": "src/components/ui/TextArea.tsx",
+      "description": "Multi-line text field with optional label, hint, and error.",
+      "handlers": ["onChange", "onBlur"],
+      "props": {
+        "label": { "type": "string" },
+        "value": { "type": "string", "required": true },
+        "rows": { "type": "number" },
+        "error": { "type": "string" },
+        "hint": { "type": "string" }
+      },
+      "previewProps": { "label": "Notes", "value": "Provenance details for this asset…", "rows": 3 },
+      "previewScenarios": [
+        { "name": "Default", "props": { "label": "Notes", "value": "Provenance details for this asset…" } },
+        { "name": "With hint", "props": { "label": "Description", "value": "", "hint": "Markdown supported" } },
+        { "name": "Error", "props": { "label": "Description", "value": "x", "error": "Too short" } }
+      ]
+    },
+    {
+      "name": "SearchInput",
+      "path": "src/components/ui/SearchInput.tsx",
+      "description": "Search field with a leading icon (IME-safe).",
+      "handlers": ["onChange"],
+      "props": {
+        "value": { "type": "string", "required": true },
+        "placeholder": { "type": "string" }
+      },
+      "previewProps": { "value": "", "placeholder": "Search assets" },
+      "previewScenarios": [
+        { "name": "Empty", "props": { "value": "", "placeholder": "Search assets" } },
+        { "name": "Typed", "props": { "value": "certificate", "placeholder": "Search" } }
+      ]
+    },
+    {
+      "name": "Checkbox",
+      "path": "src/components/ui/Checkbox.tsx",
+      "description": "Labelled checkbox.",
+      "handlers": ["onChange"],
+      "props": {
+        "checked": { "type": "boolean", "required": true },
+        "disabled": { "type": "boolean" },
+        "children": { "type": "ReactNode" }
+      },
+      "previewProps": { "checked": true, "children": "Encrypt uploads" },
+      "previewScenarios": [
+        { "name": "Checked", "props": { "checked": true, "children": "Encrypt uploads" } },
+        { "name": "Unchecked", "props": { "checked": false, "children": "Remember me" } },
+        { "name": "Disabled", "props": { "checked": true, "disabled": true, "children": "Required" } }
+      ]
+    },
+    {
+      "name": "Radio",
+      "path": "src/components/ui/Radio.tsx",
+      "description": "Labelled radio option.",
+      "handlers": ["onChange"],
+      "props": {
+        "checked": { "type": "boolean", "required": true },
+        "disabled": { "type": "boolean" },
+        "children": { "type": "ReactNode" }
+      },
+      "previewProps": { "checked": true, "children": "Standard plan" },
+      "previewScenarios": [
+        { "name": "Selected", "props": { "checked": true, "children": "Standard plan" } },
+        { "name": "Unselected", "props": { "checked": false, "children": "Pro plan" } }
+      ]
+    },
+    {
+      "name": "InlineNotice",
+      "path": "src/components/ui/InlineNotice.tsx",
+      "description": "Inline message banner with a leading icon — info / warning / error.",
+      "variants": ["info", "warning", "error"],
+      "props": {
+        "variant": { "type": "string", "options": ["info", "warning", "error"] },
+        "title": { "type": "string" },
+        "children": { "type": "ReactNode" }
+      },
+      "previewProps": { "title": "Heads up", "children": "Your session expires in 5 minutes." },
+      "previewScenarios": [
+        { "name": "Info", "props": { "variant": "info", "title": "Tip", "children": "Encryption is on by default." } },
+        { "name": "Warning", "props": { "variant": "warning", "title": "Heads up", "children": "Session expires soon." } },
+        { "name": "Error", "props": { "variant": "error", "title": "Failed", "children": "Could not verify the asset." } }
+      ]
+    },
+    {
+      "name": "HelpBubble",
+      "path": "src/components/ui/HelpBubble.tsx",
+      "description": "Inline help trigger that reveals a tooltip on hover/focus.",
+      "props": {
+        "text": { "type": "string" },
+        "align": { "type": "string" },
+        "label": { "type": "string" }
+      },
+      "previewProps": { "text": "Encryption keeps your assets private." },
+      "previewScenarios": [
+        { "name": "Default", "props": { "text": "Encryption keeps your assets private." } }
+      ]
+    },
+    {
+      "name": "CircularProgress",
+      "path": "src/components/ui/CircularProgress.tsx",
+      "description": "Ring progress indicator (percentage or fraction).",
+      "props": {
+        "progress": { "type": "number" },
+        "current": { "type": "number" },
+        "total": { "type": "number" },
+        "showLabel": { "type": "boolean" }
+      },
+      "previewProps": { "progress": 65 },
+      "previewScenarios": [
+        { "name": "65%", "props": { "progress": 65 } },
+        { "name": "Fraction", "props": { "current": 3, "total": 4 } },
+        { "name": "Complete", "props": { "progress": 100 } }
+      ]
+    },
+    {
+      "name": "LoadingIndicator",
+      "path": "src/components/ui/LoadingIndicator.tsx",
+      "description": "Breathing-dot loading state with an optional caption.",
+      "props": {
+        "caption": { "type": "string" },
+        "size": { "type": "string", "options": ["sm", "md", "lg"] }
+      },
+      "previewProps": { "caption": "加载中 Loading" },
+      "previewScenarios": [
+        { "name": "Default", "props": { "caption": "加载中 Loading" } },
+        { "name": "Large", "props": { "size": "lg", "caption": "Processing" } },
+        { "name": "No caption", "props": {} }
+      ]
+    },
+    {
+      "name": "NotificationBadge",
+      "path": "src/components/ui/NotificationBadge.tsx",
+      "description": "Small unread-count badge (or dot when count is omitted).",
+      "props": { "count": { "type": "number" } },
+      "previewProps": { "count": 3 },
+      "previewScenarios": [
+        { "name": "Count", "props": { "count": 3 } },
+        { "name": "99+", "props": { "count": 128 } },
+        { "name": "Dot", "props": {} }
+      ]
+    }
+  ]
+}

@@ -43,3 +43,18 @@ test('components exclude junk entries and carry preview metadata', () => {
   assert.ok(Array.isArray(button.previewScenarios), 'previewScenarios is an array');
   assert.ok(button.previewProps && typeof button.previewProps === 'object', 'previewProps present');
 });
+
+test('SecuraMark components are exposed with absolute paths + preview scenarios', () => {
+  const sm = data.securamark;
+  // The capture is only present when the sibling SecuraMark repo exists locally.
+  if (!sm.dir) {
+    assert.deepEqual(sm.components, [], 'no SecuraMark components when source is absent');
+    return;
+  }
+  assert.ok(sm.components.length > 0, 'curated SecuraMark components present');
+  for (const c of sm.components) {
+    assert.ok(c.absPath.startsWith('/') && c.absPath.endsWith('.tsx'), `${c.name} has an absolute .tsx path`);
+    assert.ok(Array.isArray(c.previewScenarios), `${c.name} carries previewScenarios`);
+  }
+  assert.ok(sm.components.some((c) => c.name === 'Button'), 'Button is curated');
+});

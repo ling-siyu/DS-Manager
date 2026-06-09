@@ -4,7 +4,8 @@
     {
       "name": "dsm-ui",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["design-system/src/cli.js", "ui", "--port", "7777"]
+      "runtimeArgs": ["design-system/src/cli.js", "ui", "--port", "7777", "--no-open"],
+      "port": 7777
     }
   ]
 }

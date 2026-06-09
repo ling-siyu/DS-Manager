@@ -22,10 +22,20 @@ import './styles.css';
 
 // Inject the design system's CSS custom properties so token-driven components
 // (which reference var(--ds-…)) resolve at runtime.
-const tokenStyle = document.createElement('style');
-tokenStyle.setAttribute('data-dsm-tokens', '');
-tokenStyle.textContent = data.cssVars || '';
-document.head.appendChild(tokenStyle);
+// Inject (or replace, on HMR) a <style> in <head>.
+function injectStyle(attr: string, css: string) {
+  if (!css) return;
+  document.head.querySelector(`style[${attr}]`)?.remove();
+  const el = document.createElement('style');
+  el.setAttribute(attr, '');
+  el.textContent = css;
+  document.head.appendChild(el);
+}
+
+injectStyle('data-dsm-tokens', data.cssVars || '');
+// SecuraMark's compiled Tailwind utilities + @theme (no preflight) so its real
+// components render styled. Inert for the chrome (which uses custom class names).
+injectStyle('data-securamark-css', data.securamark?.css || '');
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -41,9 +41,15 @@ export interface IconCapture {
   icons: { name: string; count: number }[];
 }
 
+export interface SecuraMarkComponent extends PreviewComponent {
+  absPath: string;
+  handlers: string[];
+}
+
 export interface PreviewData {
   tokenSets: { dsm: GalleryToken[]; securamark: GalleryToken[] };
   components: PreviewComponent[];
   cssVars: string;
   icons: { securamark: IconCapture | null; dsm: IconCapture | null };
+  securamark: { dir: string | null; components: SecuraMarkComponent[]; css: string };
 }

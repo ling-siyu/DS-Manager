@@ -32,6 +32,8 @@ export default function App() {
 
   const isToken = route !== 'components';
   const tokens = data.tokenSets[source];
+  const componentList = source === 'securamark' ? (data.securamark?.components ?? []) : data.components;
+  const iconWeight = data.icons?.securamark?.style?.weight ?? 'light';
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
     for (const t of tokens) {
@@ -79,7 +81,7 @@ export default function App() {
         <nav>
           <a href="#/components" className={`nav-item${route === 'components' ? ' active' : ''}`}>
             <span>Components</span>
-            <span className="nav-count">{data.components.length}</span>
+            <span className="nav-count">{componentList.length}</span>
           </a>
           <div className="nav-label">Tokens</div>
           {CATEGORIES.map((c) => (
@@ -107,15 +109,13 @@ export default function App() {
         <header className="toolbar">
           <h1 className="toolbar-title">{title}</h1>
           <div className="toolbar-controls">
-            {isToken && (
-              <div className="seg" role="group" aria-label="Source">
-                {(['securamark', 'dsm'] as Source[]).map((s) => (
-                  <button key={s} className={source === s ? 'on' : ''} onClick={() => setSource(s)}>
-                    {s === 'securamark' ? 'SecuraMark' : 'DSM'}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="seg" role="group" aria-label="Source">
+              {(['securamark', 'dsm'] as Source[]).map((s) => (
+                <button key={s} className={source === s ? 'on' : ''} onClick={() => setSource(s)}>
+                  {s === 'securamark' ? 'SecuraMark' : 'DSM'}
+                </button>
+              ))}
+            </div>
             <div className="seg" role="group" aria-label="Theme">
               {(['light', 'dark'] as Theme[]).map((t) => (
                 <button key={t} className={theme === t ? 'on' : ''} onClick={() => setTheme(t)}>
@@ -137,7 +137,13 @@ export default function App() {
 
         <div className="content">
           {route === 'components' ? (
-            <ComponentMatrix components={data.components} theme={theme} viewport={viewport} />
+            <ComponentMatrix
+              components={componentList}
+              source={source}
+              iconWeight={iconWeight}
+              theme={theme}
+              viewport={viewport}
+            />
           ) : (
             <SectionList sections={sections} collapsed={collapsed} onToggle={toggle} />
           )}

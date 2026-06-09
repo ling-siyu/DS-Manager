@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'fs';
-import { resolve } from 'path';
+import { resolve, join } from 'path';
+import { homedir } from 'os';
 import { loadTokens, loadRawTokens, flattenTokens, resolveReference } from './tokens.js';
 import { discoverComponents, ownProps } from './component-discovery.js';
 import { captureIconUsage } from './icons.js';
@@ -138,6 +139,51 @@ function buildIcons({ repoRoot, dsRoot }) {
   return { securamark, dsm };
 }
 
+/** Absolute path to the (read-only) SecuraMark source, for cross-repo rendering. */
+export function securamarkDir() {
+  return process.env.SECURAMARK_DIR || join(homedir(), 'Projects/securamark-frontend');
+}
+
+/**
+ * Curated SecuraMark components to render cross-repo. Reads the committed
+ * registry (targets/securamark/components.json) and resolves each path to an
+ * ABSOLUTE path under the SecuraMark source (the preview loads it via Vite's
+ * dev-only `/@fs`). Empty if the source or registry is absent. `css` is filled in
+ * by the ui command (it needs an async Tailwind compile).
+ */
+function buildSecuramark(paths) {
+  const dir = securamarkDir();
+  const regPath = paths.repoRoot ? resolve(paths.repoRoot, 'targets/securamark/components.json') : null;
+  if (!dir || !existsSync(dir) || !regPath || !existsSync(regPath)) {
+    return { dir: null, components: [], css: '' };
+  }
+  let components = [];
+  try {
+    const reg = JSON.parse(readFileSync(regPath, 'utf8'));
+    components = (reg.components ?? []).map((c) => ({
+      name: c.name,
+      path: c.path,
+      absPath: resolve(dir, c.path),
+      description: c.description ?? '',
+      status: c.status ?? 'stable',
+      variants: c.variants ?? [],
+      sizes: c.sizes ?? [],
+      props: c.props ?? {},
+      previewProps: c.previewProps ?? {},
+      previewScenarios: Array.isArray(c.previewScenarios) ? c.previewScenarios : [],
+      handlers: Array.isArray(c.handlers) ? c.handlers : [],
+    }));
+    const missing = components.filter((c) => !existsSync(c.absPath));
+    if (missing.length) {
+      console.warn(`preview-data: skipping SecuraMark components with missing source: ${missing.map((c) => c.name).join(', ')}`);
+    }
+    components = components.filter((c) => existsSync(c.absPath));
+  } catch {
+    components = [];
+  }
+  return { dir, components, css: '' };
+}
+
 /**
  * Assemble the full preview payload. `paths` is the object returned by
  * resolveProjectPaths() (tokensPath, componentsPath, dsRoot, repoRoot, buildDir).
@@ -155,5 +201,6 @@ export function buildPreviewData(paths) {
     components: buildComponents(paths),
     cssVars: readCssVars(paths.buildDir),
     icons: buildIcons(paths),
+    securamark: buildSecuramark(paths),
   };
 }

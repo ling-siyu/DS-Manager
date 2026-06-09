@@ -9,6 +9,7 @@ import react from '@vitejs/plugin-react';
 import { buildCommand } from './build.js';
 import { resolveProjectPaths } from '../utils/paths.js';
 import { buildPreviewData } from '../utils/preview-data.js';
+import { buildSecuramarkCss } from '../utils/securamark-css.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -117,9 +118,26 @@ export async function uiCommand(options = {}) {
   console.log(chalk.cyan('\n⚙  Building tokens for preview...\n'));
   await buildCommand();
 
+  // Compile SecuraMark's utility CSS so its real components render styled (async
+  // Tailwind compile). Re-run on every data rebuild so a token edit doesn't blank
+  // the SecuraMark styling until restart.
+  const compileSecuramarkCss = async (data) => {
+    if (!data.securamark.dir) return;
+    try {
+      data.securamark.css = await buildSecuramarkCss({
+        securamarkDir: data.securamark.dir,
+        tokensPath: resolve(paths.repoRoot, 'targets/securamark/tokens.json'),
+      });
+    } catch (error) {
+      console.error(chalk.yellow(`  SecuraMark CSS compile skipped: ${error.message}`));
+    }
+  };
+
   let current = buildPreviewData(paths);
+  await compileSecuramarkCss(current);
   console.log(chalk.dim(
-    `  ${current.tokenSets.securamark.length} SecuraMark + ${current.tokenSets.dsm.length} DSM tokens · ${current.components.length} components`,
+    `  ${current.tokenSets.securamark.length} SecuraMark + ${current.tokenSets.dsm.length} DSM tokens · ` +
+    `${current.components.length} DSM + ${current.securamark.components.length} SecuraMark components`,
   ));
 
   let port;
@@ -134,13 +152,15 @@ export async function uiCommand(options = {}) {
     configFile: false,
     root: PREVIEW_DIR,
     plugins: [react(), dsmDataPlugin(() => current)],
+    // Single React copy even when rendering SecuraMark's cross-repo components.
+    resolve: { dedupe: ['react', 'react-dom'] },
     server: {
       host,
       port,
       strictPort: true,
-      // The preview imports DSM's own components from ../src — outside the
-      // preview root — so allow fs access to the whole design-system dir.
-      fs: { allow: [paths.dsRoot] },
+      // Allow fs access to the design-system dir (DSM's own components, outside
+      // the preview root) and the read-only SecuraMark source (loaded via /@fs).
+      fs: { allow: [paths.dsRoot, current.securamark.dir].filter(Boolean) },
     },
     clearScreen: false,
     logLevel: 'warn',
@@ -153,6 +173,7 @@ export async function uiCommand(options = {}) {
     try {
       await buildCommand();
       current = buildPreviewData(paths);
+      await compileSecuramarkCss(current);
       const mod = server.moduleGraph.getModuleById('\0virtual:dsm-data');
       if (mod) server.moduleGraph.invalidateModule(mod);
       server.ws.send({ type: 'full-reload' });
