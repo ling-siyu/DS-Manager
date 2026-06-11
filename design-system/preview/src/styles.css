@@ -35,71 +35,57 @@ body {
   background: var(--p-bg);
 }
 
+/* Full-bleed canvas app: the surface fills the viewport; everything else
+   floats over it as docks. */
 .app {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  min-height: 100vh;
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
   background: var(--p-bg);
   color: var(--p-text);
 }
 
-/* Sidebar */
-.sidebar {
-  border-right: 1px solid var(--p-border);
-  background: var(--p-panel);
-  padding: 20px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  position: sticky;
-  top: 0;
-  height: 100vh;
+/* Floating docks */
+.dock { position: absolute; z-index: 10; }
+.dock-top { top: 16px; left: 16px; display: flex; align-items: flex-start; gap: 10px; }
+
+/* Floating left nav (was the sidebar) */
+.nav-panel {
+  display: flex; flex-direction: column; gap: 2px;
+  width: 184px; padding: 10px;
+  background: var(--p-panel); border: 1px solid var(--p-border);
+  border-radius: 12px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
-.brand { font-weight: 700; font-size: 15px; padding: 4px 10px 16px; }
+.brand { font-weight: 700; font-size: 14px; padding: 4px 8px 8px; }
 .nav-item {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 10px; border-radius: 8px; text-decoration: none;
-  color: var(--p-text); font-size: 14px;
+  padding: 7px 9px; border-radius: 8px; text-decoration: none;
+  color: var(--p-text); font-size: 13px;
 }
 .nav-item:hover { background: var(--p-chip); }
 .nav-item.active { background: var(--p-accent); color: var(--p-accent-text); }
-.nav-count { font-size: 12px; opacity: 0.7; }
+.nav-count { font-size: 11px; opacity: 0.7; font-variant-numeric: tabular-nums; }
 .nav-item.active .nav-count { opacity: 0.9; }
-.nav-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--p-muted); padding: 14px 10px 4px; }
-.nav-children { display: flex; flex-direction: column; margin: 2px 0 6px 18px; border-left: 1px solid var(--p-border); }
-.nav-child { background: none; border: 0; text-align: left; padding: 5px 10px; font-size: 12px; color: var(--p-muted); cursor: pointer; }
-.nav-child:hover { color: var(--p-text); }
-.sidebar-foot { margin-top: auto; font-size: 11px; color: var(--p-muted); padding: 10px; }
 
-/* Main */
-.main { display: flex; flex-direction: column; min-width: 0; }
-.toolbar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 24px; border-bottom: 1px solid var(--p-border);
-  position: sticky; top: 0; background: var(--p-bg); z-index: 5;
+/* Floating search */
+.search-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--p-panel); border: 1px solid var(--p-border);
+  border-radius: 10px; padding: 8px 12px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
-.toolbar-title { margin: 0; font-size: 18px; }
-.toolbar-controls { display: flex; gap: 10px; }
+.search-pill input { border: 0; outline: 0; background: transparent; color: var(--p-text); font-size: 13px; width: 220px; }
+.search-pill input::placeholder { color: var(--p-muted); }
+.search-count { font-size: 11px; color: var(--p-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* Segmented controls (used in the bottom dock + inspector tabs) */
 .seg { display: inline-flex; border: 1px solid var(--p-border); border-radius: 8px; overflow: hidden; }
 .seg button {
   border: 0; background: var(--p-panel); color: var(--p-text);
   padding: 6px 12px; font-size: 12px; cursor: pointer; text-transform: capitalize;
 }
 .seg button.on { background: var(--p-accent); color: var(--p-accent-text); }
-.content { padding: 24px; }
 .empty { color: var(--p-muted); }
-
-/* Token gallery */
-.token-group { margin-bottom: 18px; scroll-margin-top: 72px; }
-.group-header {
-  display: flex; align-items: center; gap: 8px; width: 100%;
-  background: none; border: 0; padding: 6px 0; cursor: pointer; color: inherit; text-align: left;
-}
-.chevron { font-size: 10px; color: var(--p-muted); transition: transform 0.12s ease; }
-.chevron.open { transform: rotate(90deg); }
-.group-title { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-muted); margin: 0; }
-.group-count { color: var(--p-muted); font-weight: 400; font-size: 12px; }
-.group-body { margin-top: 10px; }
 
 /* Color swatch grid-table: swatch + token name + color code per cell */
 .swatch-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
@@ -169,11 +155,9 @@ body {
 .req { color: var(--ds-semantic-color-text-error, #dc2626); margin-left: 2px; }
 .prop-type { color: var(--p-muted); font-family: ui-monospace, monospace; text-align: right; }
 
-/* Component canvas — Figma-like pannable/zoomable surface */
-.main.canvas-mode { height: 100vh; overflow: hidden; }
-.canvas-shell { display: flex; flex: 1; min-height: 0; }
+/* Canvas — Figma-like pannable/zoomable surface filling the viewport */
 .canvas-view {
-  position: relative; flex: 1; min-width: 0; overflow: hidden;
+  position: absolute; inset: 0; overflow: hidden;
   background-color: var(--p-bg);
   background-image: radial-gradient(circle, var(--p-border) 1px, transparent 1px);
   background-size: 22px 22px;
@@ -188,8 +172,9 @@ body {
   gap: 36px; padding: 8px;
 }
 
-/* Frames: floating label above a card, like a Figma frame */
-.cframe { cursor: pointer; max-width: 100%; }
+/* Frames: a floating label above a card, like a Figma frame */
+.cframe { max-width: 100%; }
+.cframe.selectable { cursor: pointer; }
 .cframe-label {
   display: flex; align-items: center; gap: 7px;
   padding: 0 2px 6px; font-size: 12px; color: var(--p-muted); user-select: none;
@@ -200,46 +185,40 @@ body {
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--p-muted); }
 .status-dot.status-stable { background: var(--ds-semantic-color-status-success-icon, #059669); }
 .cframe-body {
-  display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px;
   background: var(--p-canvas); border: 1px solid var(--p-border); border-radius: 12px;
-  padding: 14px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
 }
 .cframe.selected .cframe-body { outline: 2px solid var(--p-accent); outline-offset: 1px; }
-.cscenario { display: flex; flex-direction: column; gap: 5px; margin: 0; }
-.cscenario-stage {
+/* A component frame shows one representative render, centered. */
+.cframe.component .cframe-body {
   display: flex; align-items: center; justify-content: center;
-  min-width: 110px; min-height: 60px; padding: 16px;
-  border: 1px dashed transparent; border-radius: 9px;
+  min-width: 160px; min-height: 92px; padding: 28px;
 }
-.cscenario:hover .cscenario-stage { border-color: var(--p-border); }
-.cscenario.on .cscenario-stage { border-color: var(--p-accent); }
-.cscenario-name { font-size: 10px; color: var(--p-muted); text-align: center; user-select: none; }
+.cframe.component:hover .cframe-body { border-color: var(--p-accent); }
+/* A token frame holds a section node at a fixed width so inner grids wrap. */
+.cframe.token .cframe-body { padding: 16px; }
+.token-frame { width: 600px; max-width: 78vw; }
 
 /* Floating canvas overlays */
 .canvas-overlay { position: absolute; z-index: 4; }
-.canvas-search {
-  top: 14px; left: 14px;
-  display: flex; align-items: center; gap: 8px;
-  background: var(--p-panel); border: 1px solid var(--p-border); border-radius: 10px;
-  padding: 7px 12px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-}
-.canvas-search input { border: 0; outline: 0; background: transparent; color: var(--p-text); font-size: 13px; width: 230px; }
-.canvas-search input::placeholder { color: var(--p-muted); }
-.canvas-search-count { font-size: 11px; color: var(--p-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.canvas-dock-bottom { bottom: 16px; left: 16px; display: flex; align-items: center; gap: 10px; }
 .canvas-zoom {
-  bottom: 14px; right: 14px;
   display: inline-flex; align-items: stretch;
   background: var(--p-panel); border: 1px solid var(--p-border); border-radius: 10px;
-  overflow: hidden; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
-.canvas-zoom button { border: 0; background: transparent; color: var(--p-text); padding: 6px 11px; font-size: 13px; cursor: pointer; }
+.canvas-zoom button { border: 0; background: transparent; color: var(--p-text); padding: 7px 11px; font-size: 13px; cursor: pointer; }
 .canvas-zoom button:hover { background: var(--p-chip); }
 .canvas-zoom-pct { min-width: 56px; font-size: 12px !important; font-variant-numeric: tabular-nums; color: var(--p-muted) !important; }
+/* The bottom-dock segmented controls get the same floating-panel shadow. */
+.canvas-dock-bottom .seg { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); }
 
-/* Inspector — right sidebar for the selected component */
+/* Inspector — floating panel on the right for the selected component */
 .inspector {
-  width: 360px; flex: none; min-height: 0; overflow-y: auto;
-  border-left: 1px solid var(--p-border); background: var(--p-panel);
+  position: absolute; top: 16px; right: 16px; bottom: 16px; z-index: 10;
+  width: 340px; overflow-y: auto;
+  border: 1px solid var(--p-border); border-radius: 14px; background: var(--p-panel);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
   padding: 16px; display: flex; flex-direction: column; gap: 12px;
 }
 .inspector-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }

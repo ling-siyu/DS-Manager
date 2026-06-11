@@ -3,7 +3,7 @@ import type { PreviewComponent, SecuraMarkComponent as SMComponent } from '../ty
 import type { Theme } from '../App';
 import LiveRender from './LiveRender';
 import type { Source } from './LiveRender';
-import { scenariosOf } from './ComponentCanvas';
+import { scenariosOf } from './Canvas';
 
 // Right-hand inspector for the selected canvas component: variations + props,
 // or a device-width viewport rendering the component responsively.

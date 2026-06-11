@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { data } from './data';
-import ComponentCanvas from './components/ComponentCanvas';
-import { getSections, SectionList } from './tokens/sections';
+import Canvas, { scenariosOf } from './components/Canvas';
+import type { CanvasFrame } from './components/Canvas';
+import LiveRender from './components/LiveRender';
+import Inspector from './components/Inspector';
+import { getSections } from './tokens/sections';
 import IconSetGrid from './tokens/IconSetGrid';
 import { CATEGORIES, categoryOf } from './lib/tokenKind';
 import type { TokenCategory } from './lib/tokenKind';
+import type { PreviewComponent, SecuraMarkComponent as SMComponent } from './types';
 
 export type Theme = 'light' | 'dark';
 type Source = 'securamark' | 'dsm';
@@ -20,7 +24,9 @@ export default function App() {
   const [route, setRoute] = useState<Route>(routeFromHash());
   const [source, setSource] = useState<Source>('securamark');
   const [theme, setTheme] = useState<Theme>('light');
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [query, setQuery] = useState('');
+  const [selectedName, setSelectedName] = useState<string | null>(null);
+  const [scenarioIdx, setScenarioIdx] = useState(0);
 
   useEffect(() => {
     const onHash = () => setRoute(routeFromHash());
@@ -28,10 +34,17 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
+  // Clear search + selection whenever the content set changes.
+  useEffect(() => {
+    setQuery('');
+    setSelectedName(null);
+  }, [route, source]);
+
   const isToken = route !== 'components';
   const tokens = data.tokenSets[source];
   const componentList = source === 'securamark' ? (data.securamark?.components ?? []) : data.components;
   const iconWeight = data.icons?.securamark?.style?.weight ?? 'light';
+
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
     for (const t of tokens) {
@@ -54,59 +67,67 @@ export default function App() {
     return base;
   }, [isToken, tokens, route, theme, source, iconCapture]);
 
-  const toggle = (id: string) =>
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+  // Build canvas frames for the active route, filtered by the search query.
+  const frames = useMemo<CanvasFrame[]>(() => {
+    const q = query.trim().toLowerCase();
+    if (!isToken) {
+      return componentList
+        .filter((c) => !q || c.name.toLowerCase().includes(q) || (c.description ?? '').toLowerCase().includes(q))
+        .map((c: PreviewComponent | SMComponent) => ({
+          id: c.name,
+          label: c.name,
+          variant: 'component' as const,
+          status: c.status,
+          selectable: true,
+          node: (
+            <LiveRender
+              component={c}
+              source={source}
+              iconWeight={iconWeight}
+              scenarioProps={scenariosOf(c)[0].props}
+              resetKey={`canvas:${source}:${c.name}`}
+            />
+          ),
+        }));
+    }
+    return sections
+      .filter((s) => !q || s.title.toLowerCase().includes(q))
+      .map((s) => ({
+        id: s.id,
+        label: s.title,
+        variant: 'token' as const,
+        count: s.count,
+        selectable: false,
+        node: <div className="token-frame">{s.node}</div>,
+      }));
+  }, [isToken, componentList, sections, source, iconWeight, query]);
 
-  const goToSection = (id: string) => {
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      next.delete(id); // expand before scrolling
-      return next;
-    });
-    setTimeout(() => document.getElementById(`sec-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+  const total = isToken ? sections.length : componentList.length;
+  const selected = useMemo(
+    () => (isToken ? null : componentList.find((c) => c.name === selectedName) ?? null),
+    [isToken, componentList, selectedName],
+  );
+
+  const onSelect = (id: string | null) => {
+    setSelectedName(id);
+    setScenarioIdx(0);
   };
 
-  const title = route === 'components' ? 'Components' : CATEGORIES.find((c) => c.id === route)?.label;
+  const navItems: { id: Route; label: string }[] = [
+    { id: 'components', label: 'Components' },
+    ...CATEGORIES.map((c) => ({ id: c.id as Route, label: c.label })),
+  ];
 
   return (
     <div className="app" data-theme={theme}>
-      <aside className="sidebar">
-        <div className="brand">DSM Preview</div>
-        <nav>
-          <a href="#/components" className={`nav-item${route === 'components' ? ' active' : ''}`}>
-            <span>Components</span>
-            <span className="nav-count">{componentList.length}</span>
-          </a>
-          <div className="nav-label">Tokens</div>
-          {CATEGORIES.map((c) => (
-            <div key={c.id}>
-              <a href={`#/${c.id}`} className={`nav-item${route === c.id ? ' active' : ''}`}>
-                <span>{c.label}</span>
-                <span className="nav-count">{counts[c.id] ?? 0}</span>
-              </a>
-              {route === c.id && sections.length > 0 && (
-                <div className="nav-children">
-                  {sections.map((s) => (
-                    <button key={s.id} className="nav-child" onClick={() => goToSection(s.id)}>
-                      {s.title}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </nav>
-        <div className="sidebar-foot">Milestone 1 · foundation</div>
-      </aside>
-
-      <main className={`main${route === 'components' ? ' canvas-mode' : ''}`}>
-        <header className="toolbar">
-          <h1 className="toolbar-title">{title}</h1>
-          <div className="toolbar-controls">
+      <Canvas
+        frames={frames}
+        selectedId={selected?.name ?? null}
+        onSelect={onSelect}
+        theme={theme}
+        resetKey={`${route}:${source}`}
+        controls={
+          <>
             <div className="seg" role="group" aria-label="Source">
               {(['securamark', 'dsm'] as Source[]).map((s) => (
                 <button key={s} className={source === s ? 'on' : ''} onClick={() => setSource(s)}>
@@ -121,22 +142,46 @@ export default function App() {
                 </button>
               ))}
             </div>
-          </div>
-        </header>
+          </>
+        }
+      />
 
-        {route === 'components' ? (
-          <ComponentCanvas
-            components={componentList}
-            source={source}
-            iconWeight={iconWeight}
-            theme={theme}
+      <div className="dock dock-top">
+        <nav className="nav-panel">
+          <div className="brand">DSM</div>
+          {navItems.map((it) => (
+            <a key={it.id} href={`#/${it.id}`} className={`nav-item${route === it.id ? ' active' : ''}`}>
+              <span>{it.label}</span>
+              <span className="nav-count">{it.id === 'components' ? componentList.length : counts[it.id] ?? 0}</span>
+            </a>
+          ))}
+        </nav>
+
+        <div className="search-pill">
+          <input
+            type="search"
+            placeholder={`Search ${total} ${isToken ? 'groups' : 'components'}…`}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') { setQuery(''); e.currentTarget.blur(); } }}
+            aria-label="Search"
           />
-        ) : (
-          <div className="content">
-            <SectionList sections={sections} collapsed={collapsed} onToggle={toggle} />
-          </div>
-        )}
-      </main>
+          {query && <span className="search-count">{frames.length}/{total}</span>}
+        </div>
+      </div>
+
+      {selected && (
+        <Inspector
+          key={`${source}:${selected.name}`}
+          component={selected}
+          source={source}
+          iconWeight={iconWeight}
+          theme={theme}
+          scenarioIdx={scenarioIdx}
+          onScenarioChange={setScenarioIdx}
+          onClose={() => setSelectedName(null)}
+        />
+      )}
     </div>
   );
 }
