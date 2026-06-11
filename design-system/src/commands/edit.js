@@ -19,23 +19,16 @@ import {
 } from '../utils/edit-session.js';
 import { captureShots } from '../utils/render-shots.js';
 import { diffShotDirs } from '../utils/shot-diff.js';
-import {
-  applyEdits,
-  buildFileContext,
-  buildSystemContext,
-  createClient,
-  DEFAULT_MODEL,
-  proposeEdits,
-  shotPairs,
-  verifyShots,
-} from '../utils/ai-engine.js';
 import * as git from '../utils/git.js';
 
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
 // The agent-facing CLI for the gated edit loop. Every subcommand supports
 // --json (machine-readable result on stdout, exit code 0/1) — that is the
-// contract an AI agent drives. See docs/phase-4-spec.md.
+// contract the driving agent (Claude Code, or any MCP/CLI agent) follows. The
+// agent is the brain: it proposes edits with its own tools and judges the
+// before/after screenshots with its own vision — no model API key in the loop.
+// See docs/phase-4-spec.md.
 
 function emit(result, options, humanRender) {
   if (options.json) {
@@ -95,197 +88,10 @@ function toTargets(components) {
   }));
 }
 
-/**
- * The full embedded loop: NL instruction → AI-proposed edits → apply (scope-
- * enforced) → typecheck/token gate (with failure feedback iterations) →
- * before/after screenshots → pixel diff → AI vision verdict → human gate.
- */
-async function runEditLoop(instruction, options, log) {
-  const paths = gatedPaths();
-  const result = {
-    ok: false, instruction, model: options.model,
-    session: null, autoStarted: false, iterations: [],
-    check: null, diff: null, verdict: null, approved: null, nextSteps: null,
-  };
-
-  // 0. Fail fast on bad inputs — before any session or screenshots.
-  const client = await createClient();
-  const maxIterations = Number.parseInt(options.maxIterations ?? '3', 10);
-  if (!Number.isInteger(maxIterations) || maxIterations < 1) {
-    throw new Error(`--max-iterations must be a positive integer (got "${options.maxIterations}")`);
-  }
-
-  // 1. Session (auto-start when none is active — the gate must always hold).
-  let session = loadSession(sessionRoot(paths));
-  if (!session) {
-    session = startSession(paths, {});
-    result.autoStarted = true;
-  }
-  result.session = session.id;
-  const dir = artifactDir(session.repoRoot, session);
-
-  try {
-    return await runEditLoopInner(instruction, options, log, { paths, client, session, dir, result, maxIterations });
-  } catch (error) {
-    // An auto-started session with zero changes is pure residue — clean it up
-    // so the failure doesn't block the next run or `dsm edit start`.
-    if (result.autoStarted && !changedFiles(session).all.length) abandonSession(session);
-    throw error;
-  }
-}
-
-async function runEditLoopInner(instruction, options, log, { paths, client, session, dir, result, maxIterations }) {
-
-  // 2. Components to stage: explicit override, else every registered component
-  //    (affected-inference needs edits to exist; before-shots can't wait).
-  const registry = JSON.parse(readFileSync(paths.componentsPath, 'utf8'));
-  const componentNames = options.component?.length
-    ? options.component
-    : (registry.components ?? []).map((c) => c.name);
-  const components = affectedComponents(paths, session, componentNames);
-
-  // 3. Before-shots.
-  log(`shooting "before" (${components.length} components)…`);
-  await captureShots(paths, toTargets(components), join(dir, 'shots', 'before'), { onLog: log });
-
-  // 4. Propose → apply → check, feeding failures back. The system context is
-  //    cached across iterations; file contents are re-read each round.
-  const system = buildSystemContext(paths);
-  let feedback = null;
-  let checkResult = null;
-  let everApplied = false;
-
-  for (let i = 1; i <= maxIterations; i += 1) {
-    log(`iteration ${i}/${maxIterations}: asking ${options.model} for edits…`);
-    const proposal = await proposeEdits(client, {
-      model: options.model,
-      system,
-      files: buildFileContext(paths),
-      instruction,
-      feedback,
-    });
-    const iteration = { proposalNotes: proposal.notes, edits: proposal.edits.length, applied: 0, failed: [], check: null };
-    result.iterations.push(iteration);
-
-    if (!proposal.edits.length) {
-      result.nextSteps = `Model proposed no edits: ${proposal.notes}`;
-      if (result.autoStarted && !changedFiles(session).all.length) abandonSession(session);
-      return result;
-    }
-
-    const { applied, failed } = applyEdits(proposal.edits, {
-      repoRoot: session.repoRoot,
-      scope: session.effectiveScope,
-    });
-    iteration.applied = applied.length;
-    iteration.failed = failed;
-    if (applied.length) everApplied = true;
-    if (failed.length) {
-      feedback = `Some edits could not be applied:\n${failed.map((f) => `- ${f.file}: ${f.reason}`).join('\n')}`;
-      log(`  ${failed.length} edits failed to apply — feeding back`);
-      continue;
-    }
-
-    log(`  ${applied.length} edits applied — running check…`);
-    checkResult = await checkSession(paths, session);
-    iteration.check = checkResult.ok ? 'ok' : 'failed';
-    if (checkResult.ok) break;
-
-    const diagnostics = [
-      ...checkResult.typecheck.filter((d) => d.category === 'error')
-        .map((d) => `- ${d.file}:${d.line} TS${d.code} ${d.message}`),
-      ...(checkResult.tokens?.unresolvedRefs ?? []).map((u) => `- unresolved token ref ${u.value} at ${u.path}`),
-      ...(checkResult.tokens && checkResult.tokens.parse !== 'ok' ? [`- tokens.json parse error: ${checkResult.tokens.parse}`] : []),
-    ].join('\n');
-    feedback = `Your edits were applied but the check failed:\n${diagnostics}\nPropose corrected edits (files below reflect your changes).`;
-    log('  check failed — feeding diagnostics back');
-  }
-
-  result.check = checkResult;
-  if (!checkResult?.ok) {
-    result.nextSteps = everApplied
-      ? 'Check never passed within the iteration budget. Inspect with `dsm edit status` / `dsm edit diff`, then `dsm edit revert` (or fix manually and `dsm edit approve`).'
-      : 'No edits could be applied within the iteration budget (see iterations[].failed). The working tree is unchanged.';
-    if (!everApplied && result.autoStarted) abandonSession(session);
-    return result;
-  }
-
-  // 5. After-shots + diff.
-  log('shooting "after"…');
-  await captureShots(paths, toTargets(components), join(dir, 'shots', 'after'), { onLog: log });
-  const patch = git.diffText(session.repoRoot, session.baseRef, session.effectiveScope);
-  writeFileSync(join(dir, 'diff.patch'), patch);
-  const report = diffShotDirs(join(dir, 'shots', 'before'), join(dir, 'shots', 'after'), join(dir, 'shots', 'diff'));
-  writeFileSync(join(dir, 'diff-report.json'), `${JSON.stringify(report, null, 2)}\n`);
-  result.diff = {
-    patchFile: join(dir, 'diff.patch'),
-    pairs: report.pairs.map((p) => ({ shot: p.shot, changedPct: p.changedPct })),
-  };
-
-  // 6. Vision verdict.
-  if (options.verify !== false) {
-    log('vision verify: judging before/after screenshots…');
-    const changedPairs = shotPairs(report, dir).filter((p) => p.changedPct > 0 || report.pairs.length <= 3);
-    result.verdict = await verifyShots(client, {
-      model: options.model,
-      instruction,
-      pairs: changedPairs.length ? changedPairs : shotPairs(report, dir),
-    });
-  }
-
-  // 7. Human gate: auto-approve only with --yes AND a satisfied verdict.
-  if (options.yes && result.verdict?.satisfied) {
-    const approved = approveSession(paths, session, `${instruction}\n\nAI edit via dsm edit run (${options.model}); vision-verified.`);
-    result.approved = approved.commit;
-  } else {
-    result.nextSteps = 'Session left open for review: inspect the shots/diff above, then `dsm edit approve -m "…"` or `dsm edit revert`.';
-  }
-
-  result.ok = true;
-  return result;
-}
-
 export function registerEditCommand(program) {
   const edit = program
     .command('edit')
     .description('Git-gated edit sessions: the deterministic core of the AI edit loop');
-
-  edit
-    .command('run')
-    .description('Embedded AI loop: NL instruction → edits → check → screenshots → vision verdict → gate')
-    .argument('<instruction>', 'Natural-language design instruction')
-    .option('--model <id>', 'Anthropic model id', DEFAULT_MODEL)
-    .option('--component <name...>', 'Limit screenshots to these components (default: all registered)')
-    .option('--max-iterations <n>', 'Propose/apply/check attempts', '3')
-    .option('--no-verify', 'Skip the AI vision verdict')
-    .option('--yes', 'Auto-approve when the vision verdict is satisfied')
-    .option('--json', 'Machine-readable output')
-    .action(async (instruction, options) => {
-      try {
-        const log = options.json ? () => {} : (m) => console.log(chalk.dim(`  ${m}`));
-        const result = await runEditLoop(instruction, options, log);
-        emit(result, options, (r) => {
-          console.log();
-          if (r.verdict) {
-            const mark = r.verdict.satisfied ? chalk.green('✓ satisfied') : chalk.red('✗ not satisfied');
-            console.log(`${chalk.bold('Vision verdict:')} ${mark}`);
-            console.log(`  ${r.verdict.summary}`);
-            for (const issue of r.verdict.issues) console.log(chalk.yellow(`  ⚠ ${issue}`));
-          }
-          if (r.diff) {
-            console.log(`${chalk.bold('Visual diff:')}`);
-            for (const p of r.diff.pairs) console.log(`  ${p.shot}  ${p.changedPct}%`);
-            console.log(`  patch: ${r.diff.patchFile}`);
-          }
-          if (r.approved) console.log(chalk.green(`\n✓ approved → commit ${r.approved.slice(0, 12)}`));
-          if (r.nextSteps) console.log(chalk.cyan(`\n${r.nextSteps}`));
-          console.log();
-        });
-        if (!result.ok) process.exit(1);
-      } catch (error) {
-        fail(error, options);
-      }
-    });
 
   edit
     .command('start')

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "dsm": {
+      "command": "node",
+      "args": ["design-system/bin/dsm.js", "serve"]
+    }
+  }
+}

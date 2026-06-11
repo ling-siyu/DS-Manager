@@ -27,7 +27,6 @@
     "test": "node --test test/*.test.js"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.104.1",
     "@fontsource/aleo": "^5.2.7",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/m-plus-code-latin": "^5.2.8",

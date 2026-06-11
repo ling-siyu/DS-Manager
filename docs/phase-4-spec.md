@@ -1,11 +1,21 @@
-# Phase 4.1 — The gated edit loop (agent contract)
+# Phase 4 — The gated edit loop (agent contract)
 
-`dsm` ships the deterministic, git-gated primitives of the AI edit loop. The AI
-brain is an external agent (Claude Code or any MCP/CLI-capable agent) that
-proposes code edits and judges screenshots with its own vision. Every mutation
-is gated: it happens inside a session pinned to a base commit and a path scope,
-and ends in exactly one of **approve** (pathspec commit), **revert** (restore to
-base), or **abandon** (keep working tree, end session).
+`dsm` ships the deterministic, git-gated primitives of the AI edit loop. **The
+brain is the coding agent you are already in** — Claude Code, or any MCP/CLI
+agent (Codex, etc.) — which proposes code edits with its own tools and judges
+the screenshots with its own vision. **No model API key is ever used**: the
+intelligence is the agent session itself (e.g. a Claude Pro/Max subscription
+driving Claude Code), not a separate per-token API bill. `dsm` is the
+deterministic substrate; the agent is the loop driver.
+
+Every mutation is gated: it happens inside a session pinned to a base commit and
+a path scope, and ends in exactly one of **approve** (pathspec commit),
+**revert** (restore to base), or **abandon** (keep working tree, end session).
+
+The one-command entry point for Claude Code is the **`/dsm-edit` skill**
+(`.claude/commands/dsm-edit.md`), which encodes the recipe below so the user can
+just say `/dsm-edit make the buttons pill-shaped`. The same loop is available to
+any agent over MCP (`dsm serve`) — see § Driving from an agent.
 
 ## The loop
 
@@ -89,36 +99,35 @@ session scope. rgb()/hsl()/Tailwind-arbitrary violations remain report-only
 - MCP `edit_render` can take 10–30s (Vite + Chrome boot) — call it with patience,
   not retries.
 
-## `dsm edit run "<instruction>"` — the embedded engine (Phase 4.2)
+## Driving from an agent (no API key)
 
-The full loop in one command, with the AI inside the product:
+The agent **is** the brain — it never calls a model API. Two interfaces:
 
-```
-dsm edit run "make all buttons pill-shaped" [--model id] [--component n…]
-             [--max-iterations 3] [--no-verify] [--yes] [--json]
-```
+**Claude Code — the `/dsm-edit` skill.** `.claude/commands/dsm-edit.md` encodes
+the full recipe: the user types `/dsm-edit <instruction>`, and Claude Code runs
+`start` → `render --label before` → makes the edits itself (tokens-first) with
+its own Edit/Write tools → `check` (fixing on failure) → `render --label after`
+→ `diff` → **Reads the before/after/diff PNGs with its own vision** → presents
+the verdict + screenshots → on the user's say-so, `approve` or `revert`. The
+intelligence is the Claude Code session; `dsm` only runs the gates and renders.
 
-1. Fails fast without `ANTHROPIC_API_KEY` (the deterministic subcommands never
-   need it). Auto-starts a session when none is active — the git gate always holds.
-2. Before-shots of the targeted components (default: all registered).
-3. Iterates propose → apply → check (max `--max-iterations`): the model receives
-   a cached system context (engine rules + resolved token reference) plus the
-   current file contents each round; it returns structured search/replace edits
-   (JSON schema enforced). Apply is **scope-enforced** (an edit outside the
-   session scope is rejected and fed back); check failures (type errors,
-   unresolved token refs, parse errors) are fed back verbatim.
-4. After-shots → pixel diff → **vision verdict**: the model judges the labelled
-   before/after pairs against the instruction (`{satisfied, summary, issues[]}`,
-   ≤6 pairs per call).
-5. Human gate unchanged: the session stays open for `approve`/`revert` review;
-   `--yes` auto-approves only when the verdict is satisfied.
+**Any MCP agent — `dsm serve`.** The same operations are MCP tools
+(`edit_start`, `edit_render`, `edit_check`, `edit_diff`, `edit_approve`, …, plus
+`scan_fix`). The driving agent calls the tools and **reads the returned PNG
+paths itself** to form the visual verdict. Register it in Claude Code via the
+repo's `.mcp.json` (`dsm serve`) — see `docs/mcp-setup.md`. Codex and other
+MCP-capable agents drive the identical contract; nothing in the loop is
+Claude-Code-specific.
 
-Engine model defaults to `claude-fable-5` (override `--model` / `DSM_MODEL`).
-API usage notes: adaptive thinking, structured outputs via `output_config.format`,
-streaming for proposals, prompt caching on the system block.
+The brain contract, in full: **call the tools in order, make the edits, Read the
+shot PNGs, decide approve vs revert.** That is all an agent needs to implement.
 
 ## Deferred (next slices)
 
 Editing other repos via sandbox branches; preview Review page reading session
-artifacts; rgb/hsl auto-fix; `edit_run` as an MCP tool (long-running — needs
-progress streaming).
+artifacts; rgb/hsl auto-fix.
+
+> A standalone, API-key-driven engine (`dsm edit run`) was prototyped and then
+> removed: the tool targets subscription use through a coding agent (Claude Code
+> today, others via MCP), so the agent is always the brain and a separate
+> per-token API path was off-strategy.

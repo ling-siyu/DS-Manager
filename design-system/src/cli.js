@@ -120,7 +120,7 @@ program
 
 program
   .command('serve')
-  .description('Start the MCP server (stdio) exposing get_token, list_components, validate_file')
+  .description('Start the MCP server (stdio): get_token, list_components, validate_file + the gated edit loop (edit_start/status/check/render/diff/approve/revert/abandon, scan_fix)')
   .action(serveCommand);
 
 program

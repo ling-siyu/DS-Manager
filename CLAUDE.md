@@ -37,13 +37,14 @@ smoke-test that it can consume DSM output. Captured target data lives in this re
   approve|revert|abandon`, all `--json`; mirrored as MCP tools in `dsm serve`): git-gated
   sessions → typecheck/token validation → stage screenshots (puppeteer-core + installed
   Chrome, `#/stage/` route) → pixel diffs → approve(pathspec commit)/revert. Plus
-  `dsm scan --fix` (unambiguous hex→token). The AI brain is the driving agent (vision
-  verdict from the PNGs). **Contract: `docs/phase-4-spec.md`.** Artifacts: `.dsm-edit/`.
-- **Phase 4.2 — DONE.** The **embedded engine**: `dsm edit run "<NL instruction>"` runs the
-  whole loop inside the product (Anthropic API: structured-output edit proposals with
-  check-failure feedback iterations, scope-enforced apply, vision verdict on before/after
-  shots; default model `claude-fable-5`, needs `ANTHROPIC_API_KEY`). Human gate unchanged
-  (`--yes` auto-approves only on a satisfied verdict).
+  `dsm scan --fix` (unambiguous hex→token). **The brain is the coding agent you're already
+  in** (Claude Code, or any MCP agent) — it makes the edits with its own tools and judges the
+  PNGs with its own vision. **No model API key, ever** (the intelligence is the subscription-
+  backed agent session, not a per-token API bill). One-command entry for Claude Code: the
+  **`/dsm-edit` skill**; MCP setup in `docs/mcp-setup.md`. **Contract: `docs/phase-4-spec.md`.**
+  Artifacts: `.dsm-edit/`.
+  *(An API-key engine `dsm edit run` was prototyped then removed — off-strategy: the tool is
+  for subscription use through a coding agent, so the agent is always the brain.)*
 
 ## Phased plan (milestone-first: validate the two hard upgrades before the UI)
 
@@ -63,10 +64,11 @@ smoke-test that it can consume DSM output. Captured target data lives in this re
    app); rebuild on Vite + React 19 (matches SecuraMark). Token galleries, component matrix
    (uses the existing `previewProps`/`previewScenarios` schema in `components.json`),
    dark/light, viewports. **🎯 Milestone 1: SecuraMark's real tokens + components render here.**
-4. **The AI loop** — NL → AST edit → type-check → render → screenshot → vision-verify →
-   before/after diff → approve-commit / revert. **4.1 ✅** (deterministic gated primitives +
-   `scan --fix`, agent-driven — see `docs/phase-4-spec.md`). *Next:* embedded API engine
-   (`dsm edit "<NL>"`), sandbox-branch editing of targets, preview Review page.
+4. **The AI loop** ✅ — NL → edit → type-check → render → screenshot → vision-verify →
+   before/after diff → approve-commit / revert. Deterministic gated primitives + `scan --fix`,
+   **agent-driven, no API key** (the coding agent is the brain; `/dsm-edit` skill + MCP) — see
+   `docs/phase-4-spec.md`. *Next:* sandbox-branch editing of targets, preview Review page over
+   `.dsm-edit/` artifacts, rgb/hsl `--fix`.
 
 ## Dev environment notes
 
