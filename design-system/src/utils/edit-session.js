@@ -3,7 +3,7 @@ import { join, relative, resolve, sep } from 'path';
 import * as git from './git.js';
 import { loadRawTokens, flattenTokens, resolveReference } from './tokens.js';
 import { runBuild } from '../commands/build.js';
-import { typecheckFiles } from './typecheck.js';
+import { typecheckFiles, typecheckTargetChanges } from './typecheck.js';
 
 // Git-gated edit sessions: the deterministic core of the AI edit loop.
 // A session pins a baseRef and a scope; every mutation the loop later commits
@@ -174,6 +174,39 @@ export function sessionStatus(paths, session) {
   };
 }
 
+/** Locate an external target's tsconfig (flat config; common Vite variants). */
+function targetTsconfig(root) {
+  for (const name of ['tsconfig.json', 'tsconfig.app.json']) {
+    const p = join(root, name);
+    if (existsSync(p)) return p;
+  }
+  return null;
+}
+
+/**
+ * Type-check an external target's changed files. STRICT against the target's own
+ * tsconfig (aliases, strict mode) when one exists, reporting only edit-introduced
+ * errors (baseRef-vs-current diff); degrades to parse-only if there's no tsconfig
+ * or the program fails to load (never blocks the gate on tooling failure).
+ */
+function checkExternalTypes(root, session, changes, sourceFiles) {
+  const tsConfigFilePath = targetTsconfig(root);
+  if (!tsConfigFilePath) return typecheckFiles(sourceFiles, { lenient: true });
+
+  const baseTextByFile = new Map();
+  for (const rel of changes.all) {
+    if (!/\.(ts|tsx)$/.test(rel) || rel.endsWith('.d.ts')) continue;
+    const abs = join(root, rel);
+    if (!existsSync(abs)) continue; // deleted in working tree — nothing to check
+    baseTextByFile.set(abs, git.showFileAtRef(root, session.baseRef, rel) ?? '');
+  }
+  try {
+    return typecheckTargetChanges({ tsConfigFilePath, files: sourceFiles, baseTextByFile }).introduced;
+  } catch {
+    return typecheckFiles(sourceFiles, { lenient: true });
+  }
+}
+
 /** Unresolved-{ref} validation: clearer than letting Style Dictionary throw. */
 function validateTokenRefs(tokensPath) {
   const flat = flattenTokens(loadRawTokens(tokensPath));
@@ -204,8 +237,11 @@ export async function checkSession(paths, session) {
     .map((f) => join(root, f))
     .filter((f) => existsSync(f));
   if (sourceFiles.length) {
-    // External targets: parse-only (we don't load their strict tsconfig/aliases).
-    result.typecheck = typecheckFiles(sourceFiles, { lenient: !!session.external });
+    // External targets: strict against the target's own tsconfig, but only failing
+    // on edit-introduced errors (parse-only fallback if no tsconfig). DSM: as before.
+    result.typecheck = session.external
+      ? checkExternalTypes(root, session, changes, sourceFiles)
+      : typecheckFiles(sourceFiles);
     if (result.typecheck.some((d) => d.category === 'error')) result.ok = false;
   }
 

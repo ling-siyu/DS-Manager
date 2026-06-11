@@ -195,13 +195,23 @@ test('approve refuses when HEAD drifted past the session base', () => {
 // out on the sandbox branch. `paths` still describe DSM's own repo (the render /
 // registry source of truth); the session's git root is the target.
 
-function makeTargetRepo({ branch = 'dsm-experiment' } = {}) {
+function makeTargetRepo({ branch = 'dsm-experiment', tsconfig = false, buttonText } = {}) {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'dsm-target-')));
   gitIn(root, 'init', '-b', 'master');
   gitIn(root, 'config', 'user.email', 'test@dsm.local');
   gitIn(root, 'config', 'user.name', 'DSM Test');
   mkdirSync(join(root, 'src/components/ui'), { recursive: true });
-  writeFileSync(join(root, 'src/components/ui/Button.tsx'), 'export const Button = () => null;\n');
+  writeFileSync(join(root, 'src/components/ui/Button.tsx'), buttonText ?? 'export const Button = () => null;\n');
+  if (tsconfig) {
+    // Flat strict config like SecuraMark's (Bundler resolution, strict mode).
+    writeFileSync(join(root, 'tsconfig.json'), JSON.stringify({
+      compilerOptions: {
+        target: 'ES2022', module: 'ESNext', moduleResolution: 'Bundler',
+        jsx: 'react-jsx', strict: true, noEmit: true, skipLibCheck: true,
+      },
+      include: ['src'],
+    }, null, 2));
+  }
   gitIn(root, 'add', '-A');
   gitIn(root, 'commit', '-m', 'initial');
   if (branch !== 'master') gitIn(root, 'checkout', '-b', branch);
@@ -249,7 +259,7 @@ test('external target session requires an explicit --scope (no design-system/ de
   }
 });
 
-test('external session: scoped to the target repo, lenient check, approve commits on the sandbox branch', async () => {
+test('external session: scoped to the target repo, approve commits on the sandbox branch', async () => {
   const { root, paths } = makeTargetRepo();
   try {
     const session = startSession(paths, {
@@ -264,10 +274,10 @@ test('external session: scoped to the target repo, lenient check, approve commit
     assert.equal(session.tokensInScope, false);
     assert.deepEqual(session.effectiveScope, ['src/components/ui/Button.tsx'], 'no build/ extension for a target');
 
-    // Valid syntax but a type error → lenient (parse-only) check still passes.
+    // No tsconfig in this repo → parse-only fallback: a type error doesn't block.
     writeFileSync(join(root, 'src/components/ui/Button.tsx'), 'export const n: number = "still parses";\n');
     const check = await checkSession(paths, session);
-    assert.equal(check.ok, true, 'lenient check ignores semantic/type errors');
+    assert.equal(check.ok, true, 'parse-only fallback ignores semantic/type errors');
     assert.equal(check.tokens, null, 'token validation skipped for an external target');
 
     const result = approveSession(paths, session, 'sandbox edit');
@@ -275,6 +285,48 @@ test('external session: scoped to the target repo, lenient check, approve commit
     assert.deepEqual(result.files, ['src/components/ui/Button.tsx']);
     assert.equal(git.currentBranch(root), 'dsm-experiment', 'commit landed on the sandbox branch');
     assert.equal(loadSession(root), null, 'session ended');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('external strict check: an edit-introduced type error FAILS the gate (target tsconfig)', async () => {
+  const { root, paths } = makeTargetRepo({ tsconfig: true });
+  try {
+    const session = startSession(paths, { target: 'securamark', targetRoot: root, scope: ['src/components/ui/Button.tsx'] });
+    writeFileSync(join(root, 'src/components/ui/Button.tsx'), 'export const n: number = "type error";\n');
+    const check = await checkSession(paths, session);
+    assert.equal(check.ok, false, 'strict check catches the new type error');
+    assert.ok(check.typecheck.some((d) => d.category === 'error' && /number/.test(d.message)));
+    abandonSession(session);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('external strict check: a PRE-EXISTING type error is NOT blamed on the edit', async () => {
+  // The committed file already has a type error; the edit only appends a valid line.
+  const { root, paths } = makeTargetRepo({ tsconfig: true, buttonText: 'export const n: number = "preexisting";\n' });
+  try {
+    const session = startSession(paths, { target: 'securamark', targetRoot: root, scope: ['src/components/ui/Button.tsx'] });
+    writeFileSync(join(root, 'src/components/ui/Button.tsx'), 'export const n: number = "preexisting";\nexport const ok = 1;\n');
+    const check = await checkSession(paths, session);
+    assert.equal(check.ok, true, 'baseRef-vs-current diff suppresses the pre-existing error');
+    abandonSession(session);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('external strict check: a clean, well-typed edit PASSES', async () => {
+  const { root, paths } = makeTargetRepo({ tsconfig: true });
+  try {
+    const session = startSession(paths, { target: 'securamark', targetRoot: root, scope: ['src/components/ui/Button.tsx'] });
+    writeFileSync(join(root, 'src/components/ui/Button.tsx'), 'export const Button = () => 42;\n');
+    const check = await checkSession(paths, session);
+    assert.equal(check.ok, true, 'no introduced errors');
+    assert.deepEqual(check.typecheck, []);
+    abandonSession(session);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

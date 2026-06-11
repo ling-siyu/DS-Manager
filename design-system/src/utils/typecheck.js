@@ -86,3 +86,55 @@ export function typecheckFiles(absPaths, options = {}) {
   }
   return diagnostics;
 }
+
+/** Full semantic+syntactic diagnostics for the wanted files in a loaded project. */
+function diagnosticsForFiles(project, wanted) {
+  const out = [];
+  for (const sf of project.getSourceFiles()) {
+    if (!wanted.has(sf.getFilePath())) continue;
+    for (const diag of sf.getPreEmitDiagnostics()) {
+      out.push(toRecord(diag, sf));
+    }
+  }
+  return out;
+}
+
+// Fingerprint a diagnostic for set-membership, ignoring line (edits shift lines).
+const fingerprint = (d) => `${d.file}::${d.code}::${d.message}`;
+
+/**
+ * STRICT type-check of an external target's changed files against its OWN tsconfig
+ * (real aliases, strict mode), reporting only diagnostics the edit INTRODUCED.
+ *
+ * Loads the target's program once; collects diagnostics for the changed files in the
+ * current (edited) state, then swaps each changed file's text to its baseRef content
+ * and re-collects — the difference is what the edit added. Pre-existing errors in the
+ * target don't fail the gate. Added files have an empty baseline (all errors are new).
+ *
+ * baseTextByFile: Map<absPath, string> — baseRef content per changed file ('' if added).
+ * Returns { introduced, current, baseline } diagnostic arrays.
+ */
+export function typecheckTargetChanges({ tsConfigFilePath, files, baseTextByFile }) {
+  const project = new Project({ tsConfigFilePath });
+  const wanted = new Set();
+  for (const f of files) {
+    let sf = project.getSourceFile(f);
+    if (!sf) {
+      try { sf = project.addSourceFileAtPathIfExists(f); } catch { /* surfaces as diag */ }
+    }
+    if (sf) wanted.add(sf.getFilePath());
+  }
+
+  const current = diagnosticsForFiles(project, wanted);
+
+  // Revert each changed file to its baseRef content, then re-measure the same files.
+  for (const f of files) {
+    const sf = project.getSourceFile(f);
+    if (sf) sf.replaceWithText(baseTextByFile.get(f) ?? '');
+  }
+  const baseline = diagnosticsForFiles(project, wanted);
+
+  const baseSet = new Set(baseline.map(fingerprint));
+  const introduced = current.filter((d) => !baseSet.has(fingerprint(d)));
+  return { introduced, current, baseline };
+}

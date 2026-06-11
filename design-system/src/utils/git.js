@@ -65,6 +65,15 @@ export function filesAtRef(cwd, ref, pathspecs = []) {
   return splitLines(git(cwd, ['ls-tree', '-r', '--name-only', ref, '--', ...pathspecs]));
 }
 
+/** Contents of a repoRoot-relative file at ref, or null if it didn't exist there. */
+export function showFileAtRef(cwd, ref, path) {
+  try {
+    return git(cwd, [`show`, `${ref}:${path}`], { maxBuffer: 32 * 1024 * 1024 });
+  } catch {
+    return null; // added since ref (or unreadable) — caller treats as empty baseline
+  }
+}
+
 /** Stage and commit ONLY the given pathspecs. Returns the new commit sha. */
 export function commitPaths(cwd, message, pathspecs) {
   if (!pathspecs?.length) throw new Error('commitPaths requires explicit pathspecs');
