@@ -39,6 +39,11 @@ smoke-test that it can consume DSM output. Captured target data lives in this re
   Chrome, `#/stage/` route) → pixel diffs → approve(pathspec commit)/revert. Plus
   `dsm scan --fix` (unambiguous hex→token). The AI brain is the driving agent (vision
   verdict from the PNGs). **Contract: `docs/phase-4-spec.md`.** Artifacts: `.dsm-edit/`.
+- **Phase 4.2 — DONE.** The **embedded engine**: `dsm edit run "<NL instruction>"` runs the
+  whole loop inside the product (Anthropic API: structured-output edit proposals with
+  check-failure feedback iterations, scope-enforced apply, vision verdict on before/after
+  shots; default model `claude-fable-5`, needs `ANTHROPIC_API_KEY`). Human gate unchanged
+  (`--yes` auto-approves only on a satisfied verdict).
 
 ## Phased plan (milestone-first: validate the two hard upgrades before the UI)
 

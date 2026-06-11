@@ -89,8 +89,36 @@ session scope. rgb()/hsl()/Tailwind-arbitrary violations remain report-only
 - MCP `edit_render` can take 10–30s (Vite + Chrome boot) — call it with patience,
   not retries.
 
+## `dsm edit run "<instruction>"` — the embedded engine (Phase 4.2)
+
+The full loop in one command, with the AI inside the product:
+
+```
+dsm edit run "make all buttons pill-shaped" [--model id] [--component n…]
+             [--max-iterations 3] [--no-verify] [--yes] [--json]
+```
+
+1. Fails fast without `ANTHROPIC_API_KEY` (the deterministic subcommands never
+   need it). Auto-starts a session when none is active — the git gate always holds.
+2. Before-shots of the targeted components (default: all registered).
+3. Iterates propose → apply → check (max `--max-iterations`): the model receives
+   a cached system context (engine rules + resolved token reference) plus the
+   current file contents each round; it returns structured search/replace edits
+   (JSON schema enforced). Apply is **scope-enforced** (an edit outside the
+   session scope is rejected and fed back); check failures (type errors,
+   unresolved token refs, parse errors) are fed back verbatim.
+4. After-shots → pixel diff → **vision verdict**: the model judges the labelled
+   before/after pairs against the instruction (`{satisfied, summary, issues[]}`,
+   ≤6 pairs per call).
+5. Human gate unchanged: the session stays open for `approve`/`revert` review;
+   `--yes` auto-approves only when the verdict is satisfied.
+
+Engine model defaults to `claude-fable-5` (override `--model` / `DSM_MODEL`).
+API usage notes: adaptive thinking, structured outputs via `output_config.format`,
+streaming for proposals, prompt caching on the system block.
+
 ## Deferred (next slices)
 
-Embedded API engine (`dsm edit "<NL instruction>"` calling the Anthropic API for
-edit generation + vision verify); editing other repos via sandbox branches;
-preview Review page reading session artifacts; rgb/hsl auto-fix.
+Editing other repos via sandbox branches; preview Review page reading session
+artifacts; rgb/hsl auto-fix; `edit_run` as an MCP tool (long-running — needs
+progress streaming).

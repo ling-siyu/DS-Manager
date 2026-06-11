@@ -62,9 +62,10 @@ const toPosix = (p) => p.split(sep).join('/');
 
 /** Is `file` (repoRoot-relative) inside any of the scope pathspecs?
  *  A scope entry of '.' means the whole repo. */
-function inScope(file, scope) {
+export function isInScope(file, scope) {
   return scope.some((s) => s === '.' || file === s || file.startsWith(`${s.replace(/\/$/, '')}/`));
 }
+const inScope = isInScope;
 
 /** The directory sessions live under: always the GIT root (paths.repoRoot can
  *  sit deeper in monorepo layouts — sessions must resolve consistently). */
