@@ -76,6 +76,38 @@ export function resolveReference(ref, flat, seen = new Set()) {
   return resolveReference(value, flat, seen);
 }
 
+/** Normalize a hex color for value matching: lowercase, expand #abc → #aabbcc.
+ *  Returns null for alpha forms (#abcd / #rrggbbaa) — those never match tokens. */
+export function normalizeHex(value) {
+  const m = /^#([0-9a-fA-F]{3,8})$/.exec(String(value).trim());
+  if (!m) return null;
+  let hex = m[1].toLowerCase();
+  if (hex.length === 3) hex = hex.split('').map((c) => c + c).join('');
+  if (hex.length !== 6) return null; // 4- and 8-digit carry alpha
+  return `#${hex}`;
+}
+
+/**
+ * Reverse lookup: normalized hex value → candidate tokens [{ path, cssVar }],
+ * semantic.* candidates first. The fixer only auto-applies unambiguous matches;
+ * ambiguity (e.g. #ffffff backing several semantic roles) is surfaced to the
+ * driving agent, which knows the usage context.
+ */
+export function buildValueIndex(resolvedTokens) {
+  const index = new Map();
+  for (const [path, token] of Object.entries(resolvedTokens)) {
+    const hex = normalizeHex(token.resolvedValue);
+    if (!hex) continue;
+    if (!index.has(hex)) index.set(hex, []);
+    index.get(hex).push({ path, cssVar: token.cssVar });
+  }
+  const rank = (p) => (p.startsWith('semantic.') ? 0 : p.startsWith('component.') ? 1 : 2);
+  for (const candidates of index.values()) {
+    candidates.sort((a, b) => rank(a.path) - rank(b.path) || a.path.localeCompare(b.path));
+  }
+  return index;
+}
+
 export function loadTokens(tokensPath) {
   const raw = loadRawTokens(tokensPath);
   const flat = flattenTokens(raw);

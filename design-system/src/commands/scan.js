@@ -150,15 +150,16 @@ export async function collectScanResults(scanPath = '.') {
 }
 
 export function printScanResults({ absolutePath, files, totalErrors, totalWarnings, results }, options = {}) {
+  if (options.json) {
+    // Pure JSON on stdout — no human header (consumers parse this directly).
+    console.log(JSON.stringify({ totalErrors, totalWarnings, files: results }, null, 2));
+    return;
+  }
+
   console.log(chalk.cyan(`\n🔍 Scanning ${absolutePath}\n`));
 
   if (files.length === 0) {
     console.log(chalk.yellow('No files found to scan.\n'));
-    return;
-  }
-
-  if (options.json) {
-    console.log(JSON.stringify({ totalErrors, totalWarnings, files: results }, null, 2));
     return;
   }
 
@@ -188,7 +189,56 @@ export function printScanResults({ absolutePath, files, totalErrors, totalWarnin
   console.log(chalk.dim('     or use the /tokenize Claude Code command to auto-replace.\n'));
 }
 
+async function fixCommand(scanPath, options) {
+  const { resolveProjectPaths } = await import('../utils/paths.js');
+  const { requireSession } = await import('../utils/edit-session.js');
+  const { applyHexFixes, fixableFiles } = await import('../utils/scan-fix.js');
+  const { repoRoot: gitRoot } = await import('../utils/git.js');
+
+  const paths = resolveProjectPaths();
+  const session = requireSession(gitRoot(paths.repoRoot));
+
+  const { absolutePath, results } = await collectScanResults(scanPath);
+  const { eligible, outOfScope } = fixableFiles(results, absolutePath, session);
+  const outcome = applyHexFixes(eligible, { tokensPath: paths.tokensPath });
+  const result = { ok: true, session: session.id, ...outcome, outOfScope };
+
+  if (options.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  console.log(chalk.green(`\n✓ ${outcome.fixed.length} hex value${outcome.fixed.length === 1 ? '' : 's'} replaced with token references`));
+  for (const f of outcome.fixed) {
+    console.log(`  ${f.file}:${f.line}  ${chalk.dim(f.value)} → ${chalk.white(`var(${f.cssVar})`)}`);
+  }
+  if (outcome.skipped.length) {
+    console.log(chalk.yellow(`\n⚠ ${outcome.skipped.length} skipped (agent judgment needed):`));
+    for (const s of outcome.skipped.slice(0, 20)) {
+      const extra = s.candidates ? `  candidates: ${s.candidates.join(', ')}` : '';
+      console.log(`  ${s.file}:${s.line}  ${s.value}  ${chalk.dim(s.reason)}${chalk.dim(extra)}`);
+    }
+    if (outcome.skipped.length > 20) console.log(chalk.dim(`  …and ${outcome.skipped.length - 20} more`));
+  }
+  if (outOfScope.length) {
+    console.log(chalk.yellow(`\n⚠ outside the session scope (not touched): ${outOfScope.join(', ')}`));
+  }
+  console.log(chalk.dim('\nReview with `dsm edit check` / `dsm edit diff`, then approve or revert.\n'));
+}
+
 export async function scanCommand(scanPath = '.', options = {}) {
+  if (options.fix) {
+    try {
+      await fixCommand(scanPath, options);
+    } catch (error) {
+      if (options.json) {
+        console.log(JSON.stringify({ ok: false, error: error.message }, null, 2));
+      } else {
+        console.error(chalk.red(`\n✗ ${error.message}\n`));
+      }
+      process.exit(1);
+    }
+    return;
+  }
   const scanResults = await collectScanResults(scanPath);
   printScanResults(scanResults, options);
 }

@@ -6,7 +6,7 @@ import chokidar from 'chokidar';
 import chalk from 'chalk';
 import { createServer as createViteServer } from 'vite';
 import react from '@vitejs/plugin-react';
-import { buildCommand } from './build.js';
+import { runBuild } from './build.js';
 import { resolveProjectPaths } from '../utils/paths.js';
 import { buildPreviewData } from '../utils/preview-data.js';
 import { buildSecuramarkCss } from '../utils/securamark-css.js';
@@ -110,43 +110,52 @@ export function dsmDataPlugin(getData) {
   };
 }
 
-export async function uiCommand(options = {}) {
-  const paths = resolveProjectPaths();
-  const requestedPort = Number.parseInt(options.port ?? '7777', 10);
+/**
+ * Throwing core: build tokens, assemble preview data, and start the Vite preview
+ * server. No console UI beyond optional onLog, no process.exit, no browser —
+ * safe for the edit loop (screenshots) and the MCP server.
+ *
+ * Options:
+ *  - port        starting port to probe (default 7777)
+ *  - securamark  include SecuraMark data + CSS compile (default true). false
+ *                skips the cross-repo Tailwind compile entirely — much faster
+ *                startup when only DSM components are being staged.
+ *  - watch       enable the tokens/components live-reload watcher (default false)
+ *  - build       run the token build before assembling data (default true)
+ *  - onLog       optional (msg) => void progress sink
+ *
+ * Returns { server, port, url, data, close() } — close() shuts down both the
+ * Vite server and the watcher (when enabled).
+ */
+export async function createPreviewServer(paths = resolveProjectPaths(), options = {}) {
+  const {
+    port: requestedPort = 7777,
+    securamark = true,
+    watch = false,
+    build = true,
+    onLog = () => {},
+  } = options;
   const host = '127.0.0.1';
 
-  console.log(chalk.cyan('\n⚙  Building tokens for preview...\n'));
-  await buildCommand();
+  if (build) await runBuild(paths);
 
-  // Compile SecuraMark's utility CSS so its real components render styled (async
-  // Tailwind compile). Re-run on every data rebuild so a token edit doesn't blank
-  // the SecuraMark styling until restart.
   const compileSecuramarkCss = async (data) => {
-    if (!data.securamark.dir) return;
+    if (!securamark || !data.securamark.dir) return;
     try {
       data.securamark.css = await buildSecuramarkCss({
         securamarkDir: data.securamark.dir,
         tokensPath: resolve(paths.repoRoot, 'targets/securamark/tokens.json'),
       });
     } catch (error) {
-      console.error(chalk.yellow(`  SecuraMark CSS compile skipped: ${error.message}`));
+      onLog(`SecuraMark CSS compile skipped: ${error.message}`);
     }
   };
 
   let current = buildPreviewData(paths);
+  if (!securamark) current.securamark = { dir: null, components: [], css: '' };
   await compileSecuramarkCss(current);
-  console.log(chalk.dim(
-    `  ${current.tokenSets.securamark.length} SecuraMark + ${current.tokenSets.dsm.length} DSM tokens · ` +
-    `${current.components.length} DSM + ${current.securamark.components.length} SecuraMark components`,
-  ));
 
-  let port;
-  try {
-    port = await findAvailablePort(requestedPort, { host });
-  } catch (error) {
-    console.error(chalk.red(`\n✗ ${error.message}\n`));
-    process.exit(1);
-  }
+  const port = await findAvailablePort(Number.parseInt(requestedPort, 10), { host });
 
   const server = await createViteServer({
     configFile: false,
@@ -168,23 +177,60 @@ export async function uiCommand(options = {}) {
 
   // Live-reload when tokens or components change: rebuild + invalidate the
   // virtual module + full reload (HMR handles preview source files itself).
-  const watcher = chokidar.watch([paths.tokensPath, paths.componentsPath], { ignoreInitial: true });
-  watcher.on('change', async () => {
-    try {
-      await buildCommand();
-      current = buildPreviewData(paths);
-      await compileSecuramarkCss(current);
-      const mod = server.moduleGraph.getModuleById('\0virtual:dsm-data');
-      if (mod) server.moduleGraph.invalidateModule(mod);
-      server.ws.send({ type: 'full-reload' });
-      console.log(chalk.dim('  ↻ preview data refreshed'));
-    } catch (error) {
-      console.error(chalk.red(`  preview refresh failed: ${error.message}`));
-    }
-  });
+  let watcher = null;
+  if (watch) {
+    watcher = chokidar.watch([paths.tokensPath, paths.componentsPath], { ignoreInitial: true });
+    watcher.on('change', async () => {
+      try {
+        await runBuild(paths);
+        current = buildPreviewData(paths);
+        if (!securamark) current.securamark = { dir: null, components: [], css: '' };
+        await compileSecuramarkCss(current);
+        const mod = server.moduleGraph.getModuleById('\0virtual:dsm-data');
+        if (mod) server.moduleGraph.invalidateModule(mod);
+        server.ws.send({ type: 'full-reload' });
+        onLog('preview data refreshed');
+      } catch (error) {
+        onLog(`preview refresh failed: ${error.message}`);
+      }
+    });
+  }
 
   await server.listen();
   const url = `http://${host}:${port}/`;
+
+  return {
+    server,
+    port,
+    url,
+    data: current,
+    async close() {
+      if (watcher) await watcher.close();
+      await server.close();
+    },
+  };
+}
+
+export async function uiCommand(options = {}) {
+  console.log(chalk.cyan('\n⚙  Building tokens for preview...\n'));
+
+  let preview;
+  try {
+    preview = await createPreviewServer(resolveProjectPaths(), {
+      port: options.port ?? '7777',
+      watch: true,
+      onLog: (msg) => console.log(chalk.dim(`  ${msg}`)),
+    });
+  } catch (error) {
+    console.error(chalk.red(`\n✗ ${error.message}\n`));
+    process.exit(1);
+  }
+
+  const { data, url } = preview;
+  console.log(chalk.dim(
+    `  ${data.tokenSets.securamark.length} SecuraMark + ${data.tokenSets.dsm.length} DSM tokens · ` +
+    `${data.components.length} DSM + ${data.securamark.components.length} SecuraMark components`,
+  ));
   console.log(chalk.green(`\n✓ DSM preview running at ${chalk.bold(url)}\n`));
   if (options.open !== false) openBrowser(url);
 }

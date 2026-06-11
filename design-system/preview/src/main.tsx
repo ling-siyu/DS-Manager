@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import StagePage from './StagePage';
 import { data } from './data';
 
 // Self-hosted fonts (bundled by Vite, no CDN) — mirrors SecuraMark's @fontsource
@@ -37,8 +38,16 @@ injectStyle('data-dsm-tokens', data.cssVars || '');
 // components render styled. Inert for the chrome (which uses custom class names).
 injectStyle('data-securamark-css', data.securamark?.css || '');
 
+// The screenshot stage bypasses the App chrome entirely (and StrictMode's
+// double-invocation, which would double dynamic imports for no benefit there).
+const isStage = window.location.hash.startsWith('#/stage/');
+
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+  isStage ? (
+    <StagePage />
+  ) : (
+    <StrictMode>
+      <App />
+    </StrictMode>
+  ),
 );

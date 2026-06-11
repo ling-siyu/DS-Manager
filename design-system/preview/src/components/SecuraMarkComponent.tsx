@@ -1,17 +1,11 @@
 import { useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
 import { IconContext } from '@phosphor-icons/react';
+import { loadFromFs } from './loaders';
 
-// Load a SecuraMark component cross-repo via Vite dev's /@fs (the absolute path is
-// fs-allowed in ui.js). Vite transpiles its TSX + relative imports on the fly;
-// react is deduped so hooks work across the boundary. Phosphor icons render at the
-// product's captured weight via IconContext.
-function loadFromFs(absPath: string) {
-  // /@fs/<abs path with forward slashes>. Works for POSIX (/Users/…) and Windows
-  // (C:\… → C:/…) once backslashes are normalized and any leading slash dropped.
-  const normalized = absPath.replace(/\\/g, '/').replace(/^\//, '');
-  return import(/* @vite-ignore */ `/@fs/${normalized}`);
-}
+// Vite transpiles SecuraMark's TSX + relative imports on the fly via /@fs;
+// react is deduped so hooks work across the boundary. Phosphor icons render at
+// the product's captured weight via IconContext.
 
 export default function SecuraMarkComponent({
   absPath,

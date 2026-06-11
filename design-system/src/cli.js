@@ -8,6 +8,7 @@ import { doctorCommand } from './commands/doctor.js';
 import { generateContextCommand } from './commands/generate-context.js';
 import { getTokenCommand } from './commands/get-token.js';
 import { importTokensCommand } from './commands/import-tokens.js';
+import { registerEditCommand } from './commands/edit.js';
 import { initCommand } from './commands/init.js';
 import { installHookCommand } from './commands/install-hook.js';
 import { listComponentsCommand } from './commands/list-components.js';
@@ -84,9 +85,11 @@ program
 program
   .command('scan [path]')
   .description('Scan codebase for hardcoded values not referencing design tokens')
-  .option('-f, --fix', 'Attempt to auto-replace matched values with token CSS variables')
+  .option('-f, --fix', 'Replace unambiguous hardcoded hex colors with token var(--ds-…) references (requires an active edit session)')
   .option('--json', 'Output results as JSON')
   .action(scanCommand);
+
+registerEditCommand(program);
 
 program
   .command('validate [path]')

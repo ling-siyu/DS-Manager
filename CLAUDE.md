@@ -27,6 +27,18 @@ smoke-test that it can consume DSM output. Captured target data lives in this re
   transitive `resolveReference`. SecuraMark's tokens captured at **`targets/securamark/`**
   (`refresh.sh` regenerates + validates; git diff is the drift check). `--validate`
   reconstructs SecuraMark's Tailwind theme from the DTCG and matches the real config exactly.
+- **Phase 2 — DONE.** TS-compiler component discovery (ts-morph): imported/union/
+  intersection/`Omit<>` prop types + `(typeof CONST)[number]` enums; `inherited` prop flag;
+  registry persists authored props only.
+- **Phase 3 — DONE, 🎯 Milestone 1 reached.** Vite+React19 preview (`dsm ui`): token category
+  pages (self-hosted fonts incl. CJK, dense color grid, typography specimens, icon capture)
+  + component matrix rendering DSM demos AND 12 real SecuraMark components cross-repo.
+- **Phase 4.1 — DONE.** The **gated edit loop** (`dsm edit start|status|check|render|diff|
+  approve|revert|abandon`, all `--json`; mirrored as MCP tools in `dsm serve`): git-gated
+  sessions → typecheck/token validation → stage screenshots (puppeteer-core + installed
+  Chrome, `#/stage/` route) → pixel diffs → approve(pathspec commit)/revert. Plus
+  `dsm scan --fix` (unambiguous hex→token). The AI brain is the driving agent (vision
+  verdict from the PNGs). **Contract: `docs/phase-4-spec.md`.** Artifacts: `.dsm-edit/`.
 
 ## Phased plan (milestone-first: validate the two hard upgrades before the UI)
 
@@ -47,8 +59,9 @@ smoke-test that it can consume DSM output. Captured target data lives in this re
    (uses the existing `previewProps`/`previewScenarios` schema in `components.json`),
    dark/light, viewports. **🎯 Milestone 1: SecuraMark's real tokens + components render here.**
 4. **The AI loop** — NL → AST edit → type-check → render → screenshot → vision-verify →
-   before/after diff → approve-commit / revert. Then generation, critique, and implementing
-   the declared-but-unimplemented `scan --fix`.
+   before/after diff → approve-commit / revert. **4.1 ✅** (deterministic gated primitives +
+   `scan --fix`, agent-driven — see `docs/phase-4-spec.md`). *Next:* embedded API engine
+   (`dsm edit "<NL>"`), sandbox-branch editing of targets, preview Review page.
 
 ## Dev environment notes
 

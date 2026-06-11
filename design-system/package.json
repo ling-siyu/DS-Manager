@@ -41,7 +41,10 @@
     "esbuild": "^0.25.3",
     "glob": "^11.0.0",
     "lucide-react": "^1.17.0",
+    "pixelmatch": "^7.2.0",
+    "pngjs": "^7.0.0",
     "postcss": "^8.5.15",
+    "puppeteer-core": "^25.1.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "style-dictionary": "^4.1.0",
@@ -57,5 +60,9 @@
     "glob",
     "style-dictionary",
     "ts-morph"
-  ]
+  ],
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3"
+  }
 }

@@ -1,2 +1,5 @@
 .DS_Store
 design-system/node_modules/
+
+# DSM edit-loop session artifacts (screenshots, diffs, session state)
+.dsm-edit/

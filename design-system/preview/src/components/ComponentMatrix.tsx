@@ -4,19 +4,7 @@ import type { PreviewComponent, SecuraMarkComponent as SMComponent } from '../ty
 import type { Theme, Viewport } from '../App';
 import RenderBoundary from './RenderBoundary';
 import SecuraMarkComponent from './SecuraMarkComponent';
-
-// DSM's own components are resolved statically via glob (outside the preview root;
-// ui.js allows fs access).
-const LOADERS = import.meta.glob('../../../src/components/ui/*.tsx') as Record<
-  string,
-  () => Promise<{ default: ComponentType<Record<string, unknown>> }>
->;
-
-function loaderFor(path: string) {
-  const base = path.split('/').pop();
-  const key = Object.keys(LOADERS).find((k) => k.endsWith(`/${base}`));
-  return key ? LOADERS[key] : null;
-}
+import { dsmLoaderFor as loaderFor } from './loaders';
 
 const VIEWPORT_WIDTH: Record<Viewport, string> = { full: '100%', tablet: '768px', mobile: '375px' };
 
