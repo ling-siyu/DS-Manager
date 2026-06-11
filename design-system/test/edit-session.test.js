@@ -12,6 +12,8 @@ import {
   approveSession,
   revertSession,
   abandonSession,
+  assertEditableTarget,
+  checkSession,
 } from '../src/utils/edit-session.js';
 import * as git from '../src/utils/git.js';
 
@@ -183,6 +185,114 @@ test('approve refuses when HEAD drifted past the session base', () => {
     // Simulate a user commit mid-session (outside the loop's control)
     gitIn(root, 'commit', '-am', 'mid-session user commit');
     assert.throws(() => approveSession(paths, session, 'should fail'), /HEAD moved/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// ── Cross-repo editing of an external target on its sandbox branch ──────────
+// A "target" repo has no design-system/ layout; it is editable only when checked
+// out on the sandbox branch. `paths` still describe DSM's own repo (the render /
+// registry source of truth); the session's git root is the target.
+
+function makeTargetRepo({ branch = 'dsm-experiment' } = {}) {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'dsm-target-')));
+  gitIn(root, 'init', '-b', 'master');
+  gitIn(root, 'config', 'user.email', 'test@dsm.local');
+  gitIn(root, 'config', 'user.name', 'DSM Test');
+  mkdirSync(join(root, 'src/components/ui'), { recursive: true });
+  writeFileSync(join(root, 'src/components/ui/Button.tsx'), 'export const Button = () => null;\n');
+  gitIn(root, 'add', '-A');
+  gitIn(root, 'commit', '-m', 'initial');
+  if (branch !== 'master') gitIn(root, 'checkout', '-b', branch);
+  // Minimal DSM-ish paths: only used for relative() calcs in external mode (the
+  // session's git ops all run against `targetRoot`, never paths.repoRoot).
+  const paths = {
+    repoRoot: root,
+    dsRoot: join(root, 'design-system'),
+    tokensPath: join(root, 'design-system/tokens.json'),
+    buildDir: join(root, 'design-system/build'),
+    componentsPath: join(root, 'design-system/components.json'),
+  };
+  return { root, paths };
+}
+
+test('assertEditableTarget: allows own repo, allows a target on the sandbox branch, rejects elsewhere', () => {
+  const { root } = makeTargetRepo({ branch: 'dsm-experiment' });
+  const { root: own } = makeTargetRepo({ branch: 'master' });
+  try {
+    // Own repo (targetGitRoot === git root of packageRoot) is always allowed.
+    assert.doesNotThrow(() => assertEditableTarget(own, own));
+    // External target on the sandbox branch → allowed.
+    assert.doesNotThrow(() => assertEditableTarget(root, own, { sandboxBranch: 'dsm-experiment' }));
+    // External target on any other branch → refused.
+    gitIn(root, 'checkout', 'master');
+    assert.throws(
+      () => assertEditableTarget(root, own, { sandboxBranch: 'dsm-experiment' }),
+      /sandbox branch "dsm-experiment"/,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+    rmSync(own, { recursive: true, force: true });
+  }
+});
+
+test('external target session requires an explicit --scope (no design-system/ default)', () => {
+  const { root, paths } = makeTargetRepo();
+  try {
+    assert.throws(
+      () => startSession(paths, { target: 'securamark', targetRoot: root }),
+      /scope is required/,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('external session: scoped to the target repo, lenient check, approve commits on the sandbox branch', async () => {
+  const { root, paths } = makeTargetRepo();
+  try {
+    const session = startSession(paths, {
+      target: 'securamark',
+      targetRoot: root,
+      scope: ['src/components/ui/Button.tsx'],
+    });
+    assert.equal(session.external, true);
+    assert.equal(session.target, 'securamark');
+    assert.equal(session.repoRoot, root);
+    assert.equal(session.branch, 'dsm-experiment');
+    assert.equal(session.tokensInScope, false);
+    assert.deepEqual(session.effectiveScope, ['src/components/ui/Button.tsx'], 'no build/ extension for a target');
+
+    // Valid syntax but a type error → lenient (parse-only) check still passes.
+    writeFileSync(join(root, 'src/components/ui/Button.tsx'), 'export const n: number = "still parses";\n');
+    const check = await checkSession(paths, session);
+    assert.equal(check.ok, true, 'lenient check ignores semantic/type errors');
+    assert.equal(check.tokens, null, 'token validation skipped for an external target');
+
+    const result = approveSession(paths, session, 'sandbox edit');
+    assert.ok(result.commit);
+    assert.deepEqual(result.files, ['src/components/ui/Button.tsx']);
+    assert.equal(git.currentBranch(root), 'dsm-experiment', 'commit landed on the sandbox branch');
+    assert.equal(loadSession(root), null, 'session ended');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('external check FAILS on a syntax error (the parse gate still holds)', async () => {
+  const { root, paths } = makeTargetRepo();
+  try {
+    const session = startSession(paths, {
+      target: 'securamark',
+      targetRoot: root,
+      scope: ['src/components/ui/Button.tsx'],
+    });
+    writeFileSync(join(root, 'src/components/ui/Button.tsx'), 'export const broken = (=> {\n');
+    const check = await checkSession(paths, session);
+    assert.equal(check.ok, false, 'a genuine parse error fails the gate');
+    assert.ok(check.typecheck.some((d) => d.category === 'error'));
+    abandonSession(session);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

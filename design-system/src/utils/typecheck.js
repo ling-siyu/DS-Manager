@@ -21,11 +21,41 @@ function createProject() {
   });
 }
 
+function toRecord(diag, sf) {
+  const start = diag.getStart?.() ?? diag.start;
+  const file = sf?.getFilePath?.() ?? (sf && String(sf.fileName));
+  const line = sf && start !== undefined
+    ? (sf.getLineAndColumnAtPos
+        ? sf.getLineAndColumnAtPos(start).line
+        : sf.getLineAndCharacterOfPosition(start).line + 1)
+    : null;
+  const category = typeof diag.getCategory === 'function'
+    ? diag.getCategory()
+    : diag.category;
+  const code = typeof diag.getCode === 'function' ? diag.getCode() : diag.code;
+  const messageText = typeof diag.getMessageText === 'function'
+    ? diag.getMessageText()
+    : diag.messageText;
+  return {
+    file: String(file),
+    line,
+    code,
+    category: ts.DiagnosticCategory[category].toLowerCase(),
+    message: ts.flattenDiagnosticMessageText(messageText, ' '),
+  };
+}
+
 /**
  * Type-check the given absolute file paths. Returns diagnostics limited to those
  * files: [{ file, line, code, category: 'error'|'warning'|..., message }].
+ *
+ * lenient: SYNTAX-only diagnostics (parse errors), skipping semantic/type checks.
+ * Used when editing an external target whose strict config + path aliases we don't
+ * load — a broken parse still fails the gate, but unresolved imports / type
+ * mismatches against the target's own tsconfig don't produce noise here.
  */
-export function typecheckFiles(absPaths) {
+export function typecheckFiles(absPaths, options = {}) {
+  const { lenient = false } = options;
   const project = createProject();
   const wanted = new Set();
   for (const p of absPaths) {
@@ -35,20 +65,24 @@ export function typecheckFiles(absPaths) {
     } catch { /* unparseable file surfaces via diagnostics below */ }
   }
 
+  if (lenient) {
+    const program = project.getProgram().compilerObject;
+    const diagnostics = [];
+    for (const sf of program.getSourceFiles()) {
+      if (!wanted.has(sf.fileName)) continue;
+      for (const diag of program.getSyntacticDiagnostics(sf)) {
+        diagnostics.push(toRecord(diag, diag.file ?? sf));
+      }
+    }
+    return diagnostics;
+  }
+
   const diagnostics = [];
   for (const diag of project.getPreEmitDiagnostics()) {
     const sf = diag.getSourceFile();
     const file = sf?.getFilePath();
     if (!file || !wanted.has(file)) continue;
-    const start = diag.getStart();
-    const line = sf && start !== undefined ? sf.getLineAndColumnAtPos(start).line : null;
-    diagnostics.push({
-      file: String(file),
-      line,
-      code: diag.getCode(),
-      category: ts.DiagnosticCategory[diag.getCategory()].toLowerCase(),
-      message: ts.flattenDiagnosticMessageText(diag.getMessageText(), ' '),
-    });
+    diagnostics.push(toRecord(diag, sf));
   }
   return diagnostics;
 }

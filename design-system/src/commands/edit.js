@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, relative, resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import chalk from 'chalk';
@@ -7,7 +7,7 @@ import {
   abandonSession,
   approveSession,
   artifactDir,
-  assertOwnRepo,
+  assertEditableTarget,
   changedFiles,
   checkSession,
   loadSession,
@@ -18,10 +18,41 @@ import {
   startSession,
 } from '../utils/edit-session.js';
 import { captureShots } from '../utils/render-shots.js';
+import { securamarkDir } from '../utils/preview-data.js';
 import { diffShotDirs } from '../utils/shot-diff.js';
 import * as git from '../utils/git.js';
 
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+
+const toPosix = (p) => p.split('\\').join('/');
+
+/** Resolve a known external edit target (its source dir + git root). */
+function resolveTarget(name) {
+  if (name !== 'securamark') {
+    throw new Error(`Unknown --app "${name}" (known targets: securamark).`);
+  }
+  const dir = securamarkDir();
+  if (!existsSync(dir)) {
+    throw new Error(`Target source not found at ${dir}. Set SECURAMARK_DIR or clone it there.`);
+  }
+  return { name, dir, repoRoot: git.repoRoot(dir) };
+}
+
+/**
+ * Resolve the edit context: DSM `paths` (the render/registry source of truth, always
+ * DSM's own repo) plus the session root — DSM's repo, or an external --app target's repo.
+ * Gates with assertEditableTarget so a target is only editable on its sandbox branch.
+ */
+export function editContext(options = {}) {
+  const paths = resolveProjectPaths();
+  if (options.app) {
+    const target = resolveTarget(options.app);
+    assertEditableTarget(target.repoRoot, PACKAGE_ROOT);
+    return { paths, target, sRoot: target.repoRoot };
+  }
+  assertEditableTarget(git.repoRoot(paths.repoRoot), PACKAGE_ROOT);
+  return { paths, target: null, sRoot: sessionRoot(paths) };
+}
 
 // The agent-facing CLI for the gated edit loop. Every subcommand supports
 // --json (machine-readable result on stdout, exit code 0/1) — that is the
@@ -47,16 +78,20 @@ function fail(error, options) {
   process.exit(1);
 }
 
-function gatedPaths() {
-  const paths = resolveProjectPaths();
-  assertOwnRepo(paths, PACKAGE_ROOT);
-  return paths;
+/** The render `source` for a session: an external target's name, else 'dsm'. */
+function sessionSource(session) {
+  return session.external ? session.target : 'dsm';
 }
 
 /** Registry components whose source path intersects the session's changed files. */
 function affectedComponents(paths, session, overrideNames) {
   const root = session.repoRoot;
-  const registry = JSON.parse(readFileSync(paths.componentsPath, 'utf8'));
+  // External targets use DSM's captured registry (targets/<name>/components.json);
+  // DSM uses its own components.json.
+  const registryPath = session.external
+    ? resolve(paths.repoRoot, `targets/${session.target}/components.json`)
+    : paths.componentsPath;
+  const registry = JSON.parse(readFileSync(registryPath, 'utf8'));
   const components = registry.components ?? [];
 
   if (overrideNames?.length) {
@@ -69,6 +104,13 @@ function affectedComponents(paths, session, overrideNames) {
   }
 
   const changes = changedFiles(session);
+
+  if (session.external) {
+    // Changed files and registry paths are both relative to the target's repo root.
+    const changed = new Set(changes.all.map(toPosix));
+    return components.filter((c) => changed.has(toPosix(c.path)));
+  }
+
   const dsPrefix = relative(root, paths.dsRoot);
   const tokensRel = relative(root, paths.tokensPath);
 
@@ -80,9 +122,9 @@ function affectedComponents(paths, session, overrideNames) {
   return components.filter((c) => changes.all.includes(`${dsPrefix}/${c.path}`));
 }
 
-function toTargets(components) {
+function toTargets(components, source = 'dsm') {
   return components.map((c) => ({
-    source: 'dsm',
+    source,
     name: c.name,
     scenarios: [...Array(Math.max(c.previewScenarios?.length ?? 0, 1)).keys()],
   }));
@@ -96,14 +138,15 @@ export function registerEditCommand(program) {
   edit
     .command('start')
     .description('Start a session: verify a clean tree in scope and pin the base commit')
+    .option('--app <name>', 'Edit an external target on its sandbox branch (e.g. securamark)')
     .option('--scope <path...>', 'Pathspecs the session may touch (default: design-system/)')
     .option('--allow-dirty', 'Accept pre-existing changes in scope as part of the session')
     .option('--force', 'Discard a stale session record')
     .option('--json', 'Machine-readable output')
     .action((options) => {
       try {
-        const paths = gatedPaths();
-        const session = startSession(paths, options);
+        const { paths, target } = editContext(options);
+        const session = startSession(paths, { ...options, targetRoot: target?.repoRoot, target: target?.name });
         emit({ ok: true, session, artifactDir: artifactDir(session.repoRoot, session) }, options, (r) => {
           console.log(chalk.green(`\n✓ Edit session ${r.session.id} started`));
           console.log(`  base    ${r.session.baseRef.slice(0, 12)} (${r.session.branch ?? 'detached'})`);
@@ -118,11 +161,12 @@ export function registerEditCommand(program) {
   edit
     .command('status')
     .description('Show the active session, changed files, and HEAD drift')
+    .option('--app <name>', 'Operate on an external target session (e.g. securamark)')
     .option('--json', 'Machine-readable output')
     .action((options) => {
       try {
-        const paths = gatedPaths();
-        const session = requireSession(sessionRoot(paths));
+        const { paths, sRoot } = editContext(options);
+        const session = requireSession(sRoot);
         const status = sessionStatus(paths, session);
         emit({ ok: true, ...status }, options, (r) => {
           console.log(chalk.cyan(`\nSession ${r.session.id}`) + chalk.dim(`  base ${r.session.baseRef.slice(0, 12)}`));
@@ -139,11 +183,12 @@ export function registerEditCommand(program) {
   edit
     .command('check')
     .description('Type-check changed files; validate + rebuild tokens when they changed')
+    .option('--app <name>', 'Operate on an external target session (e.g. securamark)')
     .option('--json', 'Machine-readable output')
     .action(async (options) => {
       try {
-        const paths = gatedPaths();
-        const session = requireSession(sessionRoot(paths));
+        const { paths, sRoot } = editContext(options);
+        const session = requireSession(sRoot);
         const result = await checkSession(paths, session);
         emit(result, options, (r) => {
           if (r.ok) {
@@ -170,12 +215,13 @@ export function registerEditCommand(program) {
     .command('render')
     .description('Screenshot affected components to the session artifact dir')
     .requiredOption('--label <label>', 'Shot set label (before, after, after-2, …)')
+    .option('--app <name>', 'Operate on an external target session (e.g. securamark)')
     .option('--component <name...>', 'Override affected-component inference')
     .option('--json', 'Machine-readable output')
     .action(async (options) => {
       try {
-        const paths = gatedPaths();
-        const session = requireSession(sessionRoot(paths));
+        const { paths, sRoot } = editContext(options);
+        const session = requireSession(sRoot);
         if (options.label === 'diff') {
           throw new Error('The label "diff" is reserved for pixel-diff output; pick another label.');
         }
@@ -184,7 +230,7 @@ export function registerEditCommand(program) {
           throw new Error('No affected components to render (no in-scope component/token changes; use --component to override).');
         }
         const outDir = join(artifactDir(session.repoRoot, session), 'shots', options.label);
-        const shots = await captureShots(paths, toTargets(components), outDir, {
+        const shots = await captureShots(paths, toTargets(components, sessionSource(session)), outDir, {
           onLog: options.json ? () => {} : (m) => console.log(chalk.dim(`  ${m}`)),
         });
         emit({ ok: true, label: options.label, shots }, options, (r) => {
@@ -198,13 +244,14 @@ export function registerEditCommand(program) {
   edit
     .command('diff')
     .description('Code diff + pixel-diff of before/after shots')
+    .option('--app <name>', 'Operate on an external target session (e.g. securamark)')
     .option('--before <label>', 'Before shot label', 'before')
     .option('--after <label>', 'After shot label', 'after')
     .option('--json', 'Machine-readable output')
     .action((options) => {
       try {
-        const paths = gatedPaths();
-        const session = requireSession(sessionRoot(paths));
+        const { sRoot } = editContext(options);
+        const session = requireSession(sRoot);
         const dir = artifactDir(session.repoRoot, session);
 
         const patch = git.diffText(session.repoRoot, session.baseRef, session.effectiveScope);
@@ -239,11 +286,12 @@ export function registerEditCommand(program) {
     .command('approve')
     .description('Commit the session scope (pathspec commit) and end the session')
     .requiredOption('-m, --message <message>', 'Commit message')
+    .option('--app <name>', 'Operate on an external target session (e.g. securamark)')
     .option('--json', 'Machine-readable output')
     .action((options) => {
       try {
-        const paths = gatedPaths();
-        const session = requireSession(sessionRoot(paths));
+        const { paths, sRoot } = editContext(options);
+        const session = requireSession(sRoot);
         const result = approveSession(paths, session, options.message);
         emit({ ok: true, ...result }, options, (r) => {
           console.log(chalk.green(`\n✓ approved → commit ${r.commit.slice(0, 12)} (${r.files.length} files)\n`));
@@ -256,11 +304,12 @@ export function registerEditCommand(program) {
   edit
     .command('revert')
     .description('Restore the session scope to the base commit and end the session')
+    .option('--app <name>', 'Operate on an external target session (e.g. securamark)')
     .option('--json', 'Machine-readable output')
     .action((options) => {
       try {
-        const paths = gatedPaths();
-        const session = requireSession(sessionRoot(paths));
+        const { paths, sRoot } = editContext(options);
+        const session = requireSession(sRoot);
         const result = revertSession(paths, session);
         emit({ ok: true, ...result }, options, (r) => {
           console.log(chalk.green(`\n✓ reverted (${r.restored.length} restored, ${r.deleted.length} deleted)\n`));
@@ -273,11 +322,12 @@ export function registerEditCommand(program) {
   edit
     .command('abandon')
     .description('End the session keeping the working tree as-is (no commit, no revert)')
+    .option('--app <name>', 'Operate on an external target session (e.g. securamark)')
     .option('--json', 'Machine-readable output')
     .action((options) => {
       try {
-        const paths = gatedPaths();
-        const session = requireSession(sessionRoot(paths));
+        const { sRoot } = editContext(options);
+        const session = requireSession(sRoot);
         const result = abandonSession(session);
         emit({ ok: true, ...result }, options, (r) => {
           console.log(chalk.green(`\n✓ session abandoned (${r.kept.length} changed files kept in working tree)\n`));

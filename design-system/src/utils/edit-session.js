@@ -43,17 +43,28 @@ export function requireSession(repoRoot) {
   return session;
 }
 
+/** The sandbox branch an external target must be on for the loop to touch it.
+ *  Overridable for tests / alternate conventions. */
+export const SANDBOX_BRANCH = process.env.DSM_SANDBOX_BRANCH || 'dsm-experiment';
+
 /**
- * Guard: dsm only edits the repository it lives in this slice. SecuraMark (and
- * any other -C target) stays read-only until the sandbox-branch flow lands.
+ * Gate for which repository the edit loop may mutate:
+ *   - DSM's own repo → always allowed (unchanged behaviour).
+ *   - any external target → allowed ONLY when it is checked out on the sandbox
+ *     branch (isolated, never-pushed). Refuses on its real branches.
+ * `targetGitRoot` is the git root of the files to be edited; `packageRoot` locates
+ * DSM's own repo.
  */
-export function assertOwnRepo(paths, packageRoot) {
-  const targetGitRoot = git.repoRoot(paths.repoRoot);
+export function assertEditableTarget(targetGitRoot, packageRoot, options = {}) {
+  const { sandboxBranch = SANDBOX_BRANCH } = options;
   const ownGitRoot = git.repoRoot(packageRoot);
-  if (resolve(targetGitRoot) !== resolve(ownGitRoot)) {
+  if (resolve(targetGitRoot) === resolve(ownGitRoot)) return; // own repo
+  const branch = git.currentBranch(targetGitRoot);
+  if (branch !== sandboxBranch) {
     throw new Error(
-      `dsm edit only operates on its own repository in this version (${ownGitRoot}). ` +
-      `Target ${targetGitRoot} is read-only — the gated cross-repo flow comes later.`,
+      `Refusing to edit external target ${targetGitRoot}: it must be on the sandbox branch ` +
+      `"${sandboxBranch}" (currently ${branch ?? 'detached HEAD'}). ` +
+      `Switch with:  git -C ${targetGitRoot} checkout ${sandboxBranch}`,
     );
   }
 }
@@ -73,8 +84,11 @@ export function sessionRoot(paths) {
 }
 
 export function startSession(paths, options = {}) {
-  const { scope: userScope, allowDirty = false, force = false } = options;
-  const root = git.repoRoot(paths.repoRoot);
+  const { scope: userScope, allowDirty = false, force = false, targetRoot = null, target = null } = options;
+  const external = !!target;
+  // For an external target the files (and git ops) live in its own repo; for
+  // DSM's own repo the session root is paths.repoRoot.
+  const root = git.repoRoot(targetRoot ?? paths.repoRoot);
 
   const existing = loadSession(root);
   if (existing && !force) {
@@ -87,17 +101,23 @@ export function startSession(paths, options = {}) {
   const baseRef = git.headSha(root); // throws helpfully on unborn HEAD
   const branch = git.currentBranch(root);
 
-  // Scope is stored repoRoot-relative. Default: the design-system directory.
+  // Scope is stored repoRoot-relative. An external target has no design-system/
+  // layout to default to, so --scope is required there; DSM defaults to design-system/.
+  if (external && !userScope?.length) {
+    throw new Error('--scope is required when editing an external target (no default scope).');
+  }
   const scope = (userScope?.length ? userScope : [relative(root, paths.dsRoot) || '.'])
     .map((s) => toPosix(relative(root, resolve(root, s)) || '.'));
 
   // Build artifacts are git-TRACKED and regenerated whenever tokens build, so
   // any session that can touch tokens.json must also own build/ — otherwise
   // approve leaves dirty artifacts and revert leaves them at the edited state.
+  // This only applies to DSM's own token pipeline; external targets own neither.
   const tokensRel = toPosix(relative(root, paths.tokensPath));
   const buildRel = toPosix(relative(root, paths.buildDir));
+  const tokensInScope = !external && inScope(tokensRel, scope);
   const effectiveScope = [...scope];
-  if (inScope(tokensRel, scope) && !inScope(buildRel, effectiveScope)) {
+  if (tokensInScope && !inScope(buildRel, effectiveScope)) {
     effectiveScope.push(buildRel);
   }
 
@@ -120,7 +140,9 @@ export function startSession(paths, options = {}) {
     branch,
     scope,
     effectiveScope,
-    tokensInScope: inScope(tokensRel, scope),
+    tokensInScope,
+    external,
+    target,
     startedAt: new Date().toISOString(),
     repoRoot: root,
   };
@@ -182,12 +204,15 @@ export async function checkSession(paths, session) {
     .map((f) => join(root, f))
     .filter((f) => existsSync(f));
   if (sourceFiles.length) {
-    result.typecheck = typecheckFiles(sourceFiles);
+    // External targets: parse-only (we don't load their strict tsconfig/aliases).
+    result.typecheck = typecheckFiles(sourceFiles, { lenient: !!session.external });
     if (result.typecheck.some((d) => d.category === 'error')) result.ok = false;
   }
 
+  // Token validation/rebuild is DSM-pipeline-specific; external targets don't own
+  // tokens.json, so skip it entirely (nothing in their scope can be DSM's tokens).
   const tokensRel = toPosix(relative(root, paths.tokensPath));
-  if (changes.all.includes(tokensRel)) {
+  if (!session.external && changes.all.includes(tokensRel)) {
     const tokens = { changed: true, parse: 'ok', unresolvedRefs: [], build: 'ok' };
     try {
       JSON.parse(readFileSync(paths.tokensPath, 'utf8'));

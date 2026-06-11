@@ -16,7 +16,7 @@ import {
   abandonSession,
   approveSession,
   artifactDir,
-  assertOwnRepo,
+  assertEditableTarget,
   checkSession,
   requireSession,
   revertSession,
@@ -34,7 +34,9 @@ const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
 function gatedPaths() {
   const paths = resolveProjectPaths();
-  assertOwnRepo(paths, PACKAGE_ROOT);
+  // MCP tools operate on DSM's own repo; cross-repo --target editing is CLI-only
+  // in this slice (assertEditableTarget allows the own-repo case unconditionally).
+  assertEditableTarget(git.repoRoot(paths.repoRoot), PACKAGE_ROOT);
   return paths;
 }
 
