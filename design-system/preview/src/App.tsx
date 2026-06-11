@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { data } from './data';
-import ComponentMatrix from './components/ComponentMatrix';
+import ComponentCanvas from './components/ComponentCanvas';
 import { getSections, SectionList } from './tokens/sections';
 import IconSetGrid from './tokens/IconSetGrid';
 import { CATEGORIES, categoryOf } from './lib/tokenKind';
 import type { TokenCategory } from './lib/tokenKind';
 
 export type Theme = 'light' | 'dark';
-export type Viewport = 'full' | 'tablet' | 'mobile';
 type Source = 'securamark' | 'dsm';
 type Route = 'components' | TokenCategory;
 
@@ -21,7 +20,6 @@ export default function App() {
   const [route, setRoute] = useState<Route>(routeFromHash());
   const [source, setSource] = useState<Source>('securamark');
   const [theme, setTheme] = useState<Theme>('light');
-  const [viewport, setViewport] = useState<Viewport>('full');
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -105,7 +103,7 @@ export default function App() {
         <div className="sidebar-foot">Milestone 1 · foundation</div>
       </aside>
 
-      <main className="main">
+      <main className={`main${route === 'components' ? ' canvas-mode' : ''}`}>
         <header className="toolbar">
           <h1 className="toolbar-title">{title}</h1>
           <div className="toolbar-controls">
@@ -123,31 +121,21 @@ export default function App() {
                 </button>
               ))}
             </div>
-            {route === 'components' && (
-              <div className="seg" role="group" aria-label="Viewport">
-                {(['full', 'tablet', 'mobile'] as Viewport[]).map((v) => (
-                  <button key={v} className={viewport === v ? 'on' : ''} onClick={() => setViewport(v)}>
-                    {v}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </header>
 
-        <div className="content">
-          {route === 'components' ? (
-            <ComponentMatrix
-              components={componentList}
-              source={source}
-              iconWeight={iconWeight}
-              theme={theme}
-              viewport={viewport}
-            />
-          ) : (
+        {route === 'components' ? (
+          <ComponentCanvas
+            components={componentList}
+            source={source}
+            iconWeight={iconWeight}
+            theme={theme}
+          />
+        ) : (
+          <div className="content">
             <SectionList sections={sections} collapsed={collapsed} onToggle={toggle} />
-          )}
-        </div>
+          </div>
+        )}
       </main>
     </div>
   );
