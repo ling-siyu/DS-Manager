@@ -27,6 +27,7 @@ export default function App() {
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [scenarioIdx, setScenarioIdx] = useState(0);
+  const [inspectorWidth, setInspectorWidth] = useState(360);
 
   useEffect(() => {
     const onHash = () => setRoute(routeFromHash());
@@ -211,6 +212,8 @@ export default function App() {
           scenarioIdx={scenarioIdx}
           onScenarioChange={setScenarioIdx}
           onClose={() => setSelectedName(null)}
+          width={inspectorWidth}
+          onWidth={setInspectorWidth}
         />
       )}
     </div>

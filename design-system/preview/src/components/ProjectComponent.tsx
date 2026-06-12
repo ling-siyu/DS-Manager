@@ -76,6 +76,10 @@ export default function ProjectComponent({
   const [height, setHeight] = useState(56);
   const [error, setError] = useState('');
   const propsKey = useMemo(() => stableKey(props), [props]);
+  const rootRef = useRef<Root | null>(null);
+  const compRef = useRef<{ Comp: ComponentType<Record<string, unknown>>; Decorator: Decorator | null } | null>(null);
+  const propsRef = useRef(props);
+  propsRef.current = props;
 
   // Lazy-mount: only build a frame once it scrolls near the viewport, so a wall
   // of 70+ components doesn't spin up 70 React roots at once.
@@ -95,6 +99,23 @@ export default function ProjectComponent({
     return () => io.disconnect();
   }, [visible]);
 
+  // Render (or re-render) the loaded component into the iframe root with the
+  // current props — used on first load and on every prop edit.
+  const renderFrame = () => {
+    const root = rootRef.current;
+    const cr = compRef.current;
+    if (!root || !cr) return;
+    const inner = createElement(
+      IconContext.Provider,
+      { value: { weight: (iconWeight as never) ?? 'regular' } },
+      createElement(cr.Comp, propsRef.current),
+    );
+    root.render(cr.Decorator ? createElement(cr.Decorator, { theme, children: inner }) : inner);
+  };
+
+  // Build the iframe document + React root, then load the component. Rebuilds
+  // only when the frame identity changes (visible / absPath / theme / icon /
+  // freeze) — NOT on prop edits, so tweaking props stays smooth.
   useEffect(() => {
     if (!visible) return;
     const iframe = frameRef.current;
@@ -102,7 +123,6 @@ export default function ProjectComponent({
     if (!doc) return;
 
     let alive = true;
-    let root: Root | null = null;
     let ro: ResizeObserver | null = null;
     setError('');
 
@@ -126,7 +146,7 @@ export default function ProjectComponent({
 
     const container = doc.createElement('div');
     doc.body.appendChild(container);
-    root = createRoot(container);
+    rootRef.current = createRoot(container);
 
     const measure = () => {
       if (alive) setHeight(Math.max(1, doc.documentElement.scrollHeight));
@@ -135,15 +155,11 @@ export default function ProjectComponent({
     (async () => {
       try {
         const [mod, Decorator] = await Promise.all([loadFromFs(absPath), loadDecorator()]);
-        if (!alive || !root) return;
+        if (!alive) return;
         const Comp = (mod as { default?: ComponentType<Record<string, unknown>> }).default;
         if (!Comp) throw new Error(`${absPath} has no default export`);
-        const inner = createElement(
-          IconContext.Provider,
-          { value: { weight: (iconWeight as never) ?? 'regular' } },
-          createElement(Comp, props),
-        );
-        root.render(Decorator ? createElement(Decorator, { theme, children: inner }) : inner);
+        compRef.current = { Comp, Decorator };
+        renderFrame();
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
             measure();
@@ -160,14 +176,21 @@ export default function ProjectComponent({
     return () => {
       alive = false;
       ro?.disconnect();
-      const r = root;
-      root = null;
+      const r = rootRef.current;
+      rootRef.current = null;
+      compRef.current = null;
       // Defer unmount past the current commit to avoid React's "unmount while
       // rendering" warning when the parent re-renders.
       queueMicrotask(() => r?.unmount());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, absPath, theme, iconWeight, propsKey, freezeMotion]);
+  }, [visible, absPath, theme, iconWeight, freezeMotion]);
+
+  // Prop edits re-render the existing root in place — no iframe rebuild.
+  useEffect(() => {
+    renderFrame();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propsKey]);
 
   if (error) return <div className="render-error">{error}</div>;
   return (

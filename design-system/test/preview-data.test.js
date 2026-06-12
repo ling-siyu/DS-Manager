@@ -43,6 +43,15 @@ test('payload exposes the single-source shape', () => {
   assert.equal(typeof data.cssVars, 'string', 'cssVars is a string');
   assert.equal(typeof data.projectCss, 'string', 'projectCss is a string (filled by the ui command)');
   assert.ok(data.icons === null || typeof data.icons === 'object', 'icons is null or a capture object');
+  assert.ok(
+    data.projectTheme === null ||
+      ['background', 'primary', 'onPrimary'].every((k) => {
+        const v = data.projectTheme[k];
+        return v === null || (typeof v.dark === 'string' && typeof v.light === 'string');
+      }),
+    'projectTheme is null or {background, primary, onPrimary} of null-or-{dark,light}',
+  );
+  assert.ok(data.components.every((c) => typeof c.category === 'string' && c.category.length), 'every component carries a category');
   assert.ok(!('tokenSets' in data), 'no legacy dual token sets');
   assert.ok(!('securamark' in data), 'no legacy securamark channel');
 });

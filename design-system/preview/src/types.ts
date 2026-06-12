@@ -1,3 +1,6 @@
+/** A theme color's dark + light values, or null when the token is absent. */
+export type ColorPair = { dark: string; light: string } | null;
+
 export interface GalleryToken {
   path: string;
   name: string;
@@ -57,6 +60,19 @@ export interface PreviewData {
   /** The project's REAL compiled stylesheet (preflight + base + theme), injected
    *  inside each render iframe for full fidelity. */
   projectCss: string;
+  /** The project's key theme colors (dark + light), so the chrome adopts the
+   *  project's identity — neutrals (background/surface/text/border) plus the
+   *  primary accent. Fields null when the token is absent. */
+  projectTheme: {
+    background: ColorPair;
+    surface: ColorPair;
+    surfaceMuted: ColorPair;
+    text: ColorPair;
+    textMuted: ColorPair;
+    border: ColorPair;
+    primary: ColorPair;
+    onPrimary: ColorPair;
+  } | null;
   /** Absolute path to the project's optional preview decorator
    *  (design-system/preview.tsx), loaded via /@fs to wrap every render. */
   decoratorPath: string | null;

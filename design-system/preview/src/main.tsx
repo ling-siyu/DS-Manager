@@ -39,6 +39,37 @@ injectStyle('data-dsm-tokens', data.cssVars || '');
 // clobber the DSM chrome. It is injected per-component inside the render iframe
 // (ProjectComponent.tsx), where it applies with full fidelity in isolation.
 
+// Adopt the PROJECT's identity in the chrome (scoped to the theme attribute on
+// .app/.canvas-world, and ordered after styles.css so it overrides the defaults):
+//   --project-bg  → a component frame's card matches the surface it renders on
+//   --p-accent / --p-accent-text → retint nav selection, focus, outlines from
+//   DSM's default brand to the project's primary. Only these few values are
+//   surfaced — never the project's full stylesheet (that stays iframe-isolated).
+const t = data.projectTheme;
+if (t) {
+  // Map the chrome's --p-* surfaces to the project's neutrals + accent. --project-bg
+  // (component card / inspector stage) is the true app background; the canvas
+  // backdrop and panels use it too / the elevated surface.
+  const decl = (mode: 'dark' | 'light') => [
+    t.background?.[mode] && `--project-bg:${t.background[mode]}`,
+    t.background?.[mode] && `--p-bg:${t.background[mode]}`,
+    t.surface?.[mode] && `--p-panel:${t.surface[mode]}`,
+    t.surface?.[mode] && `--p-canvas:${t.surface[mode]}`,
+    t.surfaceMuted?.[mode] && `--p-chip:${t.surfaceMuted[mode]}`,
+    t.text?.[mode] && `--p-text:${t.text[mode]}`,
+    t.textMuted?.[mode] && `--p-muted:${t.textMuted[mode]}`,
+    t.border?.[mode] && `--p-border:${t.border[mode]}`,
+    t.primary?.[mode] && `--p-accent:${t.primary[mode]}`,
+    t.onPrimary?.[mode] && `--p-accent-text:${t.onPrimary[mode]}`,
+  ].filter(Boolean).join(';');
+  const dark = decl('dark');
+  const light = decl('light');
+  injectStyle(
+    'data-project-theme',
+    `${dark ? `[data-theme="dark"]{${dark}}` : ''}${light ? `[data-theme="light"]{${light}}` : ''}`,
+  );
+}
+
 // The screenshot stage bypasses the App chrome entirely (and StrictMode's
 // double-invocation, which would double dynamic imports for no benefit there).
 const isStage = window.location.hash.startsWith('#/stage/');

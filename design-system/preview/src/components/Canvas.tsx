@@ -41,11 +41,9 @@ export function scenariosOf(component: PreviewComponent) {
 function Frame({
   frame,
   selected,
-  onSelect,
 }: {
   frame: CanvasFrame;
   selected: boolean;
-  onSelect: (id: string) => void;
 }) {
   // A section frame is a full-width category band (header only), not a card.
   if (frame.variant === 'section') {
@@ -57,10 +55,13 @@ function Frame({
       </div>
     );
   }
+  // Selection is handled centrally by the canvas pointer handler (which
+  // distinguishes a click from a pan) via the data-frame-id below — so a click
+  // selects, but a drag that starts on a card still pans.
   return (
     <section
       className={`cframe ${frame.variant}${selected ? ' selected' : ''}${frame.selectable ? ' selectable' : ''}`}
-      onClick={frame.selectable ? (e) => { e.stopPropagation(); onSelect(frame.id); } : undefined}
+      data-frame-id={frame.selectable ? frame.id : undefined}
     >
       <header className="cframe-label">
         {frame.status && <span className={`status-dot status-${frame.status}`} />}
@@ -134,7 +135,9 @@ export default function Canvas({
   useEffect(() => () => dragCleanup.current?.(), []);
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if ((e.target as Element).closest('.cframe, .canvas-overlay')) return;
+    // Don't hijack the floating dock controls (zoom / theme). Everything else —
+    // including component cards — can start a pan; a click (no movement) selects.
+    if ((e.target as Element).closest('.canvas-overlay')) return;
     const start = { px: e.clientX, py: e.clientY, cx: camera.x, cy: camera.y };
     let moved = false;
     const onMove = (ev: PointerEvent) => {
@@ -148,9 +151,11 @@ export default function Canvas({
       window.removeEventListener('pointerup', onUp);
       dragCleanup.current = null;
     };
-    const onUp = () => {
+    const onUp = (ev: PointerEvent) => {
       stop();
-      if (!moved) onSelect(null);
+      if (moved) return; // a pan, not a click
+      const frameEl = (ev.target as Element | null)?.closest?.('.cframe.selectable');
+      onSelect(frameEl?.getAttribute('data-frame-id') ?? null);
     };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
@@ -192,7 +197,7 @@ export default function Canvas({
           <p className="empty">Nothing to show here.</p>
         ) : (
           frames.map((f) => (
-            <Frame key={f.id} frame={f} selected={selectedId === f.id} onSelect={onSelect} />
+            <Frame key={f.id} frame={f} selected={selectedId === f.id} />
           ))
         )}
       </div>

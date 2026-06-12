@@ -39,6 +39,14 @@ body {
   background: var(--p-bg);
 }
 
+/* Lock the page: the canvas owns all pan/zoom, so the browser must never scroll
+   or rubber-band underneath it (which fought the canvas wheel handler). */
+html, body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 /* Full-bleed canvas app: the surface fills the viewport; everything else
    floats over it as docks. */
 .app {
@@ -215,12 +223,19 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
 }
 .cframe.selected .cframe-body { outline: 2px solid var(--p-accent); outline-offset: 1px; }
-/* A component frame shows one representative render, centered. */
+/* A component frame shows one representative render, centered. The card uses the
+   PROJECT's background token (the surface the component actually renders on, set
+   per theme in main.tsx) so the card and the in-iframe component bg match. */
 .cframe.component .cframe-body {
   display: flex; align-items: center; justify-content: center;
   min-width: 160px; min-height: 92px; padding: 28px;
+  background: var(--project-bg, var(--p-canvas));
 }
 .cframe.component:hover .cframe-body { border-color: var(--p-accent); }
+/* On the canvas, component iframes are inert so wheel/drag reach the canvas
+   (pan/zoom) and a click selects the frame instead of being swallowed by the
+   iframe. The inspector renders the same component fully interactive. */
+.cframe.component .render-iframe { pointer-events: none; }
 /* A token frame holds a section node at a fixed width so inner grids wrap. */
 .cframe.token .cframe-body { padding: 16px; }
 
@@ -257,11 +272,19 @@ body {
 /* Inspector — floating panel on the right for the selected component */
 .inspector {
   position: absolute; top: 16px; right: 16px; bottom: 16px; z-index: 10;
-  width: 340px; overflow-y: auto;
+  overflow-y: auto; overflow-x: hidden; max-width: calc(100vw - 32px);
   border: 1px solid var(--p-border); border-radius: var(--p-radius); background: var(--p-panel);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
   padding: 16px; display: flex; flex-direction: column; gap: 12px;
 }
+/* Drag handle on the panel's left edge to resize its width. */
+.inspector-resize {
+  position: absolute; left: -4px; top: 0; bottom: 0; width: 9px; cursor: ew-resize; z-index: 12;
+}
+.inspector-resize::after {
+  content: ''; position: absolute; left: 3px; top: 0; bottom: 0; width: 2px; background: transparent;
+}
+.inspector-resize:hover::after { background: var(--p-accent); }
 .inspector-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
 .inspector-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .inspector-title h2 { margin: 0; font-size: 16px; }
@@ -271,9 +294,12 @@ body {
 .inspector-tabs { display: flex; }
 .inspector-tabs button { flex: 1; }
 .inspector-body { display: flex; flex-direction: column; gap: 10px; }
+/* The preview stage renders on the PROJECT's background with Storybook-style
+   1rem padding, so it reads exactly like the component does in the app. */
 .inspector-stage {
-  display: flex; align-items: center; justify-content: center; min-height: 84px; padding: 24px;
-  border: 1px dashed var(--p-border); border-radius: var(--p-radius); background: var(--p-canvas);
+  display: flex; align-items: center; justify-content: center; min-height: 84px; padding: 16px;
+  border: 1px solid var(--p-border); border-radius: var(--p-radius);
+  background: var(--project-bg, var(--p-canvas));
 }
 .inspector-section { margin: 8px 0 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--p-muted); }
 .inspector-scenarios { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -283,11 +309,20 @@ body {
 }
 .scenario-pill:hover { background: var(--p-chip); }
 .scenario-pill.on { background: var(--p-accent); color: var(--p-accent-text); border-color: var(--p-accent); }
-.inspector-props { width: 100%; border-collapse: collapse; }
-.inspector-props td { padding: 4px 6px; font-size: 12px; border-top: 1px solid var(--p-border); }
+.inspector-props { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.inspector-props td { padding: 5px 6px; font-size: 12px; border-top: 1px solid var(--p-border); vertical-align: middle; }
+.inspector-props td.prop-name { width: 42%; word-break: break-word; }
+.inspector-props td.prop-ctl { width: 58%; }
+.prop-input {
+  width: 100%; font-size: 12px; padding: 3px 6px; border-radius: var(--p-radius);
+  border: 1px solid var(--p-border); background: var(--p-bg); color: var(--p-text);
+}
+.prop-input:focus { outline: none; border-color: var(--p-accent); }
+.prop-check { accent-color: var(--p-accent); width: 15px; height: 15px; }
 .inspector-hint { margin: 0; font-size: 11px; color: var(--p-muted); }
 .viewport-scaler { overflow: hidden; }
 .viewport-frame {
   transform-origin: 0 0;
-  border: 1px dashed var(--p-border); border-radius: var(--p-radius); background: var(--p-canvas); padding: 20px;
+  border: 1px solid var(--p-border); border-radius: var(--p-radius);
+  background: var(--project-bg, var(--p-canvas)); padding: 16px;
 }

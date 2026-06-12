@@ -123,6 +123,38 @@ function readCssVars(buildDir) {
   return readFileSync(cssPath, 'utf8');
 }
 
+/** A DTCG color token → { dark, light } pair (themeLight extension is the light
+ *  value; falls back to the base value). Null when the token is missing. */
+function colorPair(tok) {
+  if (!tok?.$value) return null;
+  return { dark: tok.$value, light: tok.$extensions?.[SM_EXT]?.themeLight ?? tok.$value };
+}
+
+/** The project's key theme colors (dark + light), surfaced to the chrome so the
+ *  DSM UI adopts the PROJECT's identity: `background` matches the surface a
+ *  component renders on; `primary`/`onPrimary` retint the chrome accent (nav
+ *  selection, focus, outlines) from DSM's default to the project's brand. Reads
+ *  the conventional color.{background,primary,on-primary} tokens; fields are
+ *  null when absent so the chrome keeps its own defaults. */
+function readProjectTheme(tokensPath) {
+  if (!tokensPath || !existsSync(tokensPath)) return null;
+  try {
+    const color = JSON.parse(readFileSync(tokensPath, 'utf8')).color ?? {};
+    return {
+      background: colorPair(color.background),
+      surface: colorPair(color.surface),
+      surfaceMuted: colorPair(color['surface-high'] ?? color['surface-base'] ?? color.surface),
+      text: colorPair(color['on-surface'] ?? color['on-background']),
+      textMuted: colorPair(color['on-surface-variant'] ?? color['on-surface']),
+      border: colorPair(color['outline-variant'] ?? color.outline),
+      primary: colorPair(color.primary),
+      onPrimary: colorPair(color['on-primary']),
+    };
+  } catch {
+    return null;
+  }
+}
+
 /** Icon usage captured from the project's source, for the icon gallery. */
 function buildIcons({ repoRoot, dsRoot }) {
   const root = repoRoot ?? dsRoot;
@@ -164,6 +196,7 @@ export function buildPreviewData(paths) {
     components: buildComponents(paths),
     cssVars: readCssVars(paths.buildDir),
     projectCss: '',
+    projectTheme: readProjectTheme(paths.tokensPath),
     decoratorPath: resolveDecoratorPath(paths),
     // Dark-first matches most design systems (and SecuraMark); the toolbar still
     // toggles light/dark.
