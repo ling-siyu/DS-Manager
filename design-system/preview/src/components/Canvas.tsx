@@ -10,6 +10,10 @@ import type { PreviewComponent, SecuraMarkComponent as SMComponent } from '../ty
 const WORLD_W = 1280;
 const MIN_Z = 0.2;
 const MAX_Z = 2.5;
+// Keep the default view clear of the floating docks: content starts right of the
+// left nav panel and below the top search bar.
+const SAFE_LEFT = 216;
+const SAFE_TOP = 92;
 
 interface Camera {
   x: number;
@@ -82,8 +86,10 @@ export default function Canvas({
     const view = viewRef.current;
     if (!view) return;
     const { width } = view.getBoundingClientRect();
-    const z = Math.min(1, Math.max(MIN_Z, (width - 64) / WORLD_W));
-    setCamera({ x: Math.max(24, (width - WORLD_W * z) / 2), y: 24, z });
+    const avail = width - SAFE_LEFT - 24;
+    const z = Math.min(1, Math.max(MIN_Z, avail / WORLD_W));
+    // Left-align past the nav; center within the remaining width when content is narrow.
+    setCamera({ x: SAFE_LEFT + Math.max(0, (avail - WORLD_W * z) / 2), y: SAFE_TOP, z });
   };
 
   // Refit when the content set changes (route/source), not while searching.

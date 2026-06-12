@@ -73,22 +73,28 @@ export default function App() {
     if (!isToken) {
       return componentList
         .filter((c) => !q || c.name.toLowerCase().includes(q) || (c.description ?? '').toLowerCase().includes(q))
-        .map((c: PreviewComponent | SMComponent) => ({
-          id: c.name,
-          label: c.name,
-          variant: 'component' as const,
-          status: c.status,
-          selectable: true,
-          node: (
-            <LiveRender
-              component={c}
-              source={source}
-              iconWeight={iconWeight}
-              scenarioProps={scenariosOf(c)[0].props}
-              resetKey={`canvas:${source}:${c.name}`}
-            />
-          ),
-        }));
+        .map((c: PreviewComponent | SMComponent) => {
+          // The selected component mirrors the inspector's active variation on
+          // the canvas; every other frame shows its default scenario.
+          const sc = scenariosOf(c);
+          const idx = c.name === selectedName ? Math.min(scenarioIdx, sc.length - 1) : 0;
+          return {
+            id: c.name,
+            label: c.name,
+            variant: 'component' as const,
+            status: c.status,
+            selectable: true,
+            node: (
+              <LiveRender
+                component={c}
+                source={source}
+                iconWeight={iconWeight}
+                scenarioProps={sc[idx].props}
+                resetKey={`canvas:${source}:${c.name}:${idx}`}
+              />
+            ),
+          };
+        });
     }
     return sections
       .filter((s) => !q || s.title.toLowerCase().includes(q))
@@ -100,7 +106,7 @@ export default function App() {
         selectable: false,
         node: <div className="token-frame">{s.node}</div>,
       }));
-  }, [isToken, componentList, sections, source, iconWeight, query]);
+  }, [isToken, componentList, sections, source, iconWeight, query, selectedName, scenarioIdx]);
 
   const total = isToken ? sections.length : componentList.length;
   const selected = useMemo(
