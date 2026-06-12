@@ -25,11 +25,15 @@ export interface PreviewScenario {
 export interface PreviewComponent {
   name: string;
   path: string;
+  /** Absolute source path, loaded cross-file via Vite dev `/@fs`. */
+  absPath: string;
   description: string;
   status: string;
   variants: string[];
   sizes: string[];
   props: Record<string, PreviewPropMeta>;
+  /** Callback prop names to stub with no-ops (controlled-input safety). */
+  handlers: string[];
   previewProps: Record<string, unknown>;
   previewScenarios: PreviewScenario[];
 }
@@ -41,15 +45,21 @@ export interface IconCapture {
   icons: { name: string; count: number }[];
 }
 
-export interface SecuraMarkComponent extends PreviewComponent {
-  absPath: string;
-  handlers: string[];
-}
-
 export interface PreviewData {
-  tokenSets: { dsm: GalleryToken[]; securamark: GalleryToken[] };
+  /** The current project's design tokens. */
+  tokens: GalleryToken[];
+  /** The current project's components. */
   components: PreviewComponent[];
+  /** Generated CSS custom properties (--ds-* variables). */
   cssVars: string;
-  icons: { securamark: IconCapture | null; dsm: IconCapture | null };
-  securamark: { dir: string | null; components: SecuraMarkComponent[]; css: string };
+  /** The project's REAL compiled stylesheet (preflight + base + theme), injected
+   *  inside each render iframe for full fidelity. */
+  projectCss: string;
+  /** Absolute path to the project's optional preview decorator
+   *  (design-system/preview.tsx), loaded via /@fs to wrap every render. */
+  decoratorPath: string | null;
+  /** Default theme for the preview ('dark' | 'light'). */
+  defaultTheme: string;
+  /** Icon usage captured from the project source. */
+  icons: IconCapture | null;
 }

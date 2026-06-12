@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Theme } from '../App';
-import type { PreviewComponent, SecuraMarkComponent as SMComponent } from '../types';
+import type { PreviewComponent } from '../types';
 
 // Content-agnostic Figma-like surface: frames laid out together on a pannable,
 // zoomable world. Frames carry arbitrary nodes (a component render, or a token
@@ -32,7 +32,7 @@ export interface CanvasFrame {
 }
 
 /** Scenarios for a component, defaulting to a single "Default" when none. */
-export function scenariosOf(component: PreviewComponent | SMComponent) {
+export function scenariosOf(component: PreviewComponent) {
   return component.previewScenarios.length
     ? component.previewScenarios
     : [{ name: 'Default', props: {} }];

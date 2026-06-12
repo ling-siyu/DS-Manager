@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from 'fs';
-import { resolve, join } from 'path';
-import { homedir } from 'os';
-import { loadTokens, loadRawTokens, flattenTokens, resolveReference } from './tokens.js';
+import { resolve } from 'path';
+import { loadTokens } from './tokens.js';
 import { discoverComponents, ownProps } from './component-discovery.js';
 import { captureIconUsage } from './icons.js';
 
@@ -9,6 +8,11 @@ import { captureIconUsage } from './icons.js';
 // and component sources into a single JSON-serializable object the Vite app
 // consumes via the `virtual:dsm-data` module. No Vite/React/DOM here — this is
 // fully testable headless.
+//
+// The preview is single-source: it renders the CURRENT project's tokens and
+// components (resolved from design-system/tokens.json + components.json). Every
+// component is loaded cross-file via Vite's dev `/@fs` using its absolute path
+// (fs-allowed in ui.js), so no per-source rendering split is needed.
 
 const SM_EXT = 'com.securamark';
 const COMPONENT_FILE = /\.(tsx|jsx|ts|js)$/;
@@ -27,7 +31,7 @@ function groupLabel(path) {
     .join(' / ');
 }
 
-/** Normalize one flattened token (DSM-resolved or raw DTCG) to a gallery item. */
+/** Normalize one flattened token (resolved or raw DTCG) to a gallery item. */
 function toGalleryItem(path, token) {
   const ext = token.$extensions?.[SM_EXT] ?? {};
   return {
@@ -43,52 +47,37 @@ function toGalleryItem(path, token) {
   };
 }
 
-/** DSM's own design system — uses loadTokens so references resolve + cssVar is set. */
-function buildDsmTokens(tokensPath) {
+/** The project's design tokens — loadTokens resolves references + sets cssVar. */
+function buildTokens(tokensPath) {
   if (!tokensPath || !existsSync(tokensPath)) return [];
   try {
     const resolved = loadTokens(tokensPath);
     return Object.entries(resolved).map(([path, token]) => toGalleryItem(path, token));
   } catch (err) {
     // A malformed token file shouldn't take down the whole preview.
-    console.warn(`preview-data: could not load DSM tokens (${err.message})`);
+    console.warn(`preview-data: could not load tokens (${err.message})`);
     return [];
   }
 }
 
-/** Resolve `{alias}` reference strings inside a composite token value object so
- *  typography/transition specimens render real values, not raw references. */
-function resolveComposite(value, flat) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
-  const out = {};
-  for (const [key, v] of Object.entries(value)) {
-    out[key] = typeof v === 'string' && v.startsWith('{') ? resolveReference(v, flat) : v;
+/** Resolve a registry-relative component path to an absolute source file. Tries
+ *  the project root first (the common case), then the design-system dir (DSM's
+ *  own components when developing DSM itself). */
+function toAbsPath(p, { repoRoot, dsRoot }) {
+  for (const base of [repoRoot, dsRoot].filter(Boolean)) {
+    const abs = resolve(base, p);
+    if (existsSync(abs)) return abs;
   }
-  return out;
-}
-
-/** SecuraMark's captured DTCG — raw groups (color/fontFamily/fontSize/…). */
-function buildSecuramarkTokens(securamarkTokensPath) {
-  if (!securamarkTokensPath || !existsSync(securamarkTokensPath)) return [];
-  try {
-    const raw = loadRawTokens(securamarkTokensPath);
-    const flat = flattenTokens(raw);
-    return Object.entries(flat).map(([path, token]) =>
-      toGalleryItem(path, { ...token, $value: resolveComposite(token.$value, flat) }),
-    );
-  } catch (err) {
-    console.warn(`preview-data: could not load SecuraMark tokens (${err.message})`);
-    return [];
-  }
+  return resolve(repoRoot ?? dsRoot ?? '.', p);
 }
 
 /**
  * Component matrix data: the curated registry (which carries previewProps /
  * previewScenarios / description) enriched with live discovery (authored props
- * via ownProps). Entries whose path is not a component source file (e.g. junk
- * rows pointing at index.html) are excluded.
+ * via ownProps). Each entry gets an absolute source path for cross-file /@fs
+ * rendering. Entries whose source file is missing are dropped.
  */
-function buildComponents({ componentsPath, dsRoot }) {
+function buildComponents({ componentsPath, dsRoot, repoRoot }) {
   const registry = componentsPath && existsSync(componentsPath)
     ? JSON.parse(readFileSync(componentsPath, 'utf8'))
     : { components: [] };
@@ -97,21 +86,30 @@ function buildComponents({ componentsPath, dsRoot }) {
   let byName = new Map();
   try { byName = discoverComponents(dsRoot).byName; } catch { byName = new Map(); }
 
-  return entries.map((c) => {
-    const discovered = byName.get(c.name);
-    const props = discovered ? ownProps(discovered.props) : (c.props ?? {});
-    return {
-      name: c.name,
-      path: c.path,
-      description: c.description ?? '',
-      status: c.status ?? 'stable',
-      variants: discovered?.variants?.length ? discovered.variants : (c.variants ?? []),
-      sizes: discovered?.sizes?.length ? discovered.sizes : (c.sizes ?? []),
-      props,
-      previewProps: c.previewProps ?? {},
-      previewScenarios: Array.isArray(c.previewScenarios) ? c.previewScenarios : [],
-    };
-  });
+  return entries
+    .map((c) => {
+      const discovered = byName.get(c.name);
+      const props = discovered ? ownProps(discovered.props) : (c.props ?? {});
+      return {
+        name: c.name,
+        path: c.path,
+        absPath: toAbsPath(c.path, { repoRoot, dsRoot }),
+        description: c.description ?? '',
+        status: c.status ?? 'stable',
+        variants: discovered?.variants?.length ? discovered.variants : (c.variants ?? []),
+        sizes: discovered?.sizes?.length ? discovered.sizes : (c.sizes ?? []),
+        props,
+        // No-op these callback props so controlled inputs render without React's
+        // "value without onChange" warning. Prefer explicit registry handlers,
+        // else infer from on*-named props.
+        handlers: Array.isArray(c.handlers) && c.handlers.length
+          ? c.handlers
+          : Object.keys(props).filter((k) => /^on[A-Z]/.test(k)),
+        previewProps: c.previewProps ?? {},
+        previewScenarios: Array.isArray(c.previewScenarios) ? c.previewScenarios : [],
+      };
+    })
+    .filter((c) => existsSync(c.absPath));
 }
 
 function readCssVars(buildDir) {
@@ -120,87 +118,51 @@ function readCssVars(buildDir) {
   return readFileSync(cssPath, 'utf8');
 }
 
-/** Icon usage: SecuraMark from its committed capture; DSM scanned live. */
+/** Icon usage captured from the project's source, for the icon gallery. */
 function buildIcons({ repoRoot, dsRoot }) {
-  const capturePath = repoRoot ? resolve(repoRoot, 'targets/securamark/icons.json') : null;
-  let securamark = null;
-  if (capturePath && existsSync(capturePath)) {
-    try { securamark = JSON.parse(readFileSync(capturePath, 'utf8')); } catch { securamark = null; }
-  }
-
-  let dsm = null;
-  if (dsRoot) {
+  const root = repoRoot ?? dsRoot;
+  if (!root) return null;
+  try {
     const iconsData = existsSync(resolve(dsRoot, 'icons.json'))
       ? JSON.parse(readFileSync(resolve(dsRoot, 'icons.json'), 'utf8'))
       : {};
-    try { dsm = captureIconUsage(resolve(dsRoot, 'src'), iconsData); } catch { dsm = null; }
+    return captureIconUsage(resolve(root, 'src'), iconsData);
+  } catch {
+    return null;
   }
-
-  return { securamark, dsm };
-}
-
-/** Absolute path to the (read-only) SecuraMark source, for cross-repo rendering. */
-export function securamarkDir() {
-  return process.env.SECURAMARK_DIR || join(homedir(), 'Projects/securamark-frontend');
 }
 
 /**
- * Curated SecuraMark components to render cross-repo. Reads the committed
- * registry (targets/securamark/components.json) and resolves each path to an
- * ABSOLUTE path under the SecuraMark source (the preview loads it via Vite's
- * dev-only `/@fs`). Empty if the source or registry is absent. `css` is filled in
- * by the ui command (it needs an async Tailwind compile).
+ * Optional project-supplied preview config — the analog of Storybook's
+ * preview.tsx. A `design-system/preview.{tsx,jsx}` whose default export is a
+ * decorator component `({ children, theme }) => ReactNode` lets the project wrap
+ * every rendered component in its real providers (auth, i18n, data, …). Returns
+ * the absolute path (loaded via /@fs inside the render iframe) or null.
  */
-function buildSecuramark(paths) {
-  const dir = securamarkDir();
-  const regPath = paths.repoRoot ? resolve(paths.repoRoot, 'targets/securamark/components.json') : null;
-  if (!dir || !existsSync(dir) || !regPath || !existsSync(regPath)) {
-    return { dir: null, components: [], css: '' };
+function resolveDecoratorPath({ dsRoot }) {
+  if (!dsRoot) return null;
+  for (const name of ['preview.tsx', 'preview.jsx']) {
+    const abs = resolve(dsRoot, name);
+    if (existsSync(abs)) return abs;
   }
-  let components = [];
-  try {
-    const reg = JSON.parse(readFileSync(regPath, 'utf8'));
-    components = (reg.components ?? []).map((c) => ({
-      name: c.name,
-      path: c.path,
-      absPath: resolve(dir, c.path),
-      description: c.description ?? '',
-      status: c.status ?? 'stable',
-      variants: c.variants ?? [],
-      sizes: c.sizes ?? [],
-      props: c.props ?? {},
-      previewProps: c.previewProps ?? {},
-      previewScenarios: Array.isArray(c.previewScenarios) ? c.previewScenarios : [],
-      handlers: Array.isArray(c.handlers) ? c.handlers : [],
-    }));
-    const missing = components.filter((c) => !existsSync(c.absPath));
-    if (missing.length) {
-      console.warn(`preview-data: skipping SecuraMark components with missing source: ${missing.map((c) => c.name).join(', ')}`);
-    }
-    components = components.filter((c) => existsSync(c.absPath));
-  } catch {
-    components = [];
-  }
-  return { dir, components, css: '' };
+  return null;
 }
 
 /**
  * Assemble the full preview payload. `paths` is the object returned by
  * resolveProjectPaths() (tokensPath, componentsPath, dsRoot, repoRoot, buildDir).
+ * `projectCss` is filled in by the ui command (it needs an async Tailwind compile).
  */
 export function buildPreviewData(paths) {
-  const securamarkTokensPath = paths.repoRoot
-    ? resolve(paths.repoRoot, 'targets/securamark/tokens.json')
-    : null;
-
   return {
-    tokenSets: {
-      dsm: buildDsmTokens(paths.tokensPath),
-      securamark: buildSecuramarkTokens(securamarkTokensPath),
-    },
+    tokens: buildTokens(paths.tokensPath),
     components: buildComponents(paths),
     cssVars: readCssVars(paths.buildDir),
+    projectCss: '',
+    decoratorPath: resolveDecoratorPath(paths),
+    // Dark-first matches most design systems (and SecuraMark); the toolbar still
+    // toggles light/dark.
+    defaultTheme: 'dark',
     icons: buildIcons(paths),
-    securamark: buildSecuramark(paths),
   };
 }

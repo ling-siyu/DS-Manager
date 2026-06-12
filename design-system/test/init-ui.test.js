@@ -227,6 +227,37 @@ test('ensureCoreDsmProjectFiles bootstraps the minimum DSM config into a fresh r
   assert.ok(results.some((step) => step.label === 'design-system/tokens.json'));
 });
 
+test('ensureCoreDsmProjectFiles refreshes the managed SD config on update but never user data', () => {
+  const targetRoot = mkdtempSync(resolve(tmpdir(), 'dsm-core-refresh-'));
+  writeFileSync(resolve(targetRoot, 'package.json'), JSON.stringify({ name: 'fixture', private: true }, null, 2));
+  ensureCoreDsmProjectFiles(targetRoot, PACKAGE_ROOT);
+
+  const sdPath = resolve(targetRoot, 'design-system/style-dictionary.config.mjs');
+  const tokensPath = resolve(targetRoot, 'design-system/tokens.json');
+
+  // Simulate a stale (outdated) installed config and user-edited tokens.
+  writeFileSync(sdPath, '// stale config\n');
+  writeFileSync(tokensPath, '{ "primitive": { "user": "edit" } }');
+
+  // init semantics (no refresh): the existing config is left alone.
+  const initRun = ensureCoreDsmProjectFiles(targetRoot, PACKAGE_ROOT);
+  assert.equal(readFileSync(sdPath, 'utf8'), '// stale config\n', 'config untouched without refreshManaged');
+  assert.ok(initRun.find((s) => s.label.endsWith('style-dictionary.config.mjs')).status.startsWith('skipped'));
+
+  // update semantics: the managed config is refreshed from the template…
+  const updateRun = ensureCoreDsmProjectFiles(targetRoot, PACKAGE_ROOT, { refreshManaged: true });
+  const template = readFileSync(resolve(PACKAGE_ROOT, 'style-dictionary.config.mjs'), 'utf8');
+  assert.equal(readFileSync(sdPath, 'utf8'), template, 'config refreshed from template');
+  assert.equal(updateRun.find((s) => s.label.endsWith('style-dictionary.config.mjs')).status, 'refreshed');
+
+  // …but user data is never overwritten, even on update.
+  assert.equal(readFileSync(tokensPath, 'utf8'), '{ "primitive": { "user": "edit" } }', 'tokens.json preserved');
+
+  // A second update with the config already current reports it as up to date.
+  const idempotent = ensureCoreDsmProjectFiles(targetRoot, PACKAGE_ROOT, { refreshManaged: true });
+  assert.equal(idempotent.find((s) => s.label.endsWith('style-dictionary.config.mjs')).status, 'up to date');
+});
+
 test('createLocalCliWrapper prefers installed DSM and falls back to the source checkout', () => {
   const targetRoot = createTempProject();
   createLocalCliWrapper(targetRoot, '/tmp/source-dsm/src/cli.js');

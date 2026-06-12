@@ -34,9 +34,10 @@ function injectStyle(attr: string, css: string) {
 }
 
 injectStyle('data-dsm-tokens', data.cssVars || '');
-// SecuraMark's compiled Tailwind utilities + @theme (no preflight) so its real
-// components render styled. Inert for the chrome (which uses custom class names).
-injectStyle('data-securamark-css', data.securamark?.css || '');
+// NOTE: data.projectCss is deliberately NOT injected here. It is the project's
+// REAL stylesheet (Tailwind preflight + @layer base resets + theme) and would
+// clobber the DSM chrome. It is injected per-component inside the render iframe
+// (ProjectComponent.tsx), where it applies with full fidelity in isolation.
 
 // The screenshot stage bypasses the App chrome entirely (and StrictMode's
 // double-invocation, which would double dynamic imports for no benefit there).

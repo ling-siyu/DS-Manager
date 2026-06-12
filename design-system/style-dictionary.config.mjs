@@ -199,7 +199,10 @@ export default {
   platforms: {
     // ── 1. CSS Custom Properties ────────────────────────────────────────────
     css: {
-      transformGroup: 'css',
+      // 'css/ds' is the built-in 'css' group minus typography/css/shorthand —
+      // see registerFormats below. Our custom formatter expands typography
+      // composites itself, so the shorthand transform is unused noise.
+      transformGroup: 'css/ds',
       prefix: 'ds',
       buildPath: resolve(__dirname, 'build') + '/',
       files: [
@@ -248,5 +251,17 @@ export function registerFormats(sd) {
   sd.registerFormat({
     name: 'custom/tailwind',
     format: tailwindFormatter,
+  });
+
+  // 'css/ds': the built-in 'css' transform group with typography/css/shorthand
+  // removed. dsVariablesFormatter expands typography composites from each
+  // token's original $value into property-specific vars (--…-font-size, etc.),
+  // so the shorthand transform's output is never used — and it emits noisy
+  // "Unknown CSS Font Shorthand properties" warnings for tokens carrying
+  // letterSpacing/lineHeight. Derived from the live group list so it stays
+  // correct across Style Dictionary versions.
+  sd.registerTransformGroup({
+    name: 'css/ds',
+    transforms: sd.hooks.transformGroups.css.filter((t) => t !== 'typography/css/shorthand'),
   });
 }

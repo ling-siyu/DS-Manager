@@ -8,10 +8,8 @@ import { getSections } from './tokens/sections';
 import IconSetGrid from './tokens/IconSetGrid';
 import { CATEGORIES, categoryOf } from './lib/tokenKind';
 import type { TokenCategory } from './lib/tokenKind';
-import type { PreviewComponent, SecuraMarkComponent as SMComponent } from './types';
 
 export type Theme = 'light' | 'dark';
-type Source = 'securamark' | 'dsm';
 type Route = 'components' | TokenCategory;
 
 function routeFromHash(): Route {
@@ -22,8 +20,7 @@ function routeFromHash(): Route {
 
 export default function App() {
   const [route, setRoute] = useState<Route>(routeFromHash());
-  const [source, setSource] = useState<Source>('securamark');
-  const [theme, setTheme] = useState<Theme>('light');
+  const [theme, setTheme] = useState<Theme>((data.defaultTheme as Theme) ?? 'dark');
   const [query, setQuery] = useState('');
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const [scenarioIdx, setScenarioIdx] = useState(0);
@@ -34,16 +31,16 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
-  // Clear search + selection whenever the content set changes.
+  // Clear search + selection whenever the route changes.
   useEffect(() => {
     setQuery('');
     setSelectedName(null);
-  }, [route, source]);
+  }, [route]);
 
   const isToken = route !== 'components';
-  const tokens = data.tokenSets[source];
-  const componentList = source === 'securamark' ? (data.securamark?.components ?? []) : data.components;
-  const iconWeight = data.icons?.securamark?.style?.weight ?? 'light';
+  const tokens = data.tokens;
+  const componentList = data.components;
+  const iconWeight = data.icons?.style?.weight ?? 'light';
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
@@ -54,7 +51,7 @@ export default function App() {
     return c;
   }, [tokens]);
 
-  const iconCapture = isToken ? data.icons?.[source] ?? null : null;
+  const iconCapture = isToken ? data.icons ?? null : null;
   const sections = useMemo(() => {
     if (!isToken) return [];
     const base = getSections(tokens.filter((t) => categoryOf(t) === route), route as TokenCategory, theme);
@@ -65,7 +62,7 @@ export default function App() {
       ];
     }
     return base;
-  }, [isToken, tokens, route, theme, source, iconCapture]);
+  }, [isToken, tokens, route, theme, iconCapture]);
 
   // Build canvas frames for the active route, filtered by the search query.
   const frames = useMemo<CanvasFrame[]>(() => {
@@ -73,7 +70,7 @@ export default function App() {
     if (!isToken) {
       return componentList
         .filter((c) => !q || c.name.toLowerCase().includes(q) || (c.description ?? '').toLowerCase().includes(q))
-        .map((c: PreviewComponent | SMComponent) => {
+        .map((c) => {
           // The selected component mirrors the inspector's active variation on
           // the canvas; every other frame shows its default scenario.
           const sc = scenariosOf(c);
@@ -87,10 +84,10 @@ export default function App() {
             node: (
               <LiveRender
                 component={c}
-                source={source}
                 iconWeight={iconWeight}
+                theme={theme}
                 scenarioProps={sc[idx].props}
-                resetKey={`canvas:${source}:${c.name}:${idx}`}
+                resetKey={`canvas:${c.name}:${idx}`}
               />
             ),
           };
@@ -106,7 +103,7 @@ export default function App() {
         selectable: false,
         node: <div className="token-frame">{s.node}</div>,
       }));
-  }, [isToken, componentList, sections, source, iconWeight, query, selectedName, scenarioIdx]);
+  }, [isToken, componentList, sections, iconWeight, theme, query, selectedName, scenarioIdx]);
 
   const total = isToken ? sections.length : componentList.length;
   const selected = useMemo(
@@ -131,24 +128,15 @@ export default function App() {
         selectedId={selected?.name ?? null}
         onSelect={onSelect}
         theme={theme}
-        resetKey={`${route}:${source}`}
+        resetKey={route}
         controls={
-          <>
-            <div className="seg" role="group" aria-label="Source">
-              {(['securamark', 'dsm'] as Source[]).map((s) => (
-                <button key={s} className={source === s ? 'on' : ''} onClick={() => setSource(s)}>
-                  {s === 'securamark' ? 'SecuraMark' : 'DSM'}
-                </button>
-              ))}
-            </div>
-            <div className="seg" role="group" aria-label="Theme">
-              {(['light', 'dark'] as Theme[]).map((t) => (
-                <button key={t} className={theme === t ? 'on' : ''} onClick={() => setTheme(t)}>
-                  {t}
-                </button>
-              ))}
-            </div>
-          </>
+          <div className="seg" role="group" aria-label="Theme">
+            {(['light', 'dark'] as Theme[]).map((t) => (
+              <button key={t} className={theme === t ? 'on' : ''} onClick={() => setTheme(t)}>
+                {t}
+              </button>
+            ))}
+          </div>
         }
       />
 
@@ -178,9 +166,8 @@ export default function App() {
 
       {selected && (
         <Inspector
-          key={`${source}:${selected.name}`}
+          key={selected.name}
           component={selected}
-          source={source}
           iconWeight={iconWeight}
           theme={theme}
           scenarioIdx={scenarioIdx}

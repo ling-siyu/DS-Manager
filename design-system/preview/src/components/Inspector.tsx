@@ -1,8 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import type { PreviewComponent, SecuraMarkComponent as SMComponent } from '../types';
+import type { PreviewComponent } from '../types';
 import type { Theme } from '../App';
 import LiveRender from './LiveRender';
-import type { Source } from './LiveRender';
 import { scenariosOf } from './Canvas';
 
 // Right-hand inspector for the selected canvas component: variations + props,
@@ -55,15 +54,13 @@ function ScaledViewport({
 
 export default function Inspector({
   component,
-  source,
   iconWeight,
   theme,
   scenarioIdx,
   onScenarioChange,
   onClose,
 }: {
-  component: PreviewComponent | SMComponent;
-  source: Source;
+  component: PreviewComponent;
   iconWeight?: string;
   theme: Theme;
   scenarioIdx: number;
@@ -103,10 +100,10 @@ export default function Inspector({
           <div className="inspector-stage">
             <LiveRender
               component={component}
-              source={source}
               iconWeight={iconWeight}
+              theme={theme}
               scenarioProps={scenario.props}
-              resetKey={`inspect:${source}:${component.name}:${scenarioIdx}`}
+              resetKey={`inspect:${component.name}:${scenarioIdx}`}
             />
           </div>
 
@@ -171,10 +168,10 @@ export default function Inspector({
           <ScaledViewport width={device.width} available={AVAILABLE}>
             <LiveRender
               component={component}
-              source={source}
               iconWeight={iconWeight}
+              theme={theme}
               scenarioProps={scenario.props}
-              resetKey={`responsive:${source}:${component.name}:${scenarioIdx}:${device.id}`}
+              resetKey={`responsive:${component.name}:${scenarioIdx}:${device.id}`}
             />
           </ScaledViewport>
         </div>

@@ -1,60 +1,48 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'fs';
 
 import { buildPreviewData } from '../src/utils/preview-data.js';
 import { resolveProjectPaths } from '../src/utils/paths.js';
 
-// Runs against the real repo sources (tokens.json, components.json, and the
-// committed SecuraMark capture). The data layer is pure, so this is a fast
-// headless check of the shapes the Vite preview consumes.
+// Runs against the real repo sources (tokens.json, components.json). The data
+// layer is pure and single-source — it exposes the current project's tokens and
+// components — so this is a fast headless check of the shapes the Vite preview
+// consumes.
 
 const data = buildPreviewData(resolveProjectPaths());
 
-test('SecuraMark token set carries dark/light colors and fontSize line-heights', () => {
-  const { securamark } = data.tokenSets;
-  assert.ok(securamark.length > 50, 'SecuraMark token set should be populated');
-
-  const background = securamark.find((t) => t.path === 'color.background');
-  assert.ok(background, 'color.background present');
-  assert.equal(background.value, '#0e0e0e');
-  assert.equal(background.themeLight, '#f5f5f5', 'light variant carried from $extensions');
-
-  const base = securamark.find((t) => t.path === 'fontSize.base');
-  assert.ok(base, 'fontSize.base present');
-  assert.equal(base.lineHeight, '1.5rem', 'paired lineHeight carried from $extensions');
+test('token set resolves values and carries cssVar names', () => {
+  const { tokens } = data;
+  assert.ok(tokens.length > 0, 'token set should be populated');
+  assert.ok(tokens.every((t) => typeof t.group === 'string' && t.group.length), 'every item is grouped');
+  assert.ok(tokens.some((t) => typeof t.cssVar === 'string' && t.cssVar.startsWith('--ds-')), 'cssVar present');
 });
 
-test('DSM token set resolves values and carries cssVar names', () => {
-  const { dsm } = data.tokenSets;
-  assert.ok(dsm.length > 0, 'DSM token set should be populated');
-  assert.ok(dsm.every((t) => typeof t.group === 'string' && t.group.length), 'every item is grouped');
-  assert.ok(dsm.some((t) => typeof t.cssVar === 'string' && t.cssVar.startsWith('--ds-')), 'cssVar present');
-});
-
-test('components exclude junk entries and carry preview metadata', () => {
+test('components exclude junk entries and carry preview metadata + absolute paths', () => {
   const list = data.components;
   assert.ok(Array.isArray(list) && list.length > 0, 'components is a non-empty array');
   // Junk registry rows (path pointing at index.html) are filtered out.
   assert.ok(list.every((c) => /\.(tsx|jsx|ts|js)$/.test(c.path)), 'every component path is a source file');
   assert.ok(!list.some((c) => c.path.endsWith('.html')), 'no .html junk entries');
 
+  // Every component resolves to an existing absolute source file (the renderer
+  // loads it cross-file via Vite /@fs).
+  for (const c of list) {
+    assert.ok(c.absPath.startsWith('/') && existsSync(c.absPath), `${c.name} has an existing absolute path`);
+    assert.ok(Array.isArray(c.previewScenarios), `${c.name} carries previewScenarios`);
+    assert.ok(Array.isArray(c.handlers), `${c.name} carries a handlers list`);
+  }
+
   const button = list.find((c) => c.name === 'Button');
   assert.ok(button, 'Button present');
-  assert.ok(Array.isArray(button.previewScenarios), 'previewScenarios is an array');
   assert.ok(button.previewProps && typeof button.previewProps === 'object', 'previewProps present');
 });
 
-test('SecuraMark components are exposed with absolute paths + preview scenarios', () => {
-  const sm = data.securamark;
-  // The capture is only present when the sibling SecuraMark repo exists locally.
-  if (!sm.dir) {
-    assert.deepEqual(sm.components, [], 'no SecuraMark components when source is absent');
-    return;
-  }
-  assert.ok(sm.components.length > 0, 'curated SecuraMark components present');
-  for (const c of sm.components) {
-    assert.ok(c.absPath.startsWith('/') && c.absPath.endsWith('.tsx'), `${c.name} has an absolute .tsx path`);
-    assert.ok(Array.isArray(c.previewScenarios), `${c.name} carries previewScenarios`);
-  }
-  assert.ok(sm.components.some((c) => c.name === 'Button'), 'Button is curated');
+test('payload exposes the single-source shape', () => {
+  assert.equal(typeof data.cssVars, 'string', 'cssVars is a string');
+  assert.equal(typeof data.projectCss, 'string', 'projectCss is a string (filled by the ui command)');
+  assert.ok(data.icons === null || typeof data.icons === 'object', 'icons is null or a capture object');
+  assert.ok(!('tokenSets' in data), 'no legacy dual token sets');
+  assert.ok(!('securamark' in data), 'no legacy securamark channel');
 });

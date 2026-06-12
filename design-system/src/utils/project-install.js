@@ -143,7 +143,11 @@ process.exit(lastResult?.code ?? 1);
   chmodSync(wrapperPath, 0o755);
 }
 
-export function ensureCoreDsmProjectFiles(targetRoot, templateRoot) {
+export function ensureCoreDsmProjectFiles(targetRoot, templateRoot, options = {}) {
+  // `refreshManaged` (set by `dsm update`) re-copies generated machinery — the
+  // Style Dictionary config — so formatter/transform fixes ship to existing
+  // installs. User data (tokens.json, components.json) is never overwritten.
+  const { refreshManaged = false } = options;
   const steps = [
     {
       label: 'design-system/ directory',
@@ -175,8 +179,16 @@ export function ensureCoreDsmProjectFiles(targetRoot, templateRoot) {
       label: 'design-system/style-dictionary.config.mjs',
       run: () => {
         const dest = resolve(targetRoot, 'design-system/style-dictionary.config.mjs');
-        if (existsSync(dest)) return 'skipped (already exists)';
-        copyFileSync(resolve(templateRoot, 'style-dictionary.config.mjs'), dest);
+        const src = resolve(templateRoot, 'style-dictionary.config.mjs');
+        if (existsSync(dest)) {
+          // Generated machinery — refresh on update so config fixes propagate.
+          if (!refreshManaged) return 'skipped (already exists)';
+          const same = existsSync(src) && readFileSync(dest, 'utf8') === readFileSync(src, 'utf8');
+          if (same) return 'up to date';
+          copyFileSync(src, dest);
+          return 'refreshed';
+        }
+        copyFileSync(src, dest);
       },
     },
     {

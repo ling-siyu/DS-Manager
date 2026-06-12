@@ -24,7 +24,7 @@ export async function updateCommand(options = {}) {
   console.log(chalk.cyan(`\n🔄 Updating Design System Manager v${getDsmVersion()}\n`));
   console.log(chalk.dim(`   Target: ${targetRoot}\n`));
 
-  const scaffoldResults = ensureCoreDsmProjectFiles(targetRoot, PACKAGE_SOURCE_ROOT);
+  const scaffoldResults = ensureCoreDsmProjectFiles(targetRoot, PACKAGE_SOURCE_ROOT, { refreshManaged: true });
   for (const step of scaffoldResults) {
     const icon = step.status?.startsWith('failed') ? chalk.red('✗') : step.status === 'created' ? chalk.green('✓') : chalk.dim('–');
     console.log(`  ${icon}  ${chalk.white(step.label)}  ${chalk.dim(step.status)}`);

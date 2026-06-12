@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, relative, resolve, dirname } from 'path';
+import { homedir } from 'os';
 import { fileURLToPath } from 'url';
 import chalk from 'chalk';
 import { resolveProjectPaths } from '../utils/paths.js';
@@ -18,13 +19,18 @@ import {
   startSession,
 } from '../utils/edit-session.js';
 import { captureShots } from '../utils/render-shots.js';
-import { securamarkDir } from '../utils/preview-data.js';
 import { diffShotDirs } from '../utils/shot-diff.js';
 import * as git from '../utils/git.js';
 
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
 const toPosix = (p) => p.split('\\').join('/');
+
+/** Absolute path to the (read-only) SecuraMark source, for the legacy
+ *  `--app securamark` cross-repo edit target. */
+function securamarkDir() {
+  return process.env.SECURAMARK_DIR || join(homedir(), 'Projects/securamark-frontend');
+}
 
 /** Resolve a known external edit target (its source dir + git root). */
 function resolveTarget(name) {
