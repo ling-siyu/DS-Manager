@@ -1,7 +1,9 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { resolve } from 'path';
 import chalk from 'chalk';
 import { resolveProjectPaths } from '../utils/paths.js';
 import { discoverComponents, ownProps } from '../utils/component-discovery.js';
+import { resolveCategory } from '../utils/categorize.js';
 
 function normalizeValue(value) {
   if (Array.isArray(value)) {
@@ -41,6 +43,7 @@ function toBaseComponent(discoveredComponent) {
   return {
     name: discoveredComponent.name,
     path: discoveredComponent.path,
+    ...(discoveredComponent.category ? { category: discoveredComponent.category } : {}),
     ...(Object.keys(discoveredComponent.props || {}).length ? { props: discoveredComponent.props } : {}),
     ...(discoveredComponent.variants?.length ? { variants: discoveredComponent.variants } : {}),
     ...(discoveredComponent.sizes?.length ? { sizes: discoveredComponent.sizes } : {}),
@@ -228,6 +231,11 @@ export async function syncComponentsCommand(options = {}) {
   const paths = resolveProjectPaths(process.cwd(), { allowMissingTokens: true });
   const registry = loadRegistry(paths);
   const discovered = discoverComponents(paths.repoRoot);
+  // Tag each discovered component with its resolved category (path / story title).
+  discovered.components = discovered.components.map((c) => ({
+    ...c,
+    category: resolveCategory({ path: c.path, absPath: resolve(paths.repoRoot, c.path) }),
+  }));
   const plan = buildSyncPlan(registry, discovered.components, options);
 
   if (options.json) {

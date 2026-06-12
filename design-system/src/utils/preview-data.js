@@ -3,6 +3,7 @@ import { resolve } from 'path';
 import { loadTokens } from './tokens.js';
 import { discoverComponents, ownProps } from './component-discovery.js';
 import { captureIconUsage } from './icons.js';
+import { resolveCategory } from './categorize.js';
 
 // Pure data layer for the preview. buildPreviewData() turns the on-disk token
 // and component sources into a single JSON-serializable object the Vite app
@@ -90,10 +91,14 @@ function buildComponents({ componentsPath, dsRoot, repoRoot }) {
     .map((c) => {
       const discovered = byName.get(c.name);
       const props = discovered ? ownProps(discovered.props) : (c.props ?? {});
+      const absPath = toAbsPath(c.path, { repoRoot, dsRoot });
       return {
         name: c.name,
         path: c.path,
-        absPath: toAbsPath(c.path, { repoRoot, dsRoot }),
+        absPath,
+        // Registry value wins (sync-components persists it); else derive now so
+        // older registries without a category still group.
+        category: resolveCategory({ path: c.path, absPath, explicit: c.category }),
         description: c.description ?? '',
         status: c.status ?? 'stable',
         variants: discovered?.variants?.length ? discovered.variants : (c.variants ?? []),

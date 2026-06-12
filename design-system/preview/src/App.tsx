@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { data } from './data';
 import Canvas, { scenariosOf } from './components/Canvas';
 import type { CanvasFrame } from './components/Canvas';
 import LiveRender from './components/LiveRender';
 import Inspector from './components/Inspector';
+import CategoryNav from './components/CategoryNav';
+import { buildCategoryTree, matchesCategory } from './lib/categoryTree';
 import { getSections } from './tokens/sections';
 import IconSetGrid from './tokens/IconSetGrid';
 import { CATEGORIES, categoryOf } from './lib/tokenKind';
@@ -23,6 +25,7 @@ export default function App() {
   const [theme, setTheme] = useState<Theme>((data.defaultTheme as Theme) ?? 'dark');
   const [query, setQuery] = useState('');
   const [selectedName, setSelectedName] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [scenarioIdx, setScenarioIdx] = useState(0);
 
   useEffect(() => {
@@ -31,16 +34,19 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
-  // Clear search + selection whenever the route changes.
+  // Clear search + selection + category filter whenever the route changes.
   useEffect(() => {
     setQuery('');
     setSelectedName(null);
+    setSelectedCategory(null);
   }, [route]);
 
   const isToken = route !== 'components';
   const tokens = data.tokens;
   const componentList = data.components;
   const iconWeight = data.icons?.style?.weight ?? 'light';
+
+  const categoryTree = useMemo(() => buildCategoryTree(componentList), [componentList]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
@@ -64,21 +70,38 @@ export default function App() {
     return base;
   }, [isToken, tokens, route, theme, iconCapture]);
 
-  // Build canvas frames for the active route, filtered by the search query.
-  const frames = useMemo<CanvasFrame[]>(() => {
+  // Components matching the active category filter + search query.
+  const visibleComponents = useMemo(() => {
     const q = query.trim().toLowerCase();
+    return componentList.filter((c) =>
+      matchesCategory(c.category, selectedCategory) &&
+      (!q || c.name.toLowerCase().includes(q) || (c.description ?? '').toLowerCase().includes(q)),
+    );
+  }, [componentList, selectedCategory, query]);
+
+  // Build canvas frames for the active route. Components are grouped by category
+  // with a full-width section header band before each group.
+  const frames = useMemo<CanvasFrame[]>(() => {
     if (!isToken) {
-      return componentList
-        .filter((c) => !q || c.name.toLowerCase().includes(q) || (c.description ?? '').toLowerCase().includes(q))
-        .map((c) => {
+      const byCat = new Map<string, typeof visibleComponents>();
+      for (const c of visibleComponents) {
+        const cat = c.category || 'Uncategorized';
+        if (!byCat.has(cat)) byCat.set(cat, []);
+        byCat.get(cat)!.push(c);
+      }
+      const out: CanvasFrame[] = [];
+      for (const cat of [...byCat.keys()].sort()) {
+        const items = byCat.get(cat)!;
+        out.push({ id: `__section__${cat}`, label: cat, variant: 'section', count: items.length, selectable: false, node: null });
+        for (const c of items) {
           // The selected component mirrors the inspector's active variation on
           // the canvas; every other frame shows its default scenario.
           const sc = scenariosOf(c);
           const idx = c.name === selectedName ? Math.min(scenarioIdx, sc.length - 1) : 0;
-          return {
+          out.push({
             id: c.name,
             label: c.name,
-            variant: 'component' as const,
+            variant: 'component',
             status: c.status,
             selectable: true,
             node: (
@@ -90,9 +113,12 @@ export default function App() {
                 resetKey={`canvas:${c.name}:${idx}`}
               />
             ),
-          };
-        });
+          });
+        }
+      }
+      return out;
     }
+    const q = query.trim().toLowerCase();
     return sections
       .filter((s) => !q || s.title.toLowerCase().includes(q))
       .map((s) => ({
@@ -103,9 +129,12 @@ export default function App() {
         selectable: false,
         node: <div className="token-frame">{s.node}</div>,
       }));
-  }, [isToken, componentList, sections, iconWeight, theme, query, selectedName, scenarioIdx]);
+  }, [isToken, visibleComponents, sections, iconWeight, theme, query, selectedName, scenarioIdx]);
 
+  // Denominator for the search pill; numerator counts real matches (not the
+  // section-header frames).
   const total = isToken ? sections.length : componentList.length;
+  const shownCount = isToken ? frames.length : visibleComponents.length;
   const selected = useMemo(
     () => (isToken ? null : componentList.find((c) => c.name === selectedName) ?? null),
     [isToken, componentList, selectedName],
@@ -128,7 +157,7 @@ export default function App() {
         selectedId={selected?.name ?? null}
         onSelect={onSelect}
         theme={theme}
-        resetKey={route}
+        resetKey={`${route}:${selectedCategory ?? 'all'}`}
         controls={
           <div className="seg" role="group" aria-label="Theme">
             {(['light', 'dark'] as Theme[]).map((t) => (
@@ -144,10 +173,19 @@ export default function App() {
         <nav className="nav-panel">
           <div className="brand">DSM</div>
           {navItems.map((it) => (
-            <a key={it.id} href={`#/${it.id}`} className={`nav-item${route === it.id ? ' active' : ''}`}>
-              <span>{it.label}</span>
-              <span className="nav-count">{it.id === 'components' ? componentList.length : counts[it.id] ?? 0}</span>
-            </a>
+            <Fragment key={it.id}>
+              <a
+                href={`#/${it.id}`}
+                className={`nav-item${route === it.id ? ' active' : ''}`}
+                onClick={it.id === 'components' ? () => setSelectedCategory(null) : undefined}
+              >
+                <span>{it.label}</span>
+                <span className="nav-count">{it.id === 'components' ? componentList.length : counts[it.id] ?? 0}</span>
+              </a>
+              {it.id === 'components' && route === 'components' && categoryTree.length > 0 && (
+                <CategoryNav nodes={categoryTree} selected={selectedCategory} onSelect={setSelectedCategory} />
+              )}
+            </Fragment>
           ))}
         </nav>
 
@@ -160,7 +198,7 @@ export default function App() {
             onKeyDown={(e) => { if (e.key === 'Escape') { setQuery(''); e.currentTarget.blur(); } }}
             aria-label="Search"
           />
-          {query && <span className="search-count">{frames.length}/{total}</span>}
+          {query && <span className="search-count">{shownCount}/{total}</span>}
         </div>
       </div>
 

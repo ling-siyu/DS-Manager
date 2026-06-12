@@ -24,7 +24,7 @@ interface Camera {
 export interface CanvasFrame {
   id: string;
   label: string;
-  variant: 'component' | 'token';
+  variant: 'component' | 'token' | 'section';
   node: ReactNode;
   count?: number;
   status?: string;
@@ -47,6 +47,16 @@ function Frame({
   selected: boolean;
   onSelect: (id: string) => void;
 }) {
+  // A section frame is a full-width category band (header only), not a card.
+  if (frame.variant === 'section') {
+    return (
+      <div className="cframe section">
+        <span className="section-name">{frame.label}</span>
+        {frame.count != null && <span className="section-count">{frame.count}</span>}
+        <span className="section-rule" />
+      </div>
+    );
+  }
   return (
     <section
       className={`cframe ${frame.variant}${selected ? ' selected' : ''}${frame.selectable ? ' selectable' : ''}`}

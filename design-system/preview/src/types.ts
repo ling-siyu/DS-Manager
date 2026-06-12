@@ -27,6 +27,8 @@ export interface PreviewComponent {
   path: string;
   /** Absolute source path, loaded cross-file via Vite dev `/@fs`. */
   absPath: string;
+  /** '/'-delimited category path (e.g. "Landing/Illustrations"). */
+  category: string;
   description: string;
   status: string;
   variants: string[];
